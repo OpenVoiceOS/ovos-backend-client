@@ -157,6 +157,18 @@ class DeviceApi(BaseApi):
             path = '/' + self.uuid + '/voice?arch=' + arch
             return super().get(self.url + path).json().get('link')
 
+    def get_oauth_token(self, dev_cred):
+        """
+            Get Oauth token for dev_credential dev_cred.
+
+            Argument:
+                dev_cred:   development credentials identifier
+
+            Returns:
+                json string containing token and additional information
+        """
+        return super().get(self.url + "/" + self.uuid + "/token/" + str(dev_cred)).json()
+
     def get_skill_settings(self):
         """Get the remote skill settings for all skills on this device."""
         return super().get(self.url + "/" + self.uuid + "/skill/settings").json()
@@ -166,6 +178,52 @@ class DeviceApi(BaseApi):
                         json={"title": title,
                               "body": body,
                               "sender": sender}).json()
+
+    def upload_skill_metadata(self, settings_meta):
+        """Upload skill metadata.
+
+        Args:
+            settings_meta (dict): skill info and settings in JSON format
+        """
+        return self.put(url=self.url + "/" + self.uuid + "/settingsMeta",
+                        json=settings_meta)
+
+    def upload_skills_data(self, data):
+        """ Upload skills.json file. This file contains a manifest of installed
+        and failed installations for use with the Marketplace.
+
+        Args:
+             data: dictionary with skills data from msm
+        """
+        if not isinstance(data, dict):
+            raise ValueError('data must be of type dict')
+
+        _data = dict(data)  # Make sure the input data isn't modified
+        # Strip the skills.json down to the bare essentials
+        to_send = {}
+        if 'blacklist' in _data:
+            to_send['blacklist'] = _data['blacklist']
+        else:
+            LOG.warning('skills manifest lacks blacklist entry')
+            to_send['blacklist'] = []
+
+        # Make sure skills doesn't contain duplicates (keep only last)
+        if 'skills' in _data:
+            skills = {s['name']: s for s in _data['skills']}
+            to_send['skills'] = [skills[key] for key in skills]
+        else:
+            LOG.warning('skills manifest lacks skills entry')
+            to_send['skills'] = []
+
+        for s in to_send['skills']:
+            # Remove optional fields backend objects to
+            if 'update' in s:
+                s.pop('update')
+
+            # Finalize skill_gid with uuid if needed
+            s['skill_gid'] = s.get('skill_gid', '').replace('@|', f'@{self.uuid}|')
+        return self.put(url=self.url + "/" + self.uuid + "/skillJson",
+                        json=to_send)
 
 
 class STTApi(BaseApi):
@@ -292,7 +350,7 @@ class OpenWeatherMapApi(BaseApi):
             return special_cases[lang_primary]
         return "en"
 
-    def get_weather(self, lat_lon=None,  lang="en-us", units="metric"):
+    def get_weather(self, lat_lon=None, lang="en-us", units="metric"):
         """Issue an API call and map the return value into a weather report
 
         Args:
@@ -316,6 +374,9 @@ class OpenWeatherMapApi(BaseApi):
 
 
 if __name__ == "__main__":
+    d = DeviceApi()
+    data = d.get_settings()
+    print(data)
     # TODO turn these into unittests
     # ident = load_identity()
     # paired = is_paired()
@@ -327,6 +388,6 @@ if __name__ == "__main__":
     # print(data)
     # data = wolf.full_results("2+2")
     # print(data)
-    owm = OpenWeatherMapApi()
-    data = owm.get_weather()
-    print(data)
+# owm = OpenWeatherMapApi()
+# data = owm.get_weather()
+# print(data)

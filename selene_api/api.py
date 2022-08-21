@@ -1,31 +1,13 @@
-import json
 import logging
 import os
-from os.path import isfile, expanduser
 
 import requests
+from requests.exceptions import HTTPError
+
+from selene_api.identity import IdentityManager, identity_lock
 
 LOG = logging.getLogger("SeleneAPI")
 BACKEND_URL = "https://api.mycroft.ai"
-
-
-def load_identity():
-    locations = [
-        "~/.mycroft/identity/identity2.json",  # old location
-        "~/.config/mycroft/identity/identity2.json",  # xdg location
-        "~/mycroft-config/identity/identity2.json",  # smartgic docker default loc
-    ]
-    for loc in locations:
-        loc = expanduser(loc)
-        if isfile(loc):
-            LOG.debug(f"identity found: {loc}")
-            try:
-                with open(loc) as f:
-                    return json.load(f)
-            except:
-                LOG.error("invalid identity file!")
-                continue
-    return {}
 
 
 def is_paired(remote=True):
@@ -45,7 +27,7 @@ def is_paired(remote=True):
         except Exception as e:
             pass
         return False
-    identity = load_identity()
+    identity = IdentityManager.get()
     if identity["access"] and identity["uuid"]:
         return True
     return False
@@ -66,40 +48,64 @@ class BaseApi:
 
     @property
     def identity(self):
-        return load_identity()
+        return IdentityManager.get()
 
     @property
     def uuid(self):
-        return self.identity["uuid"]
+        return self.identity.uuid
 
     @property
     def headers(self):
         return {"Content-Type": "application/json",
-                "Device": self.identity['uuid'],
-                "Authorization": f"Bearer {self.identity['access']}"}
+                "Device": self.identity.uuid,
+                "Authorization": f"Bearer {self.identity.access}"}
+
+    def check_token(self):
+        if self.identity.is_expired():
+            self.refresh_token()
+
+    def refresh_token(self):
+        LOG.debug('Refreshing token')
+        if identity_lock.acquire(blocking=False):
+            try:
+                data = self.get(self.url + "/auth/token")
+                IdentityManager.save(data, lock=False)
+                LOG.debug('Saved credentials')
+            except HTTPError as e:
+                if e.response.status_code == 401:
+                    LOG.error('Could not refresh token, invalid refresh code.')
+                else:
+                    raise
+
+            finally:
+                identity_lock.release()
 
     def get(self, url=None, *args, **kwargs):
         url = url or self.url
         headers = kwargs.get("headers", {})
         headers.update(self.headers)
+        self.check_token()
         return requests.get(url, headers=headers, timeout=(3.05, 15), *args, **kwargs)
 
     def post(self, url=None, *args, **kwargs):
         url = url or self.url
         headers = kwargs.get("headers", {})
         headers.update(self.headers)
+        self.check_token()
         return requests.post(url, headers=headers, timeout=(3.05, 15), *args, **kwargs)
 
     def put(self, url=None, *args, **kwargs):
         url = url or self.url
         headers = kwargs.get("headers", {})
         headers.update(self.headers)
+        self.check_token()
         return requests.put(url, headers=headers, timeout=(3.05, 15), *args, **kwargs)
 
     def patch(self, url=None, *args, **kwargs):
         url = url or self.url
         headers = kwargs.get("headers", {})
         headers.update(self.headers)
+        self.check_token()
         return requests.patch(url, headers=headers, timeout=(3.05, 15), *args, **kwargs)
 
 
@@ -242,8 +248,8 @@ class STTApi(BaseApi):
     @property
     def headers(self):
         return {"Content-Type": "audio/x-flac",
-                "Device": self.identity['uuid'],
-                "Authorization": f"Bearer {self.identity['access']}"}
+                "Device": self.identity.uuid,
+                "Authorization": f"Bearer {self.identity.access}"}
 
     def stt(self, audio, language="en-us", limit=1):
         """ Web API wrapper for performing Speech to Text (STT)

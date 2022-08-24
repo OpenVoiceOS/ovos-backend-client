@@ -43,7 +43,9 @@ def has_been_paired():
 
 
 class BaseApi:
-    def __init__(self, url=BACKEND_URL):
+    def __init__(self, url=BACKEND_URL, version="v1"):
+        self.backend_url = url
+        self.backend_version = version
         self.url = url
 
     @property
@@ -68,7 +70,7 @@ class BaseApi:
         LOG.debug('Refreshing token')
         if identity_lock.acquire(blocking=False):
             try:
-                data = requests.get(BACKEND_URL + "/v1/auth/token",
+                data = requests.get(self.backend_url + f"/{self.backend_version}/auth/token",
                                     headers=self.headers).json()
                 IdentityManager.save(data, lock=False)
                 LOG.debug('Saved credentials')
@@ -111,9 +113,9 @@ class BaseApi:
 
 
 class DeviceApi(BaseApi):
-    def __init__(self, url=BACKEND_URL):
-        super().__init__(url)
-        self.url = f"{url}/v1/device"
+    def __init__(self, url=BACKEND_URL, version="v1"):
+        super().__init__(url, version)
+        self.url = f"{url}/{self.backend_version}/device"
 
     def get(self, url=None, *args, **kwargs):
         """ Retrieve all device information from the web backend """
@@ -245,9 +247,9 @@ class DeviceApi(BaseApi):
 
 
 class STTApi(BaseApi):
-    def __init__(self, url=BACKEND_URL):
-        super().__init__(url)
-        self.url = f"{url}/v1/stt"
+    def __init__(self, url=BACKEND_URL, version="v1"):
+        super().__init__(url, version)
+        self.url = f"{url}/{self.backend_version}/stt"
 
     @property
     def headers(self):
@@ -275,9 +277,9 @@ class STTApi(BaseApi):
 class GeolocationApi(BaseApi):
     """Web API wrapper for performing geolocation lookups."""
 
-    def __init__(self, url=BACKEND_URL):
-        super().__init__(url=url)
-        self.url += "/v1/geolocation"
+    def __init__(self, url=BACKEND_URL, version="v1"):
+        super().__init__(url, version)
+        self.url += f"/{self.backend_version}/geolocation"
 
     def get_geolocation(self, location):
         """Call the geolocation endpoint.
@@ -294,13 +296,17 @@ class GeolocationApi(BaseApi):
 
 class WolframAlphaApi(BaseApi):
 
+    def __init__(self, url=BACKEND_URL, version="v1"):
+        super().__init__(url, version)
+        self.url += f"/{self.backend_version}/wolframAlpha"
+
     def spoken(self, query, units="metric", lat_lon=None, optional_params=None):
         optional_params = optional_params or {}
         # default to location configured in selene
         if not lat_lon:
             loc = DeviceApi().get_location()
             lat_lon = (loc['coordinate']['latitude'], loc['coordinate']['longitude'])
-        url = f"{self.url}/v1/wolframAlphaSpoken"
+        url = f"{self.url}Spoken"
         params = {'i': query,
                   'units': units,
                   "geolocation": "{},{}".format(*lat_lon),
@@ -328,7 +334,7 @@ class WolframAlphaApi(BaseApi):
                   "format": "image,plaintext",
                   "output": "json",
                   **optional_params}
-        url = f"{self.url}/v1/wolframAlphaFull"
+        url = f"{self.url}Full"
         data = self.get(url=url, params=params)
         return data.json()
 
@@ -336,9 +342,9 @@ class WolframAlphaApi(BaseApi):
 class OpenWeatherMapApi(BaseApi):
     """Use Open Weather Map's One Call API to retrieve weather information"""
 
-    def __init__(self, url=BACKEND_URL):
-        super().__init__(url)
-        self.url = f"{url}/v1/owm"
+    def __init__(self, url=BACKEND_URL, version="v1"):
+        super().__init__(url, version)
+        self.url = f"{url}/{self.backend_version}/owm"
 
     @staticmethod
     def owm_language(lang: str):
@@ -392,19 +398,19 @@ class OpenWeatherMapApi(BaseApi):
 
 
 if __name__ == "__main__":
-    d = DeviceApi()
+    d = DeviceApi("http://0.0.0.0:6712")
 
     # TODO turn these into unittests
     # ident = load_identity()
     # paired = is_paired()
-    geo = GeolocationApi()
+    geo = GeolocationApi("http://0.0.0.0:6712")
     data = geo.get_geolocation("Lisbon Portugal")
     print(data)
-    wolf = WolframAlphaApi()
+    wolf = WolframAlphaApi("http://0.0.0.0:6712")
     data = wolf.spoken("what is the speed of light")
     print(data)
     data = wolf.full_results("2+2")
     print(data)
-    owm = OpenWeatherMapApi()
+    owm = OpenWeatherMapApi("http://0.0.0.0:6712")
     data = owm.get_weather()
     print(data)

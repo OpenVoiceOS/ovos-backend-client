@@ -68,7 +68,8 @@ class BaseApi:
         LOG.debug('Refreshing token')
         if identity_lock.acquire(blocking=False):
             try:
-                data = self.get(self.url + "/auth/token")
+                data = requests.get(BACKEND_URL + "/v1/auth/token",
+                                    headers=self.headers).json()
                 IdentityManager.save(data, lock=False)
                 LOG.debug('Saved credentials')
             except HTTPError as e:
@@ -134,6 +135,9 @@ class DeviceApi(BaseApi):
             str: JSON string with user configuration information.
         """
         return super().get(self.url + "/" + self.uuid + "/setting").json()
+
+    def get_code(self):
+        return super().get(self.url + "/code", params={"state": self.uuid}).json()
 
     def get_location(self):
         """ Retrieve device location information from the web backend

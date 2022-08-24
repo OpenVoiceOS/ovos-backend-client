@@ -26,6 +26,7 @@ class SeleneCloud:
                             {"type": "label",
                              "label": "This is encoded data, DO NOT EDIT in browser"},
                             {"type": "text",
+                             "name": "encoded_data",
                              "value": data}
                         ]
                     }
@@ -41,7 +42,8 @@ class SeleneCloud:
         data = None
         for s in settings:
             if s['skill_gid'] == data_id:
-                data = s['skillMetadata']["sections"][0]["fields"][-1]["value"]
+                sections = s['skillMetadata']['sections']
+                data = sections[0]["fields"][-1]["value"]
                 break
         return data
 
@@ -66,16 +68,17 @@ class SecretSeleneCloud(SeleneCloud):
 
     def get_entry(self, data_id):
         data = super().get_entry(data_id)
-        data = json.loads(data)
-        ciphertext = data["ciphertext"].encode("utf-8")
-        tag = data["tag"].encode("utf-8")
-        nonce = data["nonce"].encode("utf-8")
+        if data:
+            data = json.loads(data)
+            ciphertext = data["ciphertext"].encode("utf-8")
+            tag = data["tag"].encode("utf-8")
+            nonce = data["nonce"].encode("utf-8")
 
-        ciphertext = base64.decodebytes(ciphertext)
-        tag = base64.decodebytes(tag)
-        nonce = base64.decodebytes(nonce)
+            ciphertext = base64.decodebytes(ciphertext)
+            tag = base64.decodebytes(tag)
+            nonce = base64.decodebytes(nonce)
 
-        return decrypt(self.key, ciphertext, tag, nonce)
+            return decrypt(self.key, ciphertext, tag, nonce)
 
 
 if __name__ == "__main__":

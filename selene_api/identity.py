@@ -102,7 +102,7 @@ class IdentityManager:
 
     @staticmethod
     def _update(login=None):
-        LOG.debug('Updaing identity')
+        LOG.debug('Updating identity')
         login = login or {}
         expiration = login.get("expiration", 0)
         IdentityManager.__identity.uuid = login.get("uuid", "")

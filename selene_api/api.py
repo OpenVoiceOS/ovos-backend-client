@@ -1,12 +1,11 @@
-import logging
 import os
 
 import requests
+from ovos_utils.log import LOG
 from requests.exceptions import HTTPError
 
 from selene_api.identity import IdentityManager, identity_lock
 
-LOG = logging.getLogger("SeleneAPI")
 BACKEND_URL = "https://api.mycroft.ai"
 
 

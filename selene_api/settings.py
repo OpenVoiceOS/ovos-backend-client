@@ -1,10 +1,22 @@
-import base64
 import json
 from copy import deepcopy
+
 from selene_api.api import DeviceApi, BACKEND_URL
 
 
 class RemoteSkillSettings:
+    """ WARNING: selene backend does not use proper skill_id, if you have
+    skills with same name but different author settings will overwrite each
+    other on the backend, THIS CLASS IS NOT 100% SAFE in mycroft-core
+
+    mycroft-core uses msm to generate weird metadata, removes author and munges github branch names into id
+    ovos-core uses the proper deterministic skill_id and can be used safely
+
+    you can define arbitrary strings as skill_id to use this as a datastore
+
+    skill matching is currently done by checking "if {skill_id} in string"
+    """
+
     def __init__(self, skill_id, settings=None, meta=None, url=BACKEND_URL, version="v1"):
         self.api = DeviceApi(url, version)
         self.skill_id = skill_id
@@ -56,32 +68,38 @@ class RemoteSkillSettings:
         # TODO auto update in backend ?
 
     def download(self):
-        """ WARNING: selene backend does not use proper skill_id, if you have
-        skills with same name but different author settings will overwrite each
-        other on the backend, THIS METHOD IS NOT SAFE
-
-        skill matching is currently done by checking "if {skill} in string"
-        once mycroft fixes it on their side this will start using a proper
-        unique identifier
         """
+        download skill settings for this skill from selene
 
+        WARNING: selene backend does not use proper skill_id, if you have
+        skills with same name but different author settings will overwrite each
+        other on the backend, THIS METHOD IS NOT 100% SAFE in mycroft-core
+
+        mycroft-core uses msm to generate weird metadata, removes author and munges github branch names into id
+
+        ovos-core uses the proper deterministic skill_id and can be used safely
+        """
+        s = None
         data = self.api.get_skill_settings_v1()
+
         # try exact matches, ovos-core will upload proper skill_ids
         for settings in data:
             if settings["identifier"] == self.skill_id:
                 s = self.deserialize(settings)
-                self.meta = s.meta
-                self.settings = s.settings
-                self.identifier = s.skill_id
-                return
+                break
+
         # fallback to handle the selene/mycroft-core way
-        for settings in data:
-            if settings["identifier"].startswith(self.skill_id):
-                s = self.deserialize(settings)
-                self.meta = s.meta
-                self.settings = s.settings
-                self.identifier = s.skill_id
-                return
+        if not s:
+            for settings in data:
+                if settings["identifier"].startswith(self.skill_id):
+                    s = self.deserialize(settings)
+                    break
+        if s:
+            self.meta = s.meta
+            self.settings = s.settings
+            # update actual identifier from selene
+            # in ovos-core there is no mismatch, but in mycroft-core yes
+            self.identifier = s.skill_id
 
     def upload(self):
         data = self.serialize()

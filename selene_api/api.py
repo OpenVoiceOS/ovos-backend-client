@@ -5,44 +5,18 @@ from ovos_utils.log import LOG
 from requests.exceptions import HTTPError
 
 from selene_api.identity import IdentityManager, identity_lock
-
-BACKEND_URL = "https://api.mycroft.ai"
-
-
-def is_paired(remote=True):
-    """ Determine if this device is actively paired with a web backend
-
-       Determines if the installation of  has been paired by the user
-       with the backend system, and if that pairing is still active.
-
-       Returns:
-           bool: True if paired with backend
-       """
-    if remote:
-        try:
-            r = DeviceApi().get()
-            if r:
-                return True
-        except Exception as e:
-            pass
-        return False
-    identity = IdentityManager.get()
-    if identity["access"] and identity["uuid"]:
-        return True
-    return False
-
-
-def has_been_paired():
-    """ Determine if this device has ever been paired with a web backend
-
-    Returns:
-        bool: True if ever paired with backend (not factory reset)
-    """
-    return is_paired(remote=False)
+from ovos_config import Configuration
 
 
 class BaseApi:
-    def __init__(self, url=BACKEND_URL, version="v1"):
+    def __init__(self, url=None, version="v1"):
+
+        if not url:
+            config = Configuration()
+            config_server = config.get("server") or {}
+            url = config_server.get("url") or "https://api.mycroft.ai"
+            version = config_server.get("version") or version
+
         self.backend_url = url
         self.backend_version = version
         self.url = url
@@ -112,7 +86,7 @@ class BaseApi:
 
 
 class DeviceApi(BaseApi):
-    def __init__(self, url=BACKEND_URL, version="v1"):
+    def __init__(self, url=None, version="v1"):
         super().__init__(url, version)
         self.url = f"{url}/{self.backend_version}/device"
 
@@ -275,7 +249,7 @@ class DeviceApi(BaseApi):
 
 
 class STTApi(BaseApi):
-    def __init__(self, url=BACKEND_URL, version="v1"):
+    def __init__(self, url=None, version="v1"):
         super().__init__(url, version)
         self.url = f"{url}/{self.backend_version}/stt"
 
@@ -305,7 +279,7 @@ class STTApi(BaseApi):
 class GeolocationApi(BaseApi):
     """Web API wrapper for performing geolocation lookups."""
 
-    def __init__(self, url=BACKEND_URL, version="v1"):
+    def __init__(self, url=None, version="v1"):
         super().__init__(url, version)
         self.url += f"/{self.backend_version}/geolocation"
 
@@ -324,7 +298,7 @@ class GeolocationApi(BaseApi):
 
 class WolframAlphaApi(BaseApi):
 
-    def __init__(self, url=BACKEND_URL, version="v1"):
+    def __init__(self, url=None, version="v1"):
         super().__init__(url, version)
         self.url += f"/{self.backend_version}/wolframAlpha"
 
@@ -370,7 +344,7 @@ class WolframAlphaApi(BaseApi):
 class OpenWeatherMapApi(BaseApi):
     """Use Open Weather Map's One Call API to retrieve weather information"""
 
-    def __init__(self, url=BACKEND_URL, version="v1"):
+    def __init__(self, url=None, version="v1"):
         super().__init__(url, version)
         self.url = f"{url}/{self.backend_version}/owm"
 

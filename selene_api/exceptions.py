@@ -1,4 +1,5 @@
 from requests import RequestException
+from requests import HTTPError
 
 
 class BackendDown(RequestException):

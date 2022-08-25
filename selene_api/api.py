@@ -304,7 +304,7 @@ class WolframAlphaApi(BaseApi):
         optional_params = optional_params or {}
         # default to location configured in selene
         if not lat_lon:
-            loc = DeviceApi().get_location()
+            loc = DeviceApi(url=self.backend_url, version=self.backend_version).get_location()
             lat_lon = (loc['coordinate']['latitude'], loc['coordinate']['longitude'])
         url = f"{self.url}Spoken"
         params = {'i': query,
@@ -324,7 +324,7 @@ class WolframAlphaApi(BaseApi):
         optional_params = optional_params or {}
         # default to location configured in selene
         if not lat_lon:
-            loc = DeviceApi().get_location()
+            loc = DeviceApi(url=self.backend_url, version=self.backend_version).get_location()
             lat_lon = (loc['coordinate']['latitude'], loc['coordinate']['longitude'])
 
         params = {'input': query,
@@ -383,7 +383,7 @@ class OpenWeatherMapApi(BaseApi):
         """
         # default to location configured in selene
         if not lat_lon:
-            loc = DeviceApi().get_location()
+            loc = DeviceApi(url=self.backend_url, version=self.backend_version).get_location()
             lat = loc['coordinate']['latitude']
             lon = loc['coordinate']['longitude']
         else:

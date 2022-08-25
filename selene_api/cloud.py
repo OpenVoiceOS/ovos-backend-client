@@ -3,12 +3,12 @@ import json
 
 from ovos_utils.security import encrypt, decrypt
 
-from selene_api.api import DeviceApi
+from selene_api.api import DeviceApi, BACKEND_URL
 
 
 class SeleneCloud:
-    def __init__(self, db_id="SeleneCloud"):
-        self.api = DeviceApi()
+    def __init__(self, db_id="SeleneCloud", url=BACKEND_URL, version="v1"):
+        self.api = DeviceApi(url, version)
         self.db_id = db_id
 
     def add_entry(self, data_id, data):
@@ -49,9 +49,9 @@ class SeleneCloud:
 
 
 class SecretSeleneCloud(SeleneCloud):
-    def __init__(self, key, db_id="SecretSeleneCloud"):
+    def __init__(self, key, db_id="SecretSeleneCloud", url=BACKEND_URL, version="v1"):
         self.key = key
-        super().__init__(db_id)
+        super().__init__(db_id, url, version)
 
     def add_entry(self, data_id, data):
         if not isinstance(data, str):

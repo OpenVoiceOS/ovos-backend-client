@@ -137,8 +137,37 @@ class DeviceApi(BaseApi):
         """
         return super().get(self.url + "/" + self.uuid + "/setting").json()
 
-    def get_code(self):
-        return super().get(self.url + "/code", params={"state": self.uuid}).json()
+    def get_code(self, state=None):
+        state = state or self.uuid
+        return super().get(self.url + "/code", params={"state": state}).json()
+
+    def activate(self, state, token,
+                 core_version="unknown",
+                 platform="unknown",
+                 platform_build="unknown",
+                 enclosure_version="unknown"):
+        data = {"state": state,
+                "token": token,
+                "coreVersion": core_version,
+                "platform": platform,
+                "platform_build": platform_build,
+                "enclosureVersion": enclosure_version}
+        return self.post(self.url + "/activate", json=data).json()
+
+    def update_version(self,
+                       core_version="unknown",
+                       platform="unknown",
+                       platform_build="unknown",
+                       enclosure_version="unknown"):
+        data = {"coreVersion": core_version,
+                "platform": platform,
+                "platform_build": platform_build,
+                "enclosureVersion": enclosure_version}
+        return self.patch(self.url + "/" + self.uuid, json=data)
+
+    def report_metric(self, name, data):
+        return self.post(self.url + "/" + self.uuid + "/metric/" + name,
+                         json=data)
 
     def get_location(self):
         """ Retrieve device location information from the web backend

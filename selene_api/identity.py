@@ -1,9 +1,11 @@
 import json
 import os
+import shutil
 import time
-from os.path import isfile, expanduser
+from os.path import isfile, dirname, expanduser
 
 from combo_lock import ComboLock
+from ovos_utils.configuration import get_xdg_config_save_path, get_xdg_base
 from ovos_utils.log import LOG
 
 identity_lock = ComboLock('/tmp/identity-lock')
@@ -11,8 +13,8 @@ identity_lock = ComboLock('/tmp/identity-lock')
 
 def find_identity():
     locations = [
-        "~/.mycroft/identity/identity2.json",  # old location
-        "~/.config/mycroft/identity/identity2.json",  # xdg location
+        IdentityManager.OLD_IDENTITY_FILE,  # old location
+        IdentityManager.IDENTITY_FILE,  # xdg location
         "~/mycroft-config/identity/identity2.json",  # smartgic docker default loc
     ]
     for loc in locations:
@@ -24,8 +26,8 @@ def find_identity():
 
 def load_identity():
     locations = [
-        "~/.mycroft/identity/identity2.json",  # old location
-        "~/.config/mycroft/identity/identity2.json",  # xdg location
+        IdentityManager.OLD_IDENTITY_FILE,  # old location
+        IdentityManager.IDENTITY_FILE,  # xdg location
         "~/mycroft-config/identity/identity2.json",  # smartgic docker default loc
     ]
     for loc in locations:
@@ -56,21 +58,25 @@ class DeviceIdentity:
 
 
 class IdentityManager:
+    IDENTITY_FILE = f"{get_xdg_config_save_path()}/identity/identity2.json"
+    OLD_IDENTITY_FILE = expanduser(f"~/.{get_xdg_base()}/identity/identity2.json")
     __identity = None
 
     @staticmethod
     def _load():
-        LOG.debug('Loading identity')
-        try:
-            identity_file = find_identity()
-            if identity_file:
-                with open(identity_file, 'r') as f:
+        if isfile(IdentityManager.OLD_IDENTITY_FILE) and \
+                not isfile(IdentityManager.IDENTITY_FILE):
+            os.makedirs(dirname(IdentityManager.IDENTITY_FILE), exist_ok=True)
+            shutil.move(IdentityManager.OLD_IDENTITY_FILE, IdentityManager.IDENTITY_FILE)
+        if isfile(IdentityManager.IDENTITY_FILE):
+            LOG.debug('Loading identity')
+            try:
+                with open(IdentityManager.IDENTITY_FILE) as f:
                     IdentityManager.__identity = DeviceIdentity(**json.load(f))
-            else:
-                IdentityManager.__identity = DeviceIdentity()
-        except Exception as e:
-            LOG.exception(f'Failed to load identity file: {repr(e)}')
-            IdentityManager.__identity = DeviceIdentity()
+                return
+            except Exception:
+                pass
+        IdentityManager.__identity = DeviceIdentity()
 
     @staticmethod
     def load(lock=True):
@@ -91,8 +97,10 @@ class IdentityManager:
         try:
             if login:
                 IdentityManager._update(login)
-            identity_file = find_identity()
-            with open(identity_file, 'w') as f:
+
+            os.makedirs(dirname(IdentityManager.IDENTITY_FILE), exist_ok=True)
+
+            with open(IdentityManager.IDENTITY_FILE, "w") as f:
                 json.dump(IdentityManager.__identity.__dict__, f)
                 f.flush()
                 os.fsync(f.fileno())
@@ -115,7 +123,7 @@ class IdentityManager:
         if lock:
             identity_lock.acquire()
         try:
-            IdentityManager._update()
+            IdentityManager._update(login)
         finally:
             if lock:
                 identity_lock.release()

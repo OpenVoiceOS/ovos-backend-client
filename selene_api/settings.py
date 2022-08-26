@@ -1,7 +1,7 @@
 import json
 from copy import deepcopy
 
-from selene_api.api import DeviceApi, BACKEND_URL
+from selene_api.api import DeviceApi
 
 
 class RemoteSkillSettings:
@@ -17,13 +17,19 @@ class RemoteSkillSettings:
     skill matching is currently done by checking "if {skill_id} in string"
     """
 
-    def __init__(self, skill_id, settings=None, meta=None, url=BACKEND_URL, version="v1"):
+    def __init__(self, skill_id, settings=None, meta=None, url=None, version="v1"):
         self.api = DeviceApi(url, version)
         self.skill_id = skill_id
         self.identifier = skill_id
         self.settings = settings or {}
         self.meta = meta or {}
         self.local_path = ""  # TODO XDG
+
+    @property
+    def selene_gid(self):
+        if self.api.identity.uuid:
+            return f'@{self.api.identity.uuid}|{self.skill_id}'
+        return f'@|{self.skill_id}'
 
     @staticmethod
     def _settings2meta(settings):
@@ -79,26 +85,54 @@ class RemoteSkillSettings:
 
         ovos-core uses the proper deterministic skill_id and can be used safely
         """
-        s = None
         data = self.api.get_skill_settings_v1()
 
-        # try exact matches, ovos-core will upload proper skill_ids
-        for settings in data:
-            if settings["identifier"] == self.skill_id:
-                s = self.deserialize(settings)
-                break
+        def match_settings(x, against):
+            uuid = None
+            for sets in x:
+                fields = sets["identifier"].split("|")
+                if len(fields) == 3:
+                    uuid, skill_id, branch = fields
+                elif len(fields) == 2:
+                    if fields[0].startswith("@"):
+                        uuid, skill_id = fields
+                    else:
+                        skill_id, branch = fields
+                else:
+                    skill_id = sets["identifier"]
 
-        # fallback to handle the selene/mycroft-core way
-        if not s:
-            for settings in data:
-                if settings["identifier"].startswith(self.skill_id):
-                    s = self.deserialize(settings)
-                    break
+                # setting belong to another device
+                if uuid and uuid != self.api.uuid:
+                    uuid = uuid.replace("@", "")
+                    # TODO shared_settings flag
+                    # continue
+
+                if skill_id == against:
+                    return self.deserialize(sets)
+
+        # this is a mess, possible keys seen by logging data
+        # - {skill_id}
+        # - @|{skill_id}
+        # - @{uuid}|{skill_id}
+        # - {skill_id}|{branch}
+        # - @|{skill_id}|{branch}
+        # - @{uuid}|{skill_id}|{branch}
+        # - {skill_id_no_author}
+        # - @|{skill_id_no_author}
+        # - @{uuid}|{skill_id_no_author}
+        # - {skill_id_no_author}|{branch}
+        # - @|{skill_id_no_author}|{branch}
+        # - @{uuid}|{skill_id_no_author}|{branch}
+        # - {whatever we feel like uploading}
+        s = match_settings(data, self.skill_id) or \
+            match_settings(data, self.selene_gid) or \
+            match_settings(data, self.identifier) or \
+            match_settings(data, self.skill_id.split(".")[0])
+
         if s:
             self.meta = s.meta
             self.settings = s.settings
             # update actual identifier from selene
-            # in ovos-core there is no mismatch, but in mycroft-core yes
             self.identifier = s.skill_id
 
     def upload(self):
@@ -106,9 +140,11 @@ class RemoteSkillSettings:
         return self.api.put_skill_settings_v1(data)
 
     def load(self):
+        # TODO load from file
         pass
 
     def store(self):
+        # TODO save to file
         pass
 
     def get(self, key):
@@ -137,8 +173,7 @@ class RemoteSkillSettings:
                     meta['sections'][idx]["fields"][idx2]["value"] = str(val)
         return {'skillMetadata': meta,
                 "skill_gid": self.identifier,
-                "display_name": self.skill_id,
-                "identifier": self.identifier}
+                "display_name": self.skill_id}
 
     def deserialize(self, data):
         if isinstance(data, str):
@@ -168,9 +203,8 @@ class RemoteSkillSettings:
 
                     skill_json[f["name"]] = val
 
-        skill_id = data.get("skill_gid") or data.get("identifier")
-        # skill_id = skill_id.split("|")[0]
-
+        skill_id = data.get("skill_gid") or \
+                   data.get("identifier")  # deprecated
         return RemoteSkillSettings(skill_id, skill_json, skill_meta,
                                    url=self.api.backend_url, version=self.api.backend_version)
 

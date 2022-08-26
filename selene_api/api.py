@@ -14,10 +14,10 @@ class BaseApi:
         if not url:
             config = Configuration()
             config_server = config.get("server") or {}
-            url = config_server.get("url") or "https://api.mycroft.ai"
+            url = config_server.get("url")
             version = config_server.get("version") or version
 
-        self.backend_url = url
+        self.backend_url = url or "https://api.mycroft.ai"
         self.backend_version = version
         self.url = url
 
@@ -88,7 +88,7 @@ class BaseApi:
 class DeviceApi(BaseApi):
     def __init__(self, url=None, version="v1"):
         super().__init__(url, version)
-        self.url = f"{url}/{self.backend_version}/device"
+        self.url = f"{self.backend_url}/{self.backend_version}/device"
 
     def get(self, url=None, *args, **kwargs):
         """ Retrieve all device information from the web backend """
@@ -251,7 +251,7 @@ class DeviceApi(BaseApi):
 class STTApi(BaseApi):
     def __init__(self, url=None, version="v1"):
         super().__init__(url, version)
-        self.url = f"{url}/{self.backend_version}/stt"
+        self.url = f"{self.backend_url}/{self.backend_version}/stt"
 
     @property
     def headers(self):
@@ -281,7 +281,7 @@ class GeolocationApi(BaseApi):
 
     def __init__(self, url=None, version="v1"):
         super().__init__(url, version)
-        self.url += f"/{self.backend_version}/geolocation"
+        self.url = f"{self.backend_url}/{self.backend_version}/geolocation"
 
     def get_geolocation(self, location):
         """Call the geolocation endpoint.
@@ -300,7 +300,7 @@ class WolframAlphaApi(BaseApi):
 
     def __init__(self, url=None, version="v1"):
         super().__init__(url, version)
-        self.url += f"/{self.backend_version}/wolframAlpha"
+        self.url = f"{self.backend_url}/{self.backend_version}/wolframAlpha"
 
     def spoken(self, query, units="metric", lat_lon=None, optional_params=None):
         optional_params = optional_params or {}
@@ -346,7 +346,7 @@ class OpenWeatherMapApi(BaseApi):
 
     def __init__(self, url=None, version="v1"):
         super().__init__(url, version)
-        self.url = f"{url}/{self.backend_version}/owm"
+        self.url = f"{self.backend_url}/{self.backend_version}/owm"
 
     @staticmethod
     def owm_language(lang: str):

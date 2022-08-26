@@ -94,3 +94,5 @@ cloud = SecretSeleneCloud(k)
 cloud.add_entry("test", {"secret": "secret data, selene cant read this"})
 data = cloud.get_entry("test")
 ```
+
+![](https://matrix-client.matrix.org/_matrix/media/r0/download/matrix.org/SrqxZnxzRNSqJaydKGRQCFKo)

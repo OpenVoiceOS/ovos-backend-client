@@ -28,6 +28,8 @@ class RemoteSkillSettings:
         self.settings = settings or {}
         self.meta = meta or {}
         self.local_path = join(get_xdg_config_save_path(), 'skills', self.skill_id, 'settings.json')
+        if not self.settings:
+            self.load()
 
     @property
     def selene_gid(self):
@@ -212,6 +214,16 @@ class RemoteSkillSettings:
             skill_id = fields[1]
         return RemoteSkillSettings(skill_id, skill_json, skill_meta, remote_id=remote_id,
                                    url=self.api.backend_url, version=self.api.backend_version)
+
+    def __enter__(self):
+        self.load()
+        self.download()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.generate_meta()
+        self.upload()
+        self.store()
 
 
 if __name__ == "__main__":

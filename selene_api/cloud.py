@@ -25,6 +25,9 @@ class SeleneCloud:
                         "fields": [
                             {"type": "label",
                              "label": "This is encoded data, DO NOT EDIT in browser"},
+                            {"type": "checkbox",  # special flag for local backend
+                             "name": "__shared_settings",  # not tied to devices
+                             "value": "true"},
                             {"type": "text",
                              "name": "encoded_data",
                              "value": data}
@@ -82,11 +85,11 @@ class SecretSeleneCloud(SeleneCloud):
 
 
 if __name__ == "__main__":
-    cloud = SeleneCloud()
+    cloud = SeleneCloud(url="http://0.0.0.0:6712")
     cloud.add_entry("test3", {"secret": "NOT ENCRYPTED MAN"})
     print(cloud.get_entry("test3"))
 
     k = "D8fmXEP5VqzVw2HE"
-    cloud = SecretSeleneCloud(k)
+    cloud = SecretSeleneCloud(k, url="http://0.0.0.0:6712")
     cloud.add_entry("test7", {"secret": "secret data"})
     print(cloud.get_entry("test7"))

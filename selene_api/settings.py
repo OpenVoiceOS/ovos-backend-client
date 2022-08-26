@@ -12,6 +12,8 @@ class RemoteSkillSettings:
     other on the backend, THIS CLASS IS NOT 100% SAFE in mycroft-core
 
     mycroft-core uses msm to generate weird metadata, removes author and munges github branch names into id
+    see: https://github.com/MycroftAI/mycroft-skills-manager/blob/master/msm/skill_entry.py#L145
+
     ovos-core uses the proper deterministic skill_id and can be used safely
     if running in mycroft-core you want to use remote_id=self.settings_meta.skill_gid
 
@@ -79,7 +81,7 @@ class RemoteSkillSettings:
         self.meta["sections"].append({"name": "Skill Settings", "fields": new_meta})
         # TODO auto update in backend ?
 
-    def download(self):
+    def download(self, filter_uuid=False):
         """
         download skill settings for this skill from selene
 
@@ -102,8 +104,10 @@ class RemoteSkillSettings:
 
             # where XXX has been observed to be
             # - {skill_id}  <- ovos-core
-            # - {MycroftSkill.name}
             # - {msm_name} <- mycroft-core
+            #   - {mycroft_marketplace_name} <- all default skills
+            #   - {MycroftSkill.name} <- sometimes sent to msm (very uncommon)
+            #   - {skill_id.split(".")[0]} <- fallback msm name
             # - XXX|{branch} <- append by msm (?)
             # - {whatever we feel like uploading} <- SeleneCloud utils
 
@@ -117,9 +121,13 @@ class RemoteSkillSettings:
 
                 # setting belong to another device
                 if uuid and uuid != self.api.uuid:
-                    # TODO shared_settings flag
-                    # continue
-                    pass
+                    # shared_settings flag
+                    # do not return settings for same skill from other devices
+                    # this should not be relied on, no assurance that uuid is part of gid
+                    # selene assumes settings are shared, only cares about skill versions not devices
+                    # TODO - proper integration with local backend (?)
+                    if filter_uuid:
+                        continue
 
                 if skill_id == against or sets["identifier"] == against:
                     return self.deserialize(sets)

@@ -23,6 +23,9 @@ class BaseApi:
 
     @property
     def identity(self):
+        # TODO - allow manually specifying the location
+        # this is helpful if copying over the identity to a non-mycroft device
+        # eg, selene call out proxy in local backend
         return IdentityManager.get()
 
     @property

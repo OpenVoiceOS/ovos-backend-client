@@ -1,6 +1,8 @@
 import json
 from copy import deepcopy
-
+from os.path import join, isfile, dirname
+from os import makedirs
+from ovos_utils.configuration import get_xdg_config_save_path
 from selene_api.api import DeviceApi
 
 
@@ -11,19 +13,21 @@ class RemoteSkillSettings:
 
     mycroft-core uses msm to generate weird metadata, removes author and munges github branch names into id
     ovos-core uses the proper deterministic skill_id and can be used safely
+    if running in mycroft-core you want to use remote_id=self.settings_meta.skill_gid
 
     you can define arbitrary strings as skill_id to use this as a datastore
 
     skill matching is currently done by checking "if {skill_id} in string"
     """
 
-    def __init__(self, skill_id, settings=None, meta=None, url=None, version="v1"):
+    def __init__(self, skill_id, settings=None, meta=None, url=None, version="v1", remote_id=None):
         self.api = DeviceApi(url, version)
         self.skill_id = skill_id
-        self.identifier = skill_id
+        self.identifier = remote_id or \
+                          self.selene_gid if not skill_id.startswith("@") else skill_id
         self.settings = settings or {}
         self.meta = meta or {}
-        self.local_path = ""  # TODO XDG
+        self.local_path = join(get_xdg_config_save_path(), 'skills', self.skill_id, 'settings.json')
 
     @property
     def selene_gid(self):
@@ -77,75 +81,71 @@ class RemoteSkillSettings:
         """
         download skill settings for this skill from selene
 
-        WARNING: selene backend does not use proper skill_id, if you have
+        WARNING: mycroft-core does not use proper skill_id, if you have
         skills with same name but different author settings will overwrite each
-        other on the backend, THIS METHOD IS NOT 100% SAFE in mycroft-core
+        other on the backend, THIS METHOD IS NOT SAFE in mycroft-core
 
         mycroft-core uses msm to generate weird metadata, removes author and munges github branch names into id
+        if running in mycroft-core you want to use remote_id=self.settings_meta.skill_gid
 
         ovos-core uses the proper deterministic skill_id and can be used safely
         """
         data = self.api.get_skill_settings_v1()
 
         def match_settings(x, against):
-            uuid = None
+            # this is a mess, possible keys seen by logging data
+            # - @|XXX
+            # - @{uuid}|XXX
+            # - XXX
+
+            # where XXX has been observed to be
+            # - {skill_id}  <- ovos-core
+            # - {MycroftSkill.name}
+            # - {msm_name} <- mycroft-core
+            # - XXX|{branch} <- append by msm (?)
+            # - {whatever we feel like uploading} <- SeleneCloud utils
+
             for sets in x:
                 fields = sets["identifier"].split("|")
-                if len(fields) == 3:
-                    uuid, skill_id, branch = fields
-                elif len(fields) == 2:
-                    if fields[0].startswith("@"):
-                        uuid, skill_id = fields
-                    else:
-                        skill_id, branch = fields
-                else:
-                    skill_id = sets["identifier"]
+                skill_id = fields[0]
+                uuid = None
+                if len(fields) >= 2 and fields[0].startswith("@"):
+                    uuid = fields[0].replace("@", "")
+                    skill_id = fields[1]
 
                 # setting belong to another device
                 if uuid and uuid != self.api.uuid:
-                    uuid = uuid.replace("@", "")
                     # TODO shared_settings flag
                     # continue
+                    pass
 
-                if skill_id == against:
+                if skill_id == against or sets["identifier"] == against:
                     return self.deserialize(sets)
 
-        # this is a mess, possible keys seen by logging data
-        # - {skill_id}
-        # - @|{skill_id}
-        # - @{uuid}|{skill_id}
-        # - {skill_id}|{branch}
-        # - @|{skill_id}|{branch}
-        # - @{uuid}|{skill_id}|{branch}
-        # - {skill_id_no_author}
-        # - @|{skill_id_no_author}
-        # - @{uuid}|{skill_id_no_author}
-        # - {skill_id_no_author}|{branch}
-        # - @|{skill_id_no_author}|{branch}
-        # - @{uuid}|{skill_id_no_author}|{branch}
-        # - {whatever we feel like uploading}
-        s = match_settings(data, self.skill_id) or \
-            match_settings(data, self.selene_gid) or \
-            match_settings(data, self.identifier) or \
-            match_settings(data, self.skill_id.split(".")[0])
+        s = match_settings(data, self.identifier) or \
+            match_settings(data, self.skill_id)
 
         if s:
             self.meta = s.meta
             self.settings = s.settings
             # update actual identifier from selene
-            self.identifier = s.skill_id
+            self.identifier = s.identifier
 
     def upload(self):
         data = self.serialize()
         return self.api.put_skill_settings_v1(data)
 
     def load(self):
-        # TODO load from file
-        pass
+        if not isfile(self.local_path):
+            self.settings = {}
+        else:
+            with open(self.local_path) as f:
+                self.settings = json.load(f)
 
     def store(self):
-        # TODO save to file
-        pass
+        makedirs(dirname(self.local_path), exist_ok=True)
+        with open(self.local_path, "w") as f:
+            json.dump(self.settings, f, indent=2)
 
     def get(self, key):
         return self.settings.get(key)
@@ -203,9 +203,14 @@ class RemoteSkillSettings:
 
                     skill_json[f["name"]] = val
 
-        skill_id = data.get("skill_gid") or \
+        skill_id = remote_id = data.get("skill_gid") or \
                    data.get("identifier")  # deprecated
-        return RemoteSkillSettings(skill_id, skill_json, skill_meta,
+
+        fields = skill_id.split("|")
+        skill_id = fields[0]
+        if len(fields) > 1 and fields[0].startswith("@"):
+            skill_id = fields[1]
+        return RemoteSkillSettings(skill_id, skill_json, skill_meta, remote_id=remote_id,
                                    url=self.api.backend_url, version=self.api.backend_version)
 
 

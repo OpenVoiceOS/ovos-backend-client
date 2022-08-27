@@ -6,6 +6,48 @@ from requests.exceptions import HTTPError
 
 from selene_api.identity import IdentityManager, identity_lock
 from ovos_config import Configuration
+from functools import lru_cache, wraps
+from time import monotonic_ns
+
+
+# TODO - move to ovos_utils ?
+def timed_lru_cache(
+    _func=None, *, seconds: int = 7000, maxsize: int = 128, typed: bool = False
+):
+    """ Extension over existing lru_cache with timeout
+
+    taken from: https://blog.soumendrak.com/cache-heavy-computation-functions-with-a-timeout-value
+
+    :param seconds: timeout value
+    :param maxsize: maximum size of the cache
+    :param typed: whether different keys for different types of cache keys
+    """
+
+    def wrapper_cache(f):
+        # create a function wrapped with traditional lru_cache
+        f = lru_cache(maxsize=maxsize, typed=typed)(f)
+        # convert seconds to nanoseconds to set the expiry time in nanoseconds
+        f.delta = seconds * 10 ** 9
+        f.expiration = monotonic_ns() + f.delta
+
+        @wraps(f)  # wraps is used to access the decorated function attributes
+        def wrapped_f(*args, **kwargs):
+            if monotonic_ns() >= f.expiration:
+                # if the current cache expired of the decorated function then
+                # clear cache for that function and set a new cache value with new expiration time
+                f.cache_clear()
+                f.expiration = monotonic_ns() + f.delta
+            return f(*args, **kwargs)
+
+        wrapped_f.cache_info = f.cache_info
+        wrapped_f.cache_clear = f.cache_clear
+        return wrapped_f
+
+    # To allow decorator to be used without arguments
+    if _func is None:
+        return wrapper_cache
+    else:
+        return wrapper_cache(_func)
 
 
 class BaseApi:
@@ -194,6 +236,8 @@ class DeviceApi(BaseApi):
         """
         return super().get(self.url + "/" + self.uuid + "/token/" + str(dev_cred)).json()
 
+    # cached for 30 seconds because often 1 call per skill is done in quick succession
+    @timed_lru_cache(seconds=30)
     def get_skill_settings(self):
         """Get the remote skill settings for all skills on this device."""
         return super().get(self.url + "/" + self.uuid + "/skill/settings").json()
@@ -305,6 +349,8 @@ class WolframAlphaApi(BaseApi):
         super().__init__(url, version)
         self.url = f"{self.backend_url}/{self.backend_version}/wolframAlpha"
 
+    # cached to save api calls, wolfram answer wont change often
+    @timed_lru_cache(seconds=60 * 30)
     def spoken(self, query, units="metric", lat_lon=None, optional_params=None):
         optional_params = optional_params or {}
         # default to location configured in selene
@@ -319,6 +365,7 @@ class WolframAlphaApi(BaseApi):
         data = self.get(url=url, params=params)
         return data.text
 
+    @timed_lru_cache(seconds=60 * 30)
     def full_results(self, query, units="metric", lat_lon=None, optional_params=None):
         """Wrapper for the WolframAlpha Full Results v2 API.
             https://products.wolframalpha.com/api/documentation/
@@ -379,6 +426,8 @@ class OpenWeatherMapApi(BaseApi):
             return special_cases[lang_primary]
         return "en"
 
+    # cached to save api calls, owm only updates data every 15mins or so
+    @timed_lru_cache(seconds=60 * 10)
     def get_weather(self, lat_lon=None, lang="en-us", units="metric"):
         """Issue an API call and map the return value into a weather report
 

@@ -4,6 +4,15 @@ from os.path import join, isfile, dirname
 from os import makedirs
 from ovos_utils.configuration import get_xdg_config_save_path
 from selene_api.api import DeviceApi
+from ovos_utils import camel_case_split
+import re
+
+
+def get_display_name(skill_name: str):
+    """Splits camelcase and removes leading/trailing "skill"."""
+    skill_name = skill_name.replace("_", " ").replace("-", " ")
+    skill_name = re.sub(r'(^[Ss]kill|[Ss]kill$)', '', skill_name)
+    return camel_case_split(skill_name).title().strip()
 
 
 class RemoteSkillSettings:
@@ -145,6 +154,9 @@ class RemoteSkillSettings:
         data = self.serialize()
         return self.api.put_skill_settings_v1(data)
 
+    def upload_meta(self):
+        self.api.upload_skill_metadata(self.meta)
+
     def load(self):
         if not isfile(self.local_path):
             self.settings = {}
@@ -183,7 +195,7 @@ class RemoteSkillSettings:
                     meta['sections'][idx]["fields"][idx2]["value"] = str(val)
         return {'skillMetadata': meta,
                 "skill_gid": self.identifier,
-                "display_name": self.skill_id}
+                "display_name": get_display_name(self.skill_id)}
 
     def deserialize(self, data):
         if isinstance(data, str):

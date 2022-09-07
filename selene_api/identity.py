@@ -62,6 +62,11 @@ class IdentityManager:
     OLD_IDENTITY_FILE = expanduser(f"~/.{get_xdg_base()}/identity/identity2.json")
     __identity = None
 
+    @classmethod
+    def set_identity_file(cls, identity_path):
+        cls.IDENTITY_FILE = identity_path
+        cls.load()
+
     @staticmethod
     def _load():
         if isfile(IdentityManager.OLD_IDENTITY_FILE) and \
@@ -69,7 +74,7 @@ class IdentityManager:
             os.makedirs(dirname(IdentityManager.IDENTITY_FILE), exist_ok=True)
             shutil.move(IdentityManager.OLD_IDENTITY_FILE, IdentityManager.IDENTITY_FILE)
         if isfile(IdentityManager.IDENTITY_FILE):
-            LOG.debug('Loading identity')
+            LOG.debug(f'Loading identity: {IdentityManager.IDENTITY_FILE}')
             try:
                 with open(IdentityManager.IDENTITY_FILE) as f:
                     IdentityManager.__identity = DeviceIdentity(**json.load(f))

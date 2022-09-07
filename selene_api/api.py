@@ -51,7 +51,7 @@ def timed_lru_cache(
 
 
 class BaseApi:
-    def __init__(self, url=None, version="v1"):
+    def __init__(self, url=None, version="v1", identity_file=None):
 
         if not url:
             config = Configuration()
@@ -59,15 +59,17 @@ class BaseApi:
             url = config_server.get("url")
             version = config_server.get("version") or version
 
+        self._identity_file = identity_file
         self.backend_url = url or "https://api.mycroft.ai"
         self.backend_version = version
         self.url = url
 
     @property
     def identity(self):
-        # TODO - allow manually specifying the location
-        # this is helpful if copying over the identity to a non-mycroft device
-        # eg, selene call out proxy in local backend
+        if self._identity_file:
+            # this is helpful if copying over the identity to a non-mycroft device
+            # eg, selene call out proxy in local backend
+            IdentityManager.set_identity_file(self._identity_file)
         return IdentityManager.get()
 
     @property

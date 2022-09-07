@@ -290,9 +290,9 @@ class DeviceApi(BaseApi):
             # If can't retrieve, assume not paired and not a subscriber yet
             return False
 
-    def get_subscriber_voice_url(self, voice=None):
+    def get_subscriber_voice_url(self, voice=None, arch=None):
         archs = {'x86_64': 'x86_64', 'armv7l': 'arm', 'aarch64': 'arm'}
-        arch = archs.get(os.uname()[4])
+        arch = arch or archs.get(os.uname()[4])
         if arch:
             path = '/' + self.uuid + '/voice?arch=' + arch
             return super().get(self.url + path).json().get('link')
@@ -439,6 +439,21 @@ class WolframAlphaApi(BaseApi):
         return data.text
 
     @timed_lru_cache(seconds=60 * 30)
+    def simple(self, query, units="metric", lat_lon=None, optional_params=None):
+        optional_params = optional_params or {}
+        # default to location configured in selene
+        if not lat_lon:
+            loc = DeviceApi(url=self.backend_url, version=self.backend_version).get_location()
+            lat_lon = (loc['coordinate']['latitude'], loc['coordinate']['longitude'])
+        url = f"{self.url}Simple"
+        params = {'i': query,
+                  'units': units,
+                  "geolocation": "{},{}".format(*lat_lon),
+                  **optional_params}
+        data = self.get(url=url, params=params)
+        return data.text
+
+    @timed_lru_cache(seconds=60 * 30)
     def full_results(self, query, units="metric", lat_lon=None, optional_params=None):
         """Wrapper for the WolframAlpha Full Results v2 API.
             https://products.wolframalpha.com/api/documentation/
@@ -516,6 +531,75 @@ class OpenWeatherMapApi(BaseApi):
         else:
             lat, lon = lat_lon
         response = self.get(url=self.url + "/onecall",
+                            params={
+                                "lang": self.owm_language(lang),
+                                "lat": lat,
+                                "lon": lon,
+                                "units": units})
+        return response.json()
+
+    @timed_lru_cache(seconds=60 * 10)
+    def get_current(self, lat_lon=None, lang="en-us", units="metric"):
+        """Issue an API call and map the return value into a weather report
+
+        Args:
+            units (str): metric or imperial measurement units
+            lat_lon (tuple): the geologic (latitude, longitude) of the weather location
+        """
+        # default to location configured in selene
+        if not lat_lon:
+            loc = DeviceApi(url=self.backend_url, version=self.backend_version).get_location()
+            lat = loc['coordinate']['latitude']
+            lon = loc['coordinate']['longitude']
+        else:
+            lat, lon = lat_lon
+        response = self.get(url=self.url + "/weather",
+                            params={
+                                "lang": self.owm_language(lang),
+                                "lat": lat,
+                                "lon": lon,
+                                "units": units})
+        return response.json()
+
+    @timed_lru_cache(seconds=60 * 10)
+    def get_hourly(self, lat_lon=None, lang="en-us", units="metric"):
+        """Issue an API call and map the return value into a weather report
+
+        Args:
+            units (str): metric or imperial measurement units
+            lat_lon (tuple): the geologic (latitude, longitude) of the weather location
+        """
+        # default to location configured in selene
+        if not lat_lon:
+            loc = DeviceApi(url=self.backend_url, version=self.backend_version).get_location()
+            lat = loc['coordinate']['latitude']
+            lon = loc['coordinate']['longitude']
+        else:
+            lat, lon = lat_lon
+        response = self.get(url=self.url + "/forecast",
+                            params={
+                                "lang": self.owm_language(lang),
+                                "lat": lat,
+                                "lon": lon,
+                                "units": units})
+        return response.json()
+
+    @timed_lru_cache(seconds=60 * 10)
+    def get_daily(self, lat_lon=None, lang="en-us", units="metric"):
+        """Issue an API call and map the return value into a weather report
+
+        Args:
+            units (str): metric or imperial measurement units
+            lat_lon (tuple): the geologic (latitude, longitude) of the weather location
+        """
+        # default to location configured in selene
+        if not lat_lon:
+            loc = DeviceApi(url=self.backend_url, version=self.backend_version).get_location()
+            lat = loc['coordinate']['latitude']
+            lon = loc['coordinate']['longitude']
+        else:
+            lat, lon = lat_lon
+        response = self.get(url=self.url + "/forecast/daily",
                             params={
                                 "lang": self.owm_language(lang),
                                 "lat": lat,

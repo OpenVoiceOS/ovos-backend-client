@@ -51,7 +51,7 @@ def timed_lru_cache(
 
 
 class BaseApi:
-    def __init__(self, url=None, version="v1"):
+    def __init__(self, url=None, version="v1", identity_file=None):
 
         if not url:
             config = Configuration()
@@ -59,15 +59,17 @@ class BaseApi:
             url = config_server.get("url")
             version = config_server.get("version") or version
 
+        self._identity_file = identity_file
         self.backend_url = url or "https://api.mycroft.ai"
         self.backend_version = version
         self.url = url
 
     @property
     def identity(self):
-        # TODO - allow manually specifying the location
-        # this is helpful if copying over the identity to a non-mycroft device
-        # eg, selene call out proxy in local backend
+        if self._identity_file:
+            # this is helpful if copying over the identity to a non-mycroft device
+            # eg, selene call out proxy in local backend
+            IdentityManager.set_identity_file(self._identity_file)
         return IdentityManager.get()
 
     @property
@@ -202,8 +204,8 @@ class AdminApi(BaseApi):
 
 
 class DeviceApi(BaseApi):
-    def __init__(self, url=None, version="v1"):
-        super().__init__(url, version)
+    def __init__(self, url=None, version="v1", identity_file=None):
+        super().__init__(url, version, identity_file)
         self.url = f"{self.backend_url}/{self.backend_version}/device"
 
     def get(self, url=None, *args, **kwargs):
@@ -367,8 +369,8 @@ class DeviceApi(BaseApi):
 
 
 class STTApi(BaseApi):
-    def __init__(self, url=None, version="v1"):
-        super().__init__(url, version)
+    def __init__(self, url=None, version="v1", identity_file=None):
+        super().__init__(url, version, identity_file)
         self.url = f"{self.backend_url}/{self.backend_version}/stt"
 
     @property
@@ -397,8 +399,8 @@ class STTApi(BaseApi):
 class GeolocationApi(BaseApi):
     """Web API wrapper for performing geolocation lookups."""
 
-    def __init__(self, url=None, version="v1"):
-        super().__init__(url, version)
+    def __init__(self, url=None, version="v1", identity_file=None):
+        super().__init__(url, version, identity_file)
         self.url = f"{self.backend_url}/{self.backend_version}/geolocation"
 
     def get_geolocation(self, location):
@@ -416,8 +418,8 @@ class GeolocationApi(BaseApi):
 
 class WolframAlphaApi(BaseApi):
 
-    def __init__(self, url=None, version="v1"):
-        super().__init__(url, version)
+    def __init__(self, url=None, version="v1", identity_file=None):
+        super().__init__(url, version, identity_file)
         self.url = f"{self.backend_url}/{self.backend_version}/wolframAlpha"
 
     # cached to save api calls, wolfram answer wont change often
@@ -465,8 +467,8 @@ class WolframAlphaApi(BaseApi):
 class OpenWeatherMapApi(BaseApi):
     """Use Open Weather Map's One Call API to retrieve weather information"""
 
-    def __init__(self, url=None, version="v1"):
-        super().__init__(url, version)
+    def __init__(self, url=None, version="v1", identity_file=None):
+        super().__init__(url, version, identity_file)
         self.url = f"{self.backend_url}/{self.backend_version}/owm"
 
     @staticmethod

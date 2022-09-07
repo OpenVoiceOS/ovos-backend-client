@@ -130,6 +130,77 @@ class BaseApi:
         return requests.patch(url, headers=headers, timeout=(3.05, 15), *args, **kwargs)
 
 
+class AdminApi(BaseApi):
+    def __init__(self, admin_key, url=None, version="v1", identity_file=None):
+        self.admin_key = admin_key
+        super().__init__(url, version, identity_file)
+        self.url = f"{self.backend_url}/{self.backend_version}/admin"
+
+    @property
+    def headers(self):
+        return {"Content-Type": "application/json",
+                "Device": self.identity.uuid,
+                "Authorization": f"Bearer {self.admin_key}"}
+
+    def pair(self, uuid):
+        identity = self.get(f"{self.url}/{uuid}/pair")
+        # save identity file
+        self.identity.save(identity)
+        return identity
+
+    def set_device_location(self, uuid, loc):
+        """
+        loc = {
+            "city": {
+                "code": "Lawrence",
+                "name": "Lawrence",
+                "state": {
+                    "code": "KS",
+                    "name": "Kansas",
+                    "country": {
+                        "code": "US",
+                        "name": "United States"
+                    }
+                }
+            },
+            "coordinate": {
+                "latitude": 38.971669,
+                "longitude": -95.23525
+            },
+            "timezone": {
+                "code": "America/Chicago",
+                "name": "Central Standard Time",
+                "dstOffset": 3600000,
+                "offset": -21600000
+            }
+        }
+        """
+        return self.put(f"{self.url}/{uuid}/location",
+                        json=loc)
+
+    def set_device_prefs(self, uuid, prefs):
+        """
+        prefs = {"time_format": "full",
+                "date_format": "DMY",
+                "system_unit": "metric",
+                "lang": "en-us"}
+        """
+        return self.put(f"{self.url}/{uuid}/prefs",
+                        json=prefs)
+
+    def set_device_info(self, uuid, info):
+        """
+        info = {"opt_in": True,
+                "name": "my_device",
+                "device_location": "kitchen",
+                "email": "notifications@me.com",
+                "isolated_skills": False,
+                "lang": "en-us"}
+        """
+        return self.put(f"{self.url}/{uuid}/device",
+                        json=info)
+
+
 class DeviceApi(BaseApi):
     def __init__(self, url=None, version="v1"):
         super().__init__(url, version)

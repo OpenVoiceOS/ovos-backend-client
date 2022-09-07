@@ -133,8 +133,8 @@ class BaseApi:
 
 
 class DeviceApi(BaseApi):
-    def __init__(self, url=None, version="v1"):
-        super().__init__(url, version)
+    def __init__(self, url=None, version="v1", identity_file=None):
+        super().__init__(url, version, identity_file)
         self.url = f"{self.backend_url}/{self.backend_version}/device"
 
     def get(self, url=None, *args, **kwargs):
@@ -298,8 +298,8 @@ class DeviceApi(BaseApi):
 
 
 class STTApi(BaseApi):
-    def __init__(self, url=None, version="v1"):
-        super().__init__(url, version)
+    def __init__(self, url=None, version="v1", identity_file=None):
+        super().__init__(url, version, identity_file)
         self.url = f"{self.backend_url}/{self.backend_version}/stt"
 
     @property
@@ -328,8 +328,8 @@ class STTApi(BaseApi):
 class GeolocationApi(BaseApi):
     """Web API wrapper for performing geolocation lookups."""
 
-    def __init__(self, url=None, version="v1"):
-        super().__init__(url, version)
+    def __init__(self, url=None, version="v1", identity_file=None):
+        super().__init__(url, version, identity_file)
         self.url = f"{self.backend_url}/{self.backend_version}/geolocation"
 
     def get_geolocation(self, location):
@@ -347,8 +347,8 @@ class GeolocationApi(BaseApi):
 
 class WolframAlphaApi(BaseApi):
 
-    def __init__(self, url=None, version="v1"):
-        super().__init__(url, version)
+    def __init__(self, url=None, version="v1", identity_file=None):
+        super().__init__(url, version, identity_file)
         self.url = f"{self.backend_url}/{self.backend_version}/wolframAlpha"
 
     # cached to save api calls, wolfram answer wont change often
@@ -396,8 +396,8 @@ class WolframAlphaApi(BaseApi):
 class OpenWeatherMapApi(BaseApi):
     """Use Open Weather Map's One Call API to retrieve weather information"""
 
-    def __init__(self, url=None, version="v1"):
-        super().__init__(url, version)
+    def __init__(self, url=None, version="v1", identity_file=None):
+        super().__init__(url, version, identity_file)
         self.url = f"{self.backend_url}/{self.backend_version}/owm"
 
     @staticmethod

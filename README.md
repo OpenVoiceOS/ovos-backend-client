@@ -96,3 +96,57 @@ data = cloud.get_entry("test")
 ```
 
 ![](https://matrix-client.matrix.org/_matrix/media/r0/download/matrix.org/SrqxZnxzRNSqJaydKGRQCFKo)
+
+
+## Admin Api (local backend only!)
+
+since local backend does not provide a web ui a [admin api](https://github.com/OpenVoiceOS/OVOS-local-backend#admin-api) can be used to manage your devices
+
+```python
+from selene_api.api import AdminApi
+admin = AdminApi("secret_admin_key")
+uuid = "..."  # check identity2.json in the device you want to manage
+# manually pair a device
+identity_json = admin.pair(uuid)
+# set device info
+info = {"opt_in": True,
+        "name": "my_device",
+        "device_location": "kitchen",
+        "email": "notifications@me.com",
+        "isolated_skills": False,
+        "lang": "en-us"}
+admin.set_device_info(uuid, info)
+# set device preferences
+prefs = {"time_format": "full",
+        "date_format": "DMY",
+        "system_unit": "metric",
+        "lang": "en-us"}
+admin.set_device_prefs(uuid, prefs)
+# set location data
+loc = {
+    "city": {
+        "code": "Lawrence",
+        "name": "Lawrence",
+        "state": {
+            "code": "KS",
+            "name": "Kansas",
+            "country": {
+                "code": "US",
+                "name": "United States"
+            }
+        }
+    },
+    "coordinate": {
+        "latitude": 38.971669,
+        "longitude": -95.23525
+    },
+    "timezone": {
+        "code": "America/Chicago",
+        "name": "Central Standard Time",
+        "dstOffset": 3600000,
+        "offset": -21600000
+    }
+}
+admin.set_device_location(uuid, loc)
+```
+

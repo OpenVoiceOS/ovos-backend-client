@@ -1,53 +1,14 @@
+import json
 import os
-
+from io import BytesIO, StringIO
+import time
 import requests
+from ovos_config import Configuration
+from ovos_utils import timed_lru_cache
 from ovos_utils.log import LOG
 from requests.exceptions import HTTPError
 
 from selene_api.identity import IdentityManager, identity_lock
-from ovos_config import Configuration
-from functools import lru_cache, wraps
-from time import monotonic_ns
-
-
-# TODO - move to ovos_utils ?
-def timed_lru_cache(
-    _func=None, *, seconds: int = 7000, maxsize: int = 128, typed: bool = False
-):
-    """ Extension over existing lru_cache with timeout
-
-    taken from: https://blog.soumendrak.com/cache-heavy-computation-functions-with-a-timeout-value
-
-    :param seconds: timeout value
-    :param maxsize: maximum size of the cache
-    :param typed: whether different keys for different types of cache keys
-    """
-
-    def wrapper_cache(f):
-        # create a function wrapped with traditional lru_cache
-        f = lru_cache(maxsize=maxsize, typed=typed)(f)
-        # convert seconds to nanoseconds to set the expiry time in nanoseconds
-        f.delta = seconds * 10 ** 9
-        f.expiration = monotonic_ns() + f.delta
-
-        @wraps(f)  # wraps is used to access the decorated function attributes
-        def wrapped_f(*args, **kwargs):
-            if monotonic_ns() >= f.expiration:
-                # if the current cache expired of the decorated function then
-                # clear cache for that function and set a new cache value with new expiration time
-                f.cache_clear()
-                f.expiration = monotonic_ns() + f.delta
-            return f(*args, **kwargs)
-
-        wrapped_f.cache_info = f.cache_info
-        wrapped_f.cache_clear = f.cache_clear
-        return wrapped_f
-
-    # To allow decorator to be used without arguments
-    if _func is None:
-        return wrapper_cache
-    else:
-        return wrapper_cache(_func)
 
 
 class BaseApi:
@@ -366,6 +327,29 @@ class DeviceApi(BaseApi):
             s['skill_gid'] = s.get('skill_gid', '').replace('@|', f'@{self.uuid}|')
         return self.put(url=self.url + "/" + self.uuid + "/skillJson",
                         json=to_send)
+
+    def upload_wake_word_v1(self, audio, params):
+        """ upload precise wake word V1 endpoint - DEPRECATED"""
+        url = f"{self.backend_url}/precise/upload"
+        return self.post(url, files={
+                'audio': BytesIO(audio.get_wav_data()),
+                'metadata': StringIO(json.dumps(params))
+            })
+
+    def upload_wake_word(self, audio, params):
+        """ upload precise wake word V2 endpoint """
+        url = f"{self.url}/{self.uuid}/wake-word-file"
+        request_data = dict(
+            wake_word=params['name'],
+            engine=params.get('engine_name') or params.get('engine'),
+            timestamp=params.get('timestamp') or params.get('time') or str(int(1000 * time.time())),
+            model=params['model']
+        )
+
+        return self.post(url, files={
+                'audio': BytesIO(audio.get_wav_data()),
+                'metadata': StringIO(json.dumps(request_data))
+            })
 
 
 class STTApi(BaseApi):

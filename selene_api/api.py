@@ -169,7 +169,7 @@ class DeviceApi(BaseApi):
         super().__init__(url, version, identity_file)
         self.url = f"{self.backend_url}/{self.backend_version}/device"
         config = Configuration().get("listener", {}).get("wake_word_upload", {})
-        self.precise_url_v1 = config.get("url") or f"{self.backend_url}/precise/upload"
+        self.precise_url_v1 = config.get("url") or f"https://training.mycroft.ai/precise/upload"
 
     def get(self, url=None, *args, **kwargs):
         """ Retrieve all device information from the web backend """

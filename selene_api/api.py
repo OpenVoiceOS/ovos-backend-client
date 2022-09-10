@@ -168,6 +168,8 @@ class DeviceApi(BaseApi):
     def __init__(self, url=None, version="v1", identity_file=None):
         super().__init__(url, version, identity_file)
         self.url = f"{self.backend_url}/{self.backend_version}/device"
+        config = Configuration().get("listener", {}).get("wake_word_upload", {})
+        self.precise_url_v1 = config.get("url") or f"{self.backend_url}/precise/upload"
 
     def get(self, url=None, *args, **kwargs):
         """ Retrieve all device information from the web backend """
@@ -330,8 +332,7 @@ class DeviceApi(BaseApi):
 
     def upload_wake_word_v1(self, audio, params):
         """ upload precise wake word V1 endpoint - DEPRECATED"""
-        url = f"{self.backend_url}/precise/upload"
-        return self.post(url, files={
+        return self.post(self.precise_url_v1, files={
                 'audio': BytesIO(audio.get_wav_data()),
                 'metadata': StringIO(json.dumps(params))
             })

@@ -87,12 +87,19 @@ class RemoteSkillSettings:
     def generate_meta(self):
         """ auto generate settings meta info for any valid value defined in settings but missing in meta"""
         names = []
-        for s in self.meta.get("sections", []):
+        if "sections" not in self.meta:
+            self.meta["sections"] = []
+        for s in self.meta["sections"]:
             names += [f["name"] for f in s.get("fields", [])]
         new_meta = self._settings2meta(
             {k: v for k, v in self.settings.items()
              if k not in names and not k.startswith("_")})
-        self.meta["sections"].append({"name": "Skill Settings", "fields": new_meta})
+        for idx, s in enumerate(self.meta["sections"]):
+            if s.get("name") == "Skill Settings":
+                self.meta["sections"][idx] = {"name": "Skill Settings", "fields": new_meta}
+                break
+        else:
+            self.meta["sections"].append({"name": "Skill Settings", "fields": new_meta})
         # TODO auto update in backend ?
 
     def download(self, filter_uuid=False):

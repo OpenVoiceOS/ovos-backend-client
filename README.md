@@ -1,6 +1,7 @@
 # Selene Api
 
-Unofficial python api for interaction with https://api.mycroft.ai , also compatible with [ovos-local-backend](https://github.com/OpenVoiceOS/OVOS-local-backend)
+Unofficial python api for interaction with https://api.mycroft.ai , also compatible
+with [ovos-local-backend](https://github.com/OpenVoiceOS/OVOS-local-backend)
 
 Will only work if running in a device paired with mycroft, a valid identity2.json must exist
 
@@ -12,6 +13,7 @@ a companion stt plugin is available - [ovos-stt-plugin-selene](https://github.co
 
 ```python
 from selene_api.api import GeolocationApi
+
 geo = GeolocationApi()
 data = geo.get_geolocation("Lisbon Portugal")
 # {'city': 'Lisboa',
@@ -25,11 +27,11 @@ data = geo.get_geolocation("Lisbon Portugal")
 
 ```python
 from selene_api.api import OpenWeatherMapApi
+
 owm = OpenWeatherMapApi()
 data = owm.get_weather()
 # dict - see api docs from owm onecall api
 ```
-
 
 ## Wolfram Alpha proxy
 
@@ -44,10 +46,9 @@ data = wolf.full_results("2+2")
 # dict - see api docs from wolfram
 ```
 
-
 ## Remote Settings
 
-To interact with skill settings on selene 
+To interact with skill settings on selene
 
 ```python
 from selene_api.settings import RemoteSkillSettings
@@ -89,7 +90,7 @@ an encrypted version is also supported if you dont trust selene!
 ```python
 from selene_api.cloud import SecretSeleneCloud
 
-k = "D8fmXEP5VqzVw2HE"   # you need this to read back the data
+k = "D8fmXEP5VqzVw2HE"  # you need this to read back the data
 cloud = SecretSeleneCloud(k)
 cloud.add_entry("test", {"secret": "secret data, selene cant read this"})
 data = cloud.get_entry("test")
@@ -97,17 +98,20 @@ data = cloud.get_entry("test")
 
 ![](https://matrix-client.matrix.org/_matrix/media/r0/download/matrix.org/SrqxZnxzRNSqJaydKGRQCFKo)
 
-
 ## Admin Api (local backend only!)
 
-since local backend does not provide a web ui a [admin api](https://github.com/OpenVoiceOS/OVOS-local-backend#admin-api) can be used to manage your devices
+since local backend does not provide a web ui a [admin api](https://github.com/OpenVoiceOS/OVOS-local-backend#admin-api)
+can be used to manage your devices
 
 ```python
 from selene_api.api import AdminApi
+
 admin = AdminApi("secret_admin_key")
 uuid = "..."  # check identity2.json in the device you want to manage
+
 # manually pair a device
 identity_json = admin.pair(uuid)
+
 # set device info
 info = {"opt_in": True,
         "name": "my_device",
@@ -116,12 +120,20 @@ info = {"opt_in": True,
         "isolated_skills": False,
         "lang": "en-us"}
 admin.set_device_info(uuid, info)
+
 # set device preferences
 prefs = {"time_format": "full",
-        "date_format": "DMY",
-        "system_unit": "metric",
-        "lang": "en-us"}
+         "date_format": "DMY",
+         "system_unit": "metric",
+         "lang": "en-us",
+         "wake_word": "hey_mycroft",
+         "ww_config": {"phonemes": "HH EY . M AY K R AO F T",
+                       "module": "ovos-ww-plugin-pocketsphinx",
+                       "threshold": 1e-90},
+         "tts_module": "ovos-tts-plugin-mimic",
+         "tts_config": {"voice": "ap"}}
 admin.set_device_prefs(uuid, prefs)
+
 # set location data
 loc = {
     "city": {

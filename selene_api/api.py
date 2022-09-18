@@ -146,7 +146,13 @@ class AdminApi(BaseApi):
         prefs = {"time_format": "full",
                 "date_format": "DMY",
                 "system_unit": "metric",
-                "lang": "en-us"}
+                "lang": "en-us",
+                "wake_word": "hey_mycroft",
+                "ww_config": {"phonemes": "HH EY . M AY K R AO F T",
+                             "module": "ovos-ww-plugin-pocketsphinx",
+                             "threshold": 1e-90},
+                "tts_module": "ovos-tts-plugin-mimic",
+                "tts_config": {"voice": "ap"}}
         """
         return self.put(f"{self.url}/{uuid}/prefs",
                         json=prefs)

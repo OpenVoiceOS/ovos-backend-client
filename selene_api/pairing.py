@@ -87,8 +87,10 @@ class PairingManager:
                  start_callback=None,
                  restart_callback=None,
                  end_callback=None,
-                 pairing_url="home.mycroft.ai"):
+                 pairing_url="home.mycroft.ai",
+                 api_url="api.mycroft.ai"):
         self.pairing_url = pairing_url
+        self.api_url = api_url
         self.restart_callback = restart_callback
         self.code_callback = code_callback
         self.error_callback = error_callback
@@ -98,7 +100,7 @@ class PairingManager:
 
         self.bus = bus
         self.enclosure = enclosure
-        self.api = DeviceApi()
+        self.api = DeviceApi(url=api_url)
         self.data = None
         self.time_code_expires = None
         self.uuid = str(uuid4())
@@ -108,6 +110,10 @@ class PairingManager:
         self.counter_lock = Lock()
         self.count = -1  # for repeating pairing code. -1 = not running
         self.num_failed_codes = 0
+
+    def set_api_url(self, url):
+        self.api_url = url
+        self.api = DeviceApi(url)
 
     def shutdown(self):
         with self.activator_lock:

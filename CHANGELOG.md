@@ -1,8 +1,8 @@
 # Changelog
 
-## [Unreleased](https://github.com/OpenVoiceOS/selene_api/tree/HEAD)
+## [V0.0.4a2](https://github.com/OpenVoiceOS/selene_api/tree/V0.0.4a2) (2022-09-18)
 
-[Full Changelog](https://github.com/OpenVoiceOS/selene_api/compare/V0.0.4a1...HEAD)
+[Full Changelog](https://github.com/OpenVoiceOS/selene_api/compare/V0.0.4a1...V0.0.4a2)
 
 **Implemented enhancements:**
 
@@ -14,7 +14,15 @@
 
 ## [V0.0.3](https://github.com/OpenVoiceOS/selene_api/tree/V0.0.3) (2022-09-18)
 
-[Full Changelog](https://github.com/OpenVoiceOS/selene_api/compare/0.0.2...V0.0.3)
+[Full Changelog](https://github.com/OpenVoiceOS/selene_api/compare/V0.0.1...V0.0.3)
+
+## [V0.0.1](https://github.com/OpenVoiceOS/selene_api/tree/V0.0.1) (2022-09-18)
+
+[Full Changelog](https://github.com/OpenVoiceOS/selene_api/compare/V0.0.1a4...V0.0.1)
+
+## [V0.0.1a4](https://github.com/OpenVoiceOS/selene_api/tree/V0.0.1a4) (2022-09-18)
+
+[Full Changelog](https://github.com/OpenVoiceOS/selene_api/compare/0.0.2...V0.0.1a4)
 
 **Implemented enhancements:**
 

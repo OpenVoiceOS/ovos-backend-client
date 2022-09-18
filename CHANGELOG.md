@@ -1,5 +1,17 @@
 # Changelog
 
+## [Unreleased](https://github.com/OpenVoiceOS/selene_api/tree/HEAD)
+
+[Full Changelog](https://github.com/OpenVoiceOS/selene_api/compare/V0.0.4a1...HEAD)
+
+**Implemented enhancements:**
+
+- feat/remote\_config [\#8](https://github.com/OpenVoiceOS/selene_api/pull/8) ([JarbasAl](https://github.com/JarbasAl))
+
+## [V0.0.4a1](https://github.com/OpenVoiceOS/selene_api/tree/V0.0.4a1) (2022-09-18)
+
+[Full Changelog](https://github.com/OpenVoiceOS/selene_api/compare/V0.0.3...V0.0.4a1)
+
 ## [V0.0.3](https://github.com/OpenVoiceOS/selene_api/tree/V0.0.3) (2022-09-18)
 
 [Full Changelog](https://github.com/OpenVoiceOS/selene_api/compare/V0.0.1...V0.0.3)

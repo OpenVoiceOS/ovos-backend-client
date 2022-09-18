@@ -55,7 +55,7 @@ setup(
     url='https://github.com/OpenVoiceOS/selene_api',
     license='Apache2',
     author='jarbasai',
-    install_requires=required("requirements/requirements.txt"),
+    install_requires=required("requirements.txt"),
     author_email='jarbasai@mailfence.com',
     description='unofficial api for selene backend'
 )

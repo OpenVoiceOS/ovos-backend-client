@@ -333,9 +333,9 @@ class DeviceApi(BaseApi):
     def upload_wake_word_v1(self, audio, params):
         """ upload precise wake word V1 endpoint - DEPRECATED"""
         return self.post(self.precise_url_v1, files={
-                'audio': BytesIO(audio.get_wav_data()),
-                'metadata': StringIO(json.dumps(params))
-            })
+            'audio': BytesIO(audio.get_wav_data()),
+            'metadata': StringIO(json.dumps(params))
+        })
 
     def upload_wake_word(self, audio, params):
         """ upload precise wake word V2 endpoint """
@@ -348,9 +348,9 @@ class DeviceApi(BaseApi):
         )
 
         return self.post(url, files={
-                'audio': BytesIO(audio.get_wav_data()),
-                'metadata': StringIO(json.dumps(request_data))
-            })
+            'audio': BytesIO(audio.get_wav_data()),
+            'metadata': StringIO(json.dumps(request_data))
+        })
 
 
 class STTApi(BaseApi):

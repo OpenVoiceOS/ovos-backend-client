@@ -1,0 +1,286 @@
+from ovos_utils.log import LOG
+from ovos_utils.network_utils import is_connected
+from ovos_utils.enclosure.api import EnclosureAPI
+from ovos_utils.messagebus import Message, FakeBus
+from selene_api.exceptions import BackendDown, InternetDown, HTTPError
+from selene_api.identity import IdentityManager
+from selene_api.api import DeviceApi
+import time
+from threading import Timer, Lock
+from uuid import uuid4
+
+_paired_cache = False
+
+
+def has_been_paired():
+    """ Determine if this device has ever been paired with a web backend
+
+    Returns:
+        bool: True if ever paired with backend (not factory reset)
+    """
+    # This forces a load from the identity file in case the pairing state
+    # has recently changed
+    id = IdentityManager.load()
+    return id.uuid is not None and id.uuid != ""
+
+
+def is_paired(ignore_errors=True):
+    """Determine if this device is actively paired with a web backend
+
+    Determines if the installation of Mycroft has been paired by the user
+    with the backend system, and if that pairing is still active.
+
+    Returns:
+        bool: True if paired with backend
+    """
+    global _paired_cache
+    if _paired_cache:
+        # NOTE: This assumes once paired, the unit remains paired.  So
+        # un-pairing must restart the system (or clear this value).
+        # The Mark 1 does perform a restart on RESET.
+        return True
+    api = DeviceApi()
+    _paired_cache = api.identity.uuid and check_remote_pairing(ignore_errors)
+
+    return _paired_cache
+
+
+def check_remote_pairing(ignore_errors):
+    """Check that a basic backend endpoint accepts our pairing.
+
+    Args:
+        ignore_errors (bool): True if errors should be ignored when
+
+    Returns:
+        True if pairing checks out, otherwise False.
+    """
+    try:
+        DeviceApi().get()
+        return True
+    except HTTPError as e:
+        if e.response.status_code == 401:
+            return False
+        error = e
+    except Exception as e:
+        error = e
+
+    LOG.warning('Could not get device info: {}'.format(repr(error)))
+
+    if ignore_errors:
+        return False
+
+    if isinstance(error, HTTPError):
+        if is_connected():
+            raise BackendDown from error
+        else:
+            raise InternetDown from error
+    else:
+        raise error
+
+
+class PairingManager:
+    poll_frequency = 5  # secs between checking server for activation
+
+    def __init__(self, bus=None, enclosure=None,
+                 code_callback=None,
+                 error_callback=None,
+                 success_callback=None,
+                 start_callback=None,
+                 restart_callback=None,
+                 end_callback=None,
+                 pairing_url="home.mycroft.ai",
+                 api_url="api.mycroft.ai"):
+        self.pairing_url = pairing_url
+        self.api_url = api_url
+        self.restart_callback = restart_callback
+        self.code_callback = code_callback
+        self.error_callback = error_callback
+        self.success_callback = success_callback
+        self.start_callback = start_callback
+        self.end_callback = end_callback
+
+        self.bus = bus or FakeBus()
+        self.enclosure = enclosure or EnclosureAPI(self.bus, "skill-ovos-setup.openvoiceos")
+        self.api = DeviceApi(url=api_url)
+        self.data = None
+        self.time_code_expires = None
+        self.uuid = str(uuid4())
+        self.activator = None
+        self.activator_lock = Lock()
+        self.activator_cancelled = False
+        self.counter_lock = Lock()
+        self.count = -1  # for repeating pairing code. -1 = not running
+        self.num_failed_codes = 0
+
+    def set_api_url(self, url):
+        self.api_url = url
+        self.api = DeviceApi(url)
+
+    def shutdown(self):
+        with self.activator_lock:
+            self.activator_cancelled = True
+            if self.activator:
+                self.activator.cancel()
+        if self.activator:
+            self.activator.join()
+
+    def kickoff_pairing(self):
+        self.data = None
+
+        # Kick off pairing...
+        with self.counter_lock:
+            if self.count > -1:
+                # We snuck in to this handler somehow while the pairing
+                # process is still being setup.  Ignore it.
+                LOG.debug("Ignoring call to kickoff_pairing")
+                return
+            # Not paired or already pairing, so start the process.
+            self.count = 0
+
+        LOG.debug("Kicking off pairing sequence")
+
+        try:
+            # Obtain a pairing code from the backend
+            self.data = self.api.get_code(self.uuid)
+
+            # Keep track of when the code was obtained.  The codes expire
+            # after 20 hours.
+            self.time_code_expires = time.monotonic() + 72000  # 20 hours
+        except Exception:
+            time.sleep(10)
+            # Call restart pairing here
+            # Bail out after Five minutes (5 * 6 attempts at 10 seconds
+            # interval)
+            if self.num_failed_codes < 5 * 6:
+                self.num_failed_codes += 1
+                self.abort_and_restart(quiet=True)
+            else:
+                self.end_pairing('connection.error')
+                self.num_failed_codes = 0
+            return
+
+        self.num_failed_codes = 0  # Reset counter on success
+
+        # Make sure code stays on display
+        if self.enclosure:
+            self.enclosure.deactivate_mouth_events()
+            self.enclosure.mouth_text(self.pairing_url + "      ")
+
+        if self.start_callback:
+            self.start_callback()
+
+        if not self.activator:
+            self.__create_activator()
+
+    def check_for_activate(self):
+        """Method is called every 10 seconds by Timer. Checks if user has
+        activated the device yet on home.mycroft.ai and if not repeats
+        the pairing code every 60 seconds.
+        """
+        try:
+            # Attempt to activate.  If the user has completed pairing on the,
+            # backend, this will succeed.  Otherwise it throws and HTTPError()
+
+            token = self.data.get("token")
+            login = self.api.activate(self.uuid, token)  # HTTPError() thrown
+
+            # When we get here, the pairing code has been entered on the
+            # backend and pairing can now be saved.
+            # The following is kinda ugly, but it is really critical that we
+            # get this saved successfully or we need to let the user know that
+            # they have to perform pairing all over again at the website.
+            try:
+                IdentityManager.save(login)
+            except Exception as e:
+                LOG.debug("First save attempt failed: " + repr(e))
+                time.sleep(2)
+                try:
+                    IdentityManager.save(login)
+                except Exception as e2:
+                    # Something must be seriously wrong
+                    LOG.debug("Second save attempt failed: " + repr(e2))
+                    self.abort_and_restart()
+
+            # Assume speaking is the pairing code.  Stop TTS of that.
+            self.bus.emit(Message("mycroft.audio.speech.stop"))
+
+            self.bus.emit(Message("mycroft.paired", login))
+            if self.enclosure:
+                self.enclosure.activate_mouth_events()  # clears the display
+            if self.success_callback:
+                self.success_callback()
+
+            # Un-mute.  Would have been muted during onboarding for a new
+            # unit, and not dangerous to do if pairing was started
+            # independently.
+            self.bus.emit(Message("mycroft.mic.unmute", None))
+
+        except HTTPError:
+            # speak pairing code every 60th second
+            with self.counter_lock:
+                if self.count == 0:
+                    self.handle_pairing_code()
+                self.count = (self.count + 1) % 6
+
+            if time.monotonic() > self.time_code_expires:
+                # After 20 hours the token times out.  Restart
+                # the pairing process.
+                with self.counter_lock:
+                    self.count = -1
+                self.data = None
+                if self.restart_callback:
+                    self.restart_callback()
+            else:
+                # trigger another check in 10 seconds
+                self.__create_activator()
+        except Exception as e:
+            LOG.debug("Unexpected error: " + repr(e))
+            self.abort_and_restart()
+
+    def end_pairing(self, error_dialog):
+        """Resets the pairing and don't restart it.
+
+        Arguments:
+            error_dialog: Reason for the ending of the pairing process.
+        """
+        self.bus.emit(Message("mycroft.mic.unmute", None))
+        self.data = None
+        self.count = -1
+        if self.end_callback:
+            self.end_callback(error_dialog)
+
+    def abort_and_restart(self, quiet=False):
+        # restart pairing sequence
+        LOG.debug("Aborting Pairing")
+        if self.enclosure:
+            self.enclosure.activate_mouth_events()
+        # Reset state variables for a new pairing session
+        with self.counter_lock:
+            self.count = -1
+        self.activator = None
+        self.data = None  # Clear pairing code info
+        LOG.info("Restarting pairing process")
+        if self.error_callback:
+            self.error_callback(quiet)
+        self.bus.emit(Message("mycroft.not.paired",
+                              data={'quiet': quiet}))
+
+    def __create_activator(self):
+        # Create a timer that will poll the backend in 10 seconds to see
+        # if the user has completed the device registration process
+        with self.activator_lock:
+            if not self.activator_cancelled:
+                self.activator = Timer(self.poll_frequency,
+                                       self.check_for_activate)
+                self.activator.daemon = True
+                self.activator.start()
+
+    def handle_pairing_code(self):
+        """Speak pairing code."""
+        code = self.data.get("code")
+        LOG.info("Pairing code: " + code)
+        if self.enclosure:
+            self.enclosure.deactivate_mouth_events()
+            self.enclosure.mouth_text(code)
+        if self.code_callback:
+            self.code_callback(code)

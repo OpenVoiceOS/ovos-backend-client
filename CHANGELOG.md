@@ -1,5 +1,9 @@
 # Changelog
 
+## [V0.0.1](https://github.com/OpenVoiceOS/selene_api/tree/V0.0.1) (2022-09-18)
+
+[Full Changelog](https://github.com/OpenVoiceOS/selene_api/compare/V0.0.1a4...V0.0.1)
+
 ## [V0.0.1a4](https://github.com/OpenVoiceOS/selene_api/tree/V0.0.1a4) (2022-09-18)
 
 [Full Changelog](https://github.com/OpenVoiceOS/selene_api/compare/0.0.2...V0.0.1a4)

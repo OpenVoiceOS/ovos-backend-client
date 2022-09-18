@@ -1,9 +1,10 @@
 from ovos_utils.log import LOG
 from ovos_utils.network_utils import is_connected
+from ovos_utils.enclosure.api import EnclosureAPI
+from ovos_utils.messagebus import Message, FakeBus
 from selene_api.exceptions import BackendDown, InternetDown, HTTPError
 from selene_api.identity import IdentityManager
 from selene_api.api import DeviceApi
-from mycroft_bus_client.message import Message
 import time
 from threading import Timer, Lock
 from uuid import uuid4
@@ -80,7 +81,7 @@ def check_remote_pairing(ignore_errors):
 class PairingManager:
     poll_frequency = 5  # secs between checking server for activation
 
-    def __init__(self, bus, enclosure=None,
+    def __init__(self, bus=None, enclosure=None,
                  code_callback=None,
                  error_callback=None,
                  success_callback=None,
@@ -98,8 +99,8 @@ class PairingManager:
         self.start_callback = start_callback
         self.end_callback = end_callback
 
-        self.bus = bus
-        self.enclosure = enclosure
+        self.bus = bus or FakeBus()
+        self.enclosure = enclosure or EnclosureAPI(self.bus, "skill-ovos-setup.openvoiceos")
         self.api = DeviceApi(url=api_url)
         self.data = None
         self.time_code_expires = None

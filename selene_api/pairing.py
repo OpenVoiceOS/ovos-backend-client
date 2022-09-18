@@ -24,7 +24,7 @@ def has_been_paired():
     return id.uuid is not None and id.uuid != ""
 
 
-def is_paired(ignore_errors=True):
+def is_paired(ignore_errors=True, url=None, version="v1", identity_file=None):
     """Determine if this device is actively paired with a web backend
 
     Determines if the installation of Mycroft has been paired by the user
@@ -40,12 +40,12 @@ def is_paired(ignore_errors=True):
         # The Mark 1 does perform a restart on RESET.
         return True
     api = DeviceApi()
-    _paired_cache = api.identity.uuid and check_remote_pairing(ignore_errors)
+    _paired_cache = api.identity.uuid and check_remote_pairing(ignore_errors, url, version, identity_file)
 
     return _paired_cache
 
 
-def check_remote_pairing(ignore_errors):
+def check_remote_pairing(ignore_errors, url=None, version="v1", identity_file=None):
     """Check that a basic backend endpoint accepts our pairing.
 
     Args:
@@ -55,7 +55,7 @@ def check_remote_pairing(ignore_errors):
         True if pairing checks out, otherwise False.
     """
     try:
-        DeviceApi().get()
+        DeviceApi(url, version, identity_file).get()
         return True
     except HTTPError as e:
         if e.response.status_code == 401:
@@ -64,7 +64,7 @@ def check_remote_pairing(ignore_errors):
     except Exception as e:
         error = e
 
-    LOG.warning('Could not get device info: {}'.format(repr(error)))
+    LOG.warning(f'Could not get device info: {error}')
 
     if ignore_errors:
         return False

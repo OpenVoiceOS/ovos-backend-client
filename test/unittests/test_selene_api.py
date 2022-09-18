@@ -302,7 +302,7 @@ class TestIsPaired(unittest.TestCase):
 
         self.assertEqual(num_calls, mock_identity_get.num_calls)
         url = mock_request.call_args[0][0]
-        self.assertEqual(url, 'https://api-test.mycroft.ai/v1/device/1234')
+        self.assertTrue(url.endswith('/v1/device/1234'))
 
     @patch('selene_api.identity.IdentityManager.get')
     @patch('selene_api.api.requests.get')

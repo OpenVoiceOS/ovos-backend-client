@@ -1,7 +1,7 @@
 from ovos_utils import timed_lru_cache
 from ovos_utils.log import LOG
 
-from ovos_backend_client.backends import OfflineBackend, OVOSAPIBackend, \
+from ovos_backend_client.backends import OfflineBackend, OVOSAPIBackend, NeonMQBackend, \
     SeleneBackend, PersonalBackend, BackendType, get_backend_config, API_REGISTRY
 
 
@@ -15,6 +15,8 @@ class BaseApi:
             self.backend = SeleneBackend(url, version, identity_file)
         elif backend_type == BackendType.PERSONAL:
             self.backend = PersonalBackend(url, version, identity_file)
+        elif backend_type == BackendType.NEON_MQ:
+            self.backend = NeonMQBackend(url, version, identity_file)
         elif backend_type == BackendType.OVOS_API:
             self.backend = OVOSAPIBackend(url, version, identity_file)
         else:  # if backend_type == BackendType.OFFLINE:
@@ -336,6 +338,8 @@ class GeolocationApi(BaseApi):
             self.url = f"{self.backend_url}/geolocate"
         elif self.backend_type == BackendType.OFFLINE:
             self.url = "https://nominatim.openstreetmap.org"
+        elif self.backend_type == BackendType.NEON_MQ:
+            self.url = self.backend_url
         else:
             self.url = f"{self.backend_url}/{self.backend_version}/geolocation"
 
@@ -366,6 +370,8 @@ class WolframAlphaApi(BaseApi):
             self.url = f"{self.backend_url}/wolframalpha"
         elif self.backend_type == BackendType.OFFLINE:
             self.url = "https://api.wolframalpha.com"
+        elif self.backend_type == BackendType.NEON_MQ:
+            self.url = self.backend_url
         else:
             self.url = f"{self.backend_url}/{self.backend_version}/wolframAlpha"
 
@@ -404,6 +410,8 @@ class OpenWeatherMapApi(BaseApi):
             self.url = f"{self.backend_url}/weather"
         elif self.backend_type == BackendType.OFFLINE:
             self.url = "https://api.openweathermap.org/data/2.5"
+        elif self.backend_type == BackendType.NEON_MQ:
+            self.url = self.backend_url
         else:
             self.url = f"{self.backend_url}/{self.backend_version}/owm"
 

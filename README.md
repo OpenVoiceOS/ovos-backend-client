@@ -4,27 +4,28 @@ Python client library for interaction with several supported backends under a si
 
 - Personal backend - [self hosted](https://github.com/OpenVoiceOS/OVOS-local-backend)
 - Selene - https://api.mycroft.ai
+- OpenVoiceOS API Service - https://api.openvoiceos.com
 - Offline - support for setting your own api keys and query services directly
 
 ## Backend Overview
 
-| API       | Offline | Personal | Selene | 
-|-----------|---------|----------|--------|
-| Admin     | yes [1] | yes      | no     |
-| Device    | yes [2] | yes      | yes    | 
-| Metrics   | yes [2] | yes      | yes    | 
-| Dataset   | yes [2] | yes      | yes    |
-| OAuth     | yes [2] | yes      | yes    |
-| Wolfram   | yes [3] | yes      | yes    | 
-| Geolocate | yes     | yes      | yes    | 
-| STT       | yes [3] | yes      | yes    | 
-| Weather   | yes [3] | yes      | yes    |
-| Email     | yes [3] | yes      | yes    |
-
+| API       | Offline | Personal | Selene | OVOS    | 
+|-----------|---------|----------|--------|---------|
+| Admin     | yes [1] | yes      | no     | no      | 
+| Device    | yes [2] | yes      | yes    | yes [4] | 
+| Metrics   | yes [2] | yes      | yes    | yes [4] | 
+| Dataset   | yes [2] | yes      | yes    | yes [4] | 
+| OAuth     | yes [2] | yes      | yes    | yes [4] |
+| Wolfram   | yes [3] | yes      | yes    | yes     | 
+| Geolocate | yes     | yes      | yes    | yes     |
+| STT       | yes [3] | yes      | yes    | yes     | 
+| Weather   | yes [3] | yes      | yes    | yes     | 
+| Email     | yes [3] | yes      | yes    | yes     |
 
     [1] will update user level mycroft.conf
     [2] shared json database with personal backend for UI compat
     [3] needs additional configuration (eg. credentials)
+    [4] uses offline_backend functionality
 
 
 ## STT

@@ -16,6 +16,7 @@ class BackendType(str, Enum):
     OFFLINE = "offline"
     PERSONAL = "personal"
     SELENE = "selene"
+    OVOS_API = "ovos_api"
 
 
 class AbstractBackend:

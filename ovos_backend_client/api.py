@@ -1,7 +1,7 @@
 from ovos_utils import timed_lru_cache
 from ovos_utils.log import LOG
 
-from ovos_backend_client.backends import OfflineBackend, \
+from ovos_backend_client.backends import OfflineBackend, OVOSAPIBackend, \
     SeleneBackend, PersonalBackend, BackendType, get_backend_config, API_REGISTRY
 
 
@@ -15,6 +15,8 @@ class BaseApi:
             self.backend = SeleneBackend(url, version, identity_file)
         elif backend_type == BackendType.PERSONAL:
             self.backend = PersonalBackend(url, version, identity_file)
+        elif backend_type == BackendType.OVOS_API:
+            self.backend = OVOSAPIBackend(url, version, identity_file)
         else:  # if backend_type == BackendType.OFFLINE:
             self.backend = OfflineBackend(url, version, identity_file)
         self.validate_backend_type()
@@ -330,7 +332,9 @@ class GeolocationApi(BaseApi):
     def validate_backend_type(self):
         if not API_REGISTRY[self.backend_type]["geolocate"]:
             raise ValueError(f"{self.__class__.__name__} not available for {self.backend_type}")
-        if self.backend_type == BackendType.OFFLINE:
+        if self.backend_type == BackendType.OVOS_API:
+            self.url = f"{self.backend_url}/geolocate"
+        elif self.backend_type == BackendType.OFFLINE:
             self.url = "https://nominatim.openstreetmap.org"
         else:
             self.url = f"{self.backend_url}/{self.backend_version}/geolocation"
@@ -358,7 +362,9 @@ class WolframAlphaApi(BaseApi):
         if self.backend_type == BackendType.OFFLINE and not self.credentials["wolfram"]:
             raise ValueError("WolframAlpha api key not set!")
 
-        if self.backend_type == BackendType.OFFLINE:
+        if self.backend_type == BackendType.OVOS_API:
+            self.url = f"{self.backend_url}/wolframalpha"
+        elif self.backend_type == BackendType.OFFLINE:
             self.url = "https://api.wolframalpha.com"
         else:
             self.url = f"{self.backend_url}/{self.backend_version}/wolframAlpha"
@@ -394,8 +400,9 @@ class OpenWeatherMapApi(BaseApi):
             raise ValueError(f"{self.__class__.__name__} not available for {self.backend_type}")
         if self.backend_type == BackendType.OFFLINE and not self.backend.credentials["owm"]:
             raise ValueError("OWM api key not set!")
-
-        if self.backend_type == BackendType.OFFLINE:
+        if self.backend_type == BackendType.OVOS_API:
+            self.url = f"{self.backend_url}/weather"
+        elif self.backend_type == BackendType.OFFLINE:
             self.url = "https://api.openweathermap.org/data/2.5"
         else:
             self.url = f"{self.backend_url}/{self.backend_version}/owm"

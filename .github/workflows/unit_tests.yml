@@ -6,7 +6,7 @@ on:
     branches:
       - dev
     paths-ignore:
-      - 'selene_api/version.py'
+      - 'ovos_backend_client/version.py'
       - 'requirements/**'
       - 'examples/**'
       - '.github/**'
@@ -20,7 +20,7 @@ on:
     branches:
       - master
     paths-ignore:
-      - 'selene_api/version.py'
+      - 'ovos_backend_client/version.py'
       - 'requirements/**'
       - 'examples/**'
       - '.github/**'
@@ -52,13 +52,13 @@ jobs:
           python -m pip install build wheel
       - name: Install core repo
         run: |
-          pip install .
+          pip install .[offline]
       - name: Install test dependencies
         run: |
           pip install pytest pytest-timeout pytest-cov
       - name: Run unittests
         run: |
-          pytest --cov=selene_api --cov-report xml test/unittests
+          pytest --cov=ovos_backend_client --cov-report xml test/unittests
           # NOTE: additional pytest invocations should also add the --cov-append flag
           #       or they will overwrite previous invocations' coverage reports
           #       (for an example, see OVOS Skill Manager's workflow)

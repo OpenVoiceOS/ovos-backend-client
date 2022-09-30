@@ -48,7 +48,7 @@ class DeviceIdentity:
         self.uuid = kwargs.get("uuid", "")
         self.access = kwargs.get("access", "")
         self.refresh = kwargs.get("refresh", "")
-        self.expires_at = kwargs.get("expires_at", 0)
+        self.expires_at = kwargs.get("expires_at", -1)
 
     def is_expired(self):
         return self.refresh and 0 < self.expires_at <= time.time()
@@ -117,11 +117,14 @@ class IdentityManager:
     def _update(login=None):
         LOG.debug('Updating identity')
         login = login or {}
-        expiration = login.get("expiration", 0)
+        expiration = login.get("expiration", -1)
         IdentityManager.__identity.uuid = login.get("uuid", "")
         IdentityManager.__identity.access = login.get("accessToken", "")
         IdentityManager.__identity.refresh = login.get("refreshToken", "")
-        IdentityManager.__identity.expires_at = time.time() + expiration
+        if expiration > 0:
+            IdentityManager.__identity.expires_at = time.time() + expiration
+        else:
+            IdentityManager.__identity.expires_at = -1
 
     @staticmethod
     def update(login=None, lock=True):

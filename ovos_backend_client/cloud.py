@@ -3,7 +3,7 @@ import json
 
 from ovos_utils.security import encrypt, decrypt
 
-from selene_api.api import DeviceApi
+from ovos_backend_client.api import DeviceApi
 
 
 class SeleneCloud:

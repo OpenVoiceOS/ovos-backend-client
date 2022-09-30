@@ -2,7 +2,7 @@ import fileinput
 from os.path import join, dirname
 
 
-version_file = join(dirname(dirname(__file__)), "selene_api", "version.py")
+version_file = join(dirname(dirname(__file__)), "ovos_backend_client", "version.py")
 
 alpha_var_name = "VERSION_ALPHA"
 

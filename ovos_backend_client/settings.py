@@ -6,11 +6,11 @@ from os import makedirs
 from os.path import dirname, expanduser, join, isfile, isdir
 
 from json_database import JsonStorage
-
+from ovos_config import Configuration
 from ovos_utils import camel_case_split
 from ovos_utils.configuration import get_xdg_config_save_path, get_xdg_data_save_path, get_xdg_data_dirs
-from ovos_config import Configuration
-from selene_api.api import DeviceApi
+
+from ovos_backend_client.api import DeviceApi
 
 
 def get_display_name(skill_name: str):

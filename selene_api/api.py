@@ -7,8 +7,27 @@ from ovos_config import Configuration
 from ovos_utils import timed_lru_cache
 from ovos_utils.log import LOG
 from requests.exceptions import HTTPError
-
+from enum import Enum
 from selene_api.identity import IdentityManager, identity_lock
+
+
+class BackendType(str, Enum):
+    OFFLINE = "offline"
+    PERSONAL = "personal"
+    SELENE = "selene"
+
+
+def get_backend_type(conf=None):
+    conf = conf or Configuration()
+    if "server" in conf:
+        conf = conf["server"]
+    if conf.get("disabled"):
+        return BackendType.OFFLINE
+    if "backend_type" in conf:
+        return conf["backend_type"]
+    if conf.get("url", "") != "https://api.mycroft.ai":
+        return BackendType.PERSONAL
+    return BackendType.SELENE
 
 
 class BaseApi:

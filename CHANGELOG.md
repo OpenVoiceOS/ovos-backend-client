@@ -1,5 +1,17 @@
 # Changelog
 
+## [Unreleased](https://github.com/OpenVoiceOS/selene_api/tree/HEAD)
+
+[Full Changelog](https://github.com/OpenVoiceOS/selene_api/compare/V0.0.4a3...HEAD)
+
+**Implemented enhancements:**
+
+- add backend\_type info to mycroft.conf [\#9](https://github.com/OpenVoiceOS/selene_api/pull/9) ([JarbasAl](https://github.com/JarbasAl))
+
+## [V0.0.4a3](https://github.com/OpenVoiceOS/selene_api/tree/V0.0.4a3) (2022-09-18)
+
+[Full Changelog](https://github.com/OpenVoiceOS/selene_api/compare/V0.0.4a2...V0.0.4a3)
+
 ## [V0.0.4a2](https://github.com/OpenVoiceOS/selene_api/tree/V0.0.4a2) (2022-09-18)
 
 [Full Changelog](https://github.com/OpenVoiceOS/selene_api/compare/V0.0.4a1...V0.0.4a2)

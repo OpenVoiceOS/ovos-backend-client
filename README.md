@@ -1,4 +1,4 @@
-# OVOS Backend Api
+# OVOS Backend Client
 
 Python client library for interaction with several supported backends under a single unified interface
 

@@ -1,57 +1,65 @@
 # Changelog
 
-## [Unreleased](https://github.com/OpenVoiceOS/selene_api/tree/HEAD)
+## [Unreleased](https://github.com/OpenVoiceOS/ovos-backend-client/tree/HEAD)
 
-[Full Changelog](https://github.com/OpenVoiceOS/selene_api/compare/V0.0.4a3...HEAD)
-
-**Implemented enhancements:**
-
-- add backend\_type info to mycroft.conf [\#9](https://github.com/OpenVoiceOS/selene_api/pull/9) ([JarbasAl](https://github.com/JarbasAl))
-
-## [V0.0.4a3](https://github.com/OpenVoiceOS/selene_api/tree/V0.0.4a3) (2022-09-18)
-
-[Full Changelog](https://github.com/OpenVoiceOS/selene_api/compare/V0.0.4a2...V0.0.4a3)
-
-## [V0.0.4a2](https://github.com/OpenVoiceOS/selene_api/tree/V0.0.4a2) (2022-09-18)
-
-[Full Changelog](https://github.com/OpenVoiceOS/selene_api/compare/V0.0.4a1...V0.0.4a2)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.4a4...HEAD)
 
 **Implemented enhancements:**
 
-- feat/remote\_config [\#8](https://github.com/OpenVoiceOS/selene_api/pull/8) ([JarbasAl](https://github.com/JarbasAl))
+- Feat/multiple backends + rename [\#10](https://github.com/OpenVoiceOS/ovos-backend-client/pull/10) ([JarbasAl](https://github.com/JarbasAl))
 
-## [V0.0.4a1](https://github.com/OpenVoiceOS/selene_api/tree/V0.0.4a1) (2022-09-18)
+## [V0.0.4a4](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.0.4a4) (2022-09-30)
 
-[Full Changelog](https://github.com/OpenVoiceOS/selene_api/compare/V0.0.3...V0.0.4a1)
-
-## [V0.0.3](https://github.com/OpenVoiceOS/selene_api/tree/V0.0.3) (2022-09-18)
-
-[Full Changelog](https://github.com/OpenVoiceOS/selene_api/compare/V0.0.1...V0.0.3)
-
-## [V0.0.1](https://github.com/OpenVoiceOS/selene_api/tree/V0.0.1) (2022-09-18)
-
-[Full Changelog](https://github.com/OpenVoiceOS/selene_api/compare/V0.0.1a4...V0.0.1)
-
-## [V0.0.1a4](https://github.com/OpenVoiceOS/selene_api/tree/V0.0.1a4) (2022-09-18)
-
-[Full Changelog](https://github.com/OpenVoiceOS/selene_api/compare/0.0.2...V0.0.1a4)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.4a3...V0.0.4a4)
 
 **Implemented enhancements:**
 
-- feat/automations [\#7](https://github.com/OpenVoiceOS/selene_api/pull/7) ([JarbasAl](https://github.com/JarbasAl))
-- Feat/pairing manager [\#6](https://github.com/OpenVoiceOS/selene_api/pull/6) ([JarbasAl](https://github.com/JarbasAl))
-- feat/pairing\_manager [\#5](https://github.com/OpenVoiceOS/selene_api/pull/5) ([JarbasAl](https://github.com/JarbasAl))
+- add backend\_type info to mycroft.conf [\#9](https://github.com/OpenVoiceOS/ovos-backend-client/pull/9) ([JarbasAl](https://github.com/JarbasAl))
 
-## [0.0.2](https://github.com/OpenVoiceOS/selene_api/tree/0.0.2) (2022-09-10)
+## [V0.0.4a3](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.0.4a3) (2022-09-18)
 
-[Full Changelog](https://github.com/OpenVoiceOS/selene_api/compare/a4dbde9e07343bbff10ce7072e89d0e56c36ce78...0.0.2)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.4a2...V0.0.4a3)
+
+## [V0.0.4a2](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.0.4a2) (2022-09-18)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.4a1...V0.0.4a2)
 
 **Implemented enhancements:**
 
-- feat/precise\_upload\_v2 [\#4](https://github.com/OpenVoiceOS/selene_api/pull/4) ([JarbasAl](https://github.com/JarbasAl))
-- missing wolfram/owm endpoints [\#3](https://github.com/OpenVoiceOS/selene_api/pull/3) ([JarbasAl](https://github.com/JarbasAl))
-- feat/admin\_api [\#2](https://github.com/OpenVoiceOS/selene_api/pull/2) ([JarbasAl](https://github.com/JarbasAl))
-- Feat/set identity path [\#1](https://github.com/OpenVoiceOS/selene_api/pull/1) ([JarbasAl](https://github.com/JarbasAl))
+- feat/remote\_config [\#8](https://github.com/OpenVoiceOS/ovos-backend-client/pull/8) ([JarbasAl](https://github.com/JarbasAl))
+
+## [V0.0.4a1](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.0.4a1) (2022-09-18)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.3...V0.0.4a1)
+
+## [V0.0.3](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.0.3) (2022-09-18)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.1...V0.0.3)
+
+## [V0.0.1](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.0.1) (2022-09-18)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.1a4...V0.0.1)
+
+## [V0.0.1a4](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.0.1a4) (2022-09-18)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/0.0.2...V0.0.1a4)
+
+**Implemented enhancements:**
+
+- feat/automations [\#7](https://github.com/OpenVoiceOS/ovos-backend-client/pull/7) ([JarbasAl](https://github.com/JarbasAl))
+- Feat/pairing manager [\#6](https://github.com/OpenVoiceOS/ovos-backend-client/pull/6) ([JarbasAl](https://github.com/JarbasAl))
+- feat/pairing\_manager [\#5](https://github.com/OpenVoiceOS/ovos-backend-client/pull/5) ([JarbasAl](https://github.com/JarbasAl))
+
+## [0.0.2](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.0.2) (2022-09-10)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/a4dbde9e07343bbff10ce7072e89d0e56c36ce78...0.0.2)
+
+**Implemented enhancements:**
+
+- feat/precise\_upload\_v2 [\#4](https://github.com/OpenVoiceOS/ovos-backend-client/pull/4) ([JarbasAl](https://github.com/JarbasAl))
+- missing wolfram/owm endpoints [\#3](https://github.com/OpenVoiceOS/ovos-backend-client/pull/3) ([JarbasAl](https://github.com/JarbasAl))
+- feat/admin\_api [\#2](https://github.com/OpenVoiceOS/ovos-backend-client/pull/2) ([JarbasAl](https://github.com/JarbasAl))
+- Feat/set identity path [\#1](https://github.com/OpenVoiceOS/ovos-backend-client/pull/1) ([JarbasAl](https://github.com/JarbasAl))
 
 
 

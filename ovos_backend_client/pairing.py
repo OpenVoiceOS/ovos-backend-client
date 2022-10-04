@@ -35,16 +35,15 @@ def requires_backend(f):
 
 
 def has_been_paired():
-    """ Determine if this device has ever been paired with a web backend
+    """ Determine if this device has ever been paired with a backend
 
     Returns:
         bool: True if ever paired with backend (not factory reset)
     """
-    if is_backend_disabled():
-        return True
     # This forces a load from the identity file in case the pairing state
     # has recently changed
     id = IdentityManager.load()
+    # NOTE: even offline backend creates a dummy identity file
     return id.uuid is not None and id.uuid != ""
 
 
@@ -58,14 +57,16 @@ def is_paired(ignore_errors=True, url=None, version="v1", identity_file=None):
         bool: True if paired with backend
     """
     global _paired_cache
-    if _paired_cache or is_backend_disabled():
+    if _paired_cache:
         # NOTE: This assumes once paired, the unit remains paired.  So
         # un-pairing must restart the system (or clear this value).
         # The Mark 1 does perform a restart on RESET.
         return True
-    api = DeviceApi()
-    _paired_cache = api.identity.uuid and check_remote_pairing(ignore_errors, url, version, identity_file)
-
+    if not is_backend_disabled(): # check if pairing is valid
+        api = DeviceApi(url=url, version=version, identity_file=identity_file)
+        _paired_cache = api.identity.uuid and check_remote_pairing(ignore_errors,
+                                                                   url=url, version=version,
+                                                                   identity_file=identity_file)
     return _paired_cache
 
 
@@ -79,7 +80,7 @@ def check_remote_pairing(ignore_errors, url=None, version="v1", identity_file=No
         True if pairing checks out, otherwise False.
     """
     try:
-        DeviceApi(url, version, identity_file).get()
+        DeviceApi(url=url, version=version, identity_file=identity_file).get()
         return True
     except HTTPError as e:
         if e.response.status_code == 401:

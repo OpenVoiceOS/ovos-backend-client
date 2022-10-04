@@ -1,0 +1,3 @@
+timezonefinder
+ovos_plugin_manager
+SpeechRecognition~=3.8

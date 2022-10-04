@@ -1,19 +1,41 @@
-from ovos_utils.log import LOG
-from ovos_utils.network_utils import is_connected
-from ovos_utils.enclosure.api import EnclosureAPI
-from ovos_utils.messagebus import Message, FakeBus
-from selene_api.exceptions import BackendDown, InternetDown, HTTPError
-from selene_api.identity import IdentityManager
-from selene_api.api import DeviceApi
 import time
 from threading import Timer, Lock
 from uuid import uuid4
+from functools import wraps
+
+from ovos_utils.enclosure.api import EnclosureAPI
+from ovos_utils.log import LOG
+from ovos_utils.messagebus import Message, FakeBus
+from ovos_utils.network_utils import is_connected
+from ovos_config.config import Configuration
+
+from ovos_backend_client.api import DeviceApi
+from ovos_backend_client.exceptions import BackendDown, InternetDown, HTTPError
+from ovos_backend_client.identity import IdentityManager
 
 _paired_cache = False
 
 
+def is_backend_disabled():
+    config = Configuration()
+    if not config.get("server"):
+        # missing server block implies disabling backend
+        return True
+    return config["server"].get("disabled") or False
+
+
+def requires_backend(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not is_backend_disabled():
+            return f(*args, **kwargs)
+        return {}
+
+    return decorated
+
+
 def has_been_paired():
-    """ Determine if this device has ever been paired with a web backend
+    """ Determine if this device has ever been paired with a backend
 
     Returns:
         bool: True if ever paired with backend (not factory reset)
@@ -21,6 +43,7 @@ def has_been_paired():
     # This forces a load from the identity file in case the pairing state
     # has recently changed
     id = IdentityManager.load()
+    # NOTE: even offline backend creates a dummy identity file
     return id.uuid is not None and id.uuid != ""
 
 
@@ -39,9 +62,11 @@ def is_paired(ignore_errors=True, url=None, version="v1", identity_file=None):
         # un-pairing must restart the system (or clear this value).
         # The Mark 1 does perform a restart on RESET.
         return True
-    api = DeviceApi()
-    _paired_cache = api.identity.uuid and check_remote_pairing(ignore_errors, url, version, identity_file)
-
+    if not is_backend_disabled(): # check if pairing is valid
+        api = DeviceApi(url=url, version=version, identity_file=identity_file)
+        _paired_cache = api.identity.uuid and check_remote_pairing(ignore_errors,
+                                                                   url=url, version=version,
+                                                                   identity_file=identity_file)
     return _paired_cache
 
 
@@ -55,7 +80,7 @@ def check_remote_pairing(ignore_errors, url=None, version="v1", identity_file=No
         True if pairing checks out, otherwise False.
     """
     try:
-        DeviceApi(url, version, identity_file).get()
+        DeviceApi(url=url, version=version, identity_file=identity_file).get()
         return True
     except HTTPError as e:
         if e.response.status_code == 401:

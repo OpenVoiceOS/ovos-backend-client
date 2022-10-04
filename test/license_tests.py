@@ -22,7 +22,7 @@ allow_unknown = False
 allow_unlicense = True
 allow_ambiguous = False
 
-pkg_name = "selene_api"
+pkg_name = "ovos_backend_client"
 
 
 class TestLicensing(unittest.TestCase):

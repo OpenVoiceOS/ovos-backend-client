@@ -1,10 +1,11 @@
 import re
+from pprint import pformat
 
 from ovos_utils import camel_case_split
 from ovos_utils.log import LOG
-from selene_api.pairing import is_paired
-from selene_api.api import DeviceApi
-from pprint import pformat
+
+from ovos_backend_client.api import DeviceApi
+from ovos_backend_client.pairing import is_paired
 
 
 def _is_remote_list(values):

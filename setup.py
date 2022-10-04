@@ -7,7 +7,7 @@ BASEDIR = os.path.abspath(os.path.dirname(__file__))
 def get_version():
     """ Find the version of the package"""
     version = None
-    version_file = os.path.join(BASEDIR, 'selene_api', 'version.py')
+    version_file = os.path.join(BASEDIR, 'ovos_backend_client', 'version.py')
     major, minor, build, alpha = (None, None, None, None)
     with open(version_file) as f:
         for line in f:
@@ -49,13 +49,16 @@ def required(requirements_file):
 
 
 setup(
-    name='selene_api',
+    name='ovos-backend-client',
     version=get_version(),
-    packages=['selene_api'],
-    url='https://github.com/OpenVoiceOS/selene_api',
+    packages=['ovos_backend_client', 'ovos_backend_client.backends'],
+    url='https://github.com/OpenVoiceOS/ovos-backend-client',
     license='Apache2',
     author='jarbasai',
-    install_requires=required("requirements.txt"),
+    install_requires=required("requirements/requirements.txt"),
+    extras_require={
+        'offline': required('requirements/offline.txt')
+    },
     author_email='jarbasai@mailfence.com',
-    description='unofficial api for selene backend'
+    description='api client for supported ovos-core backends'
 )

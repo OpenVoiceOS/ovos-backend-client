@@ -7,7 +7,7 @@ on:
     branches:
       - dev
     paths-ignore:
-      - 'selene_api/version.py'
+      - 'ovos_backend_client/version.py'
       - 'test/**'
       - 'examples/**'
       - '.github/**'

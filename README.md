@@ -1,9 +1,31 @@
-# Selene Api
+# OVOS Backend Api
 
-Unofficial python api for interaction with https://api.mycroft.ai , also compatible
-with [ovos-local-backend](https://github.com/OpenVoiceOS/OVOS-local-backend)
+Python client library for interaction with several supported backends under a single unified interface
 
-Will only work if running in a device paired with mycroft, a valid identity2.json must exist
+- Personal backend - [self hosted](https://github.com/OpenVoiceOS/OVOS-local-backend)
+- Selene - https://api.mycroft.ai
+- Offline - support for setting your own api keys and query services directly
+
+## Backend Overview
+
+| API       | Offline | Personal | Selene | 
+|-----------|---------|----------|--------|
+| Admin     | yes [1] | yes      | no     |
+| Device    | yes [2] | yes      | yes    | 
+| Metrics   | yes [2] | yes      | yes    | 
+| Dataset   | yes [2] | yes      | yes    |
+| OAuth     | yes [2] | yes      | yes    |
+| Wolfram   | yes [3] | yes      | yes    | 
+| Geolocate | yes     | yes      | yes    | 
+| STT       | yes [3] | yes      | yes    | 
+| Weather   | yes [3] | yes      | yes    |
+| Email     | yes [3] | yes      | yes    |
+
+
+    [1] will update user level mycroft.conf
+    [2] shared json database with personal backend for UI compat
+    [3] needs additional configuration (eg. credentials)
+
 
 ## STT
 
@@ -12,7 +34,7 @@ a companion stt plugin is available - [ovos-stt-plugin-selene](https://github.co
 ## Geolocation
 
 ```python
-from selene_api.api import GeolocationApi
+from ovos_backend_client.api import GeolocationApi
 
 geo = GeolocationApi()
 data = geo.get_geolocation("Lisbon Portugal")
@@ -26,7 +48,7 @@ data = geo.get_geolocation("Lisbon Portugal")
 ## OpenWeatherMap Proxy
 
 ```python
-from selene_api.api import OpenWeatherMapApi
+from ovos_backend_client.api import OpenWeatherMapApi
 
 owm = OpenWeatherMapApi()
 data = owm.get_weather()
@@ -36,7 +58,7 @@ data = owm.get_weather()
 ## Wolfram Alpha proxy
 
 ```python
-from selene_api.api import WolframAlphaApi
+from ovos_backend_client.api import WolframAlphaApi
 
 wolf = WolframAlphaApi()
 answer = wolf.spoken("what is the speed of light")
@@ -51,7 +73,7 @@ data = wolf.full_results("2+2")
 To interact with skill settings on selene
 
 ```python
-from selene_api.settings import RemoteSkillSettings
+from ovos_backend_client.settings import RemoteSkillSettings
 
 # in ovos-core skill_id is deterministic and safe
 s = RemoteSkillSettings("skill.author")
@@ -78,7 +100,7 @@ s.upload()
 by hijacking skill settings we allows storing arbitrary data in selene and use it across devices and skills
 
 ```python
-from selene_api.cloud import SeleneCloud
+from ovos_backend_client.cloud import SeleneCloud
 
 cloud = SeleneCloud()
 cloud.add_entry("test", {"secret": "NOT ENCRYPTED MAN"})
@@ -88,7 +110,7 @@ data = cloud.get_entry("test")
 an encrypted version is also supported if you dont trust selene!
 
 ```python
-from selene_api.cloud import SecretSeleneCloud
+from ovos_backend_client.cloud import SecretSeleneCloud
 
 k = "D8fmXEP5VqzVw2HE"  # you need this to read back the data
 cloud = SecretSeleneCloud(k)
@@ -104,7 +126,7 @@ since local backend does not provide a web ui a [admin api](https://github.com/O
 can be used to manage your devices
 
 ```python
-from selene_api.api import AdminApi
+from ovos_backend_client.api import AdminApi
 
 admin = AdminApi("secret_admin_key")
 uuid = "..."  # check identity2.json in the device you want to manage

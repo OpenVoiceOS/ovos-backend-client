@@ -62,11 +62,12 @@ def is_paired(ignore_errors=True, url=None, version="v1", identity_file=None):
         # un-pairing must restart the system (or clear this value).
         # The Mark 1 does perform a restart on RESET.
         return True
-    if not is_backend_disabled(): # check if pairing is valid
-        api = DeviceApi(url=url, version=version, identity_file=identity_file)
-        _paired_cache = api.identity.uuid and check_remote_pairing(ignore_errors,
-                                                                   url=url, version=version,
-                                                                   identity_file=identity_file)
+
+    # check if pairing is valid
+    api = DeviceApi(url=url, version=version, identity_file=identity_file)
+    _paired_cache = api.identity.uuid and check_remote_pairing(ignore_errors,
+                                                               url=url, version=version,
+                                                               identity_file=identity_file)
     return _paired_cache
 
 

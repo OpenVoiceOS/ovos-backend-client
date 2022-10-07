@@ -57,7 +57,7 @@ def is_paired(ignore_errors=True, url=None, version="v1", identity_file=None):
         bool: True if paired with backend
     """
     global _paired_cache
-    if _paired_cache:
+    if _paired_cache or is_backend_disabled():
         # NOTE: This assumes once paired, the unit remains paired.  So
         # un-pairing must restart the system (or clear this value).
         # The Mark 1 does perform a restart on RESET.

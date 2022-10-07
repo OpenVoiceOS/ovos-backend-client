@@ -13,8 +13,6 @@ from ovos_backend_client.api import DeviceApi
 from ovos_backend_client.exceptions import BackendDown, InternetDown, HTTPError
 from ovos_backend_client.identity import IdentityManager
 
-_paired_cache = False
-
 
 def is_backend_disabled():
     config = Configuration()
@@ -42,9 +40,9 @@ def has_been_paired():
     """
     # This forces a load from the identity file in case the pairing state
     # has recently changed
-    id = IdentityManager.load()
+    ident = IdentityManager.load()
     # NOTE: even offline backend creates a dummy identity file
-    return id.uuid is not None and id.uuid != ""
+    return ident.uuid is not None and ident.uuid != ""
 
 
 def is_paired(ignore_errors=True, url=None, version="v1", identity_file=None):
@@ -56,19 +54,14 @@ def is_paired(ignore_errors=True, url=None, version="v1", identity_file=None):
     Returns:
         bool: True if paired with backend
     """
-    global _paired_cache
-    if _paired_cache or is_backend_disabled():
-        # NOTE: This assumes once paired, the unit remains paired.  So
-        # un-pairing must restart the system (or clear this value).
-        # The Mark 1 does perform a restart on RESET.
+    if is_backend_disabled():
         return True
 
     # check if pairing is valid
     api = DeviceApi(url=url, version=version, identity_file=identity_file)
-    _paired_cache = api.identity.uuid and check_remote_pairing(ignore_errors,
+    return api.identity.uuid and check_remote_pairing(ignore_errors,
                                                                url=url, version=version,
                                                                identity_file=identity_file)
-    return _paired_cache
 
 
 def check_remote_pairing(ignore_errors, url=None, version="v1", identity_file=None):

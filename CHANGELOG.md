@@ -2,7 +2,15 @@
 
 ## [Unreleased](https://github.com/OpenVoiceOS/ovos-backend-client/tree/HEAD)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.5a3...HEAD)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.5a4...HEAD)
+
+**Implemented enhancements:**
+
+- make offline DeviceApi slightly more useful [\#14](https://github.com/OpenVoiceOS/ovos-backend-client/pull/14) ([JarbasAl](https://github.com/JarbasAl))
+
+## [V0.0.5a4](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.0.5a4) (2022-10-09)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.5a3...V0.0.5a4)
 
 **Fixed bugs:**
 

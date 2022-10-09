@@ -1,13 +1,13 @@
 import time
+from functools import wraps
 from threading import Timer, Lock
 from uuid import uuid4
-from functools import wraps
 
+from ovos_config.config import Configuration
 from ovos_utils.enclosure.api import EnclosureAPI
 from ovos_utils.log import LOG
 from ovos_utils.messagebus import Message, FakeBus
 from ovos_utils.network_utils import is_connected
-from ovos_config.config import Configuration
 
 from ovos_backend_client.api import DeviceApi
 from ovos_backend_client.exceptions import BackendDown, InternetDown, HTTPError
@@ -45,7 +45,7 @@ def has_been_paired():
     return ident.uuid is not None and ident.uuid != ""
 
 
-def is_paired(ignore_errors=True, url=None, version="v1", identity_file=None):
+def is_paired(ignore_errors=True, url=None, version="v1", identity_file=None, backend_type=None):
     """Determine if this device is actively paired with a web backend
 
     Determines if the installation of Mycroft has been paired by the user
@@ -58,13 +58,12 @@ def is_paired(ignore_errors=True, url=None, version="v1", identity_file=None):
         return True
 
     # check if pairing is valid
-    api = DeviceApi(url=url, version=version, identity_file=identity_file)
-    return api.identity.uuid and check_remote_pairing(ignore_errors,
-                                                               url=url, version=version,
-                                                               identity_file=identity_file)
+    api = DeviceApi(url=url, version=version, identity_file=identity_file, backend_type=backend_type)
+    return api.identity.uuid and check_remote_pairing(ignore_errors, url=url, version=version,
+                                                      identity_file=identity_file, backend_type=backend_type)
 
 
-def check_remote_pairing(ignore_errors, url=None, version="v1", identity_file=None):
+def check_remote_pairing(ignore_errors, url=None, version="v1", identity_file=None, backend_type=None):
     """Check that a basic backend endpoint accepts our pairing.
 
     Args:
@@ -74,8 +73,8 @@ def check_remote_pairing(ignore_errors, url=None, version="v1", identity_file=No
         True if pairing checks out, otherwise False.
     """
     try:
-        DeviceApi(url=url, version=version, identity_file=identity_file).get()
-        return True
+        return bool(DeviceApi(url=url, version=version,
+                              identity_file=identity_file, backend_type=backend_type).get())
     except HTTPError as e:
         if e.response.status_code == 401:
             return False

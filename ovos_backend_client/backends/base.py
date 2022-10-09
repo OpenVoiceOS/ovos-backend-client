@@ -241,10 +241,16 @@ class AbstractBackend:
             # If can't retrieve, assume not paired and not a subscriber yet
             return False
 
-    @abc.abstractmethod
     def device_get(self):
         """ Retrieve all device information from the web backend """
-        raise NotImplementedError()
+        return {"uuid": IdentityManager.get().uuid,
+                "name": "AnonDevice",
+                "description": "unknown",
+                "coreVersion": "unknown",
+                "enclosureVersion": "unknown",
+                "platform": "ovos-backend-client",
+                "user": {"uuid": "Anon"}
+                }
 
     @abc.abstractmethod
     def device_get_settings(self):

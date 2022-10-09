@@ -306,7 +306,6 @@ class TestIsPaired(unittest.TestCase):
     def test_is_paired_offline_true(self, mock_backend_status, mock_identity_get):
         mock_backend_status.return_value = False
         mock_identity = MagicMock()
-        mock_identity.is_expired.return_value = False
         mock_identity.uuid = '1234'
         mock_identity_get.return_value = mock_identity
         self.assertTrue(ovos_backend_client.pairing.is_paired(backend_type=BackendType.OFFLINE))
@@ -321,23 +320,18 @@ class TestIsPaired(unittest.TestCase):
         self.assertFalse(ovos_backend_client.pairing.is_paired(backend_type=BackendType.OFFLINE))
 
     @patch('ovos_backend_client.identity.IdentityManager.get')
-    @patch('ovos_backend_client.backends.base.requests.get')
+    @patch('ovos_backend_client.backends.selene.SeleneBackend.device_get')
     @patch('ovos_backend_client.pairing.is_backend_disabled')
     def test_is_paired_selene_true(self, mock_backend_status, mock_request, mock_identity_get):
         mock_backend_status.return_value = False
-        mock_request.return_value = create_response(200)
+        mock_request.return_value = {"uuid": "1234"}
         mock_identity = MagicMock()
         mock_identity.is_expired.return_value = False
         mock_identity.uuid = '1234'
         mock_identity_get.return_value = mock_identity
         num_calls = mock_identity_get.num_calls
-        # reset paired cache
-
         self.assertTrue(ovos_backend_client.pairing.is_paired(backend_type=BackendType.SELENE))
-
         self.assertEqual(num_calls, mock_identity_get.num_calls)
-        url = mock_request.call_args[0][0]
-        self.assertTrue(url.endswith('/v1/device/1234'))
 
     @patch('ovos_backend_client.identity.IdentityManager.get')
     @patch('ovos_backend_client.backends.base.requests.get')

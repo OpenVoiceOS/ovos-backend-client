@@ -189,11 +189,6 @@ class OfflineBackend(AbstractBackend):
         return location
 
     # Device Api
-    def device_get(self):
-        """ Retrieve all device information from the web backend """
-        data = JsonStorageXDG("ovos_device_info.json", subfolder="OpenVoiceOS")
-        return data
-
     def device_get_settings(self):
         """ Retrieve device settings information from the web backend
 

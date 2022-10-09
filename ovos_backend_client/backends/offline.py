@@ -189,6 +189,14 @@ class OfflineBackend(AbstractBackend):
         return location
 
     # Device Api
+    def device_get(self):
+        """ Retrieve all device information from the web backend """
+        data = JsonStorageXDG("ovos_device_info.json", subfolder="OpenVoiceOS")
+        for k, v in super().device_get().items():
+            if k not in data:
+                data[k] = v
+        return data
+
     def device_get_settings(self):
         """ Retrieve device settings information from the web backend
 
@@ -225,6 +233,10 @@ class OfflineBackend(AbstractBackend):
         data["uuid"] = data.pop("state")
         data["token"] = self.access_token
         BackendDatabase(self.uuid).update_device_db(data)
+        db = JsonStorageXDG("ovos_device_info.json", subfolder="OpenVoiceOS")
+        db.update(data)
+        db.store()
+        return identity
 
     def device_update_version(self,
                               core_version="unknown",
@@ -237,6 +249,9 @@ class OfflineBackend(AbstractBackend):
                 "enclosureVersion": enclosure_version,
                 "token": self.access_token}
         BackendDatabase(self.uuid).update_device_db(data)
+        db = JsonStorageXDG("ovos_device_info.json", subfolder="OpenVoiceOS")
+        db.update(data)
+        db.store()
 
     def device_report_metric(self, name, data):
         return self.metrics_upload(name, data)
@@ -497,7 +512,7 @@ if __name__ == "__main__":
     flac_data = audio.get_flac_data()
     a = b.stt_get(flac_data)
 
-    #a = b.owm_get_weather()
+    # a = b.owm_get_weather()
     # a = b.owm_get_daily()
     # a = b.owm_get_hourly()
     # a = b.owm_get_current()

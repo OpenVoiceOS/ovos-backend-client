@@ -1,8 +1,8 @@
 # Changelog
 
-## [Unreleased](https://github.com/OpenVoiceOS/ovos-backend-client/tree/HEAD)
+## [V0.0.5a5](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.0.5a5) (2022-10-09)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.5a4...HEAD)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.5a4...V0.0.5a5)
 
 **Implemented enhancements:**
 

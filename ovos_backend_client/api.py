@@ -28,6 +28,8 @@ class BaseApi:
 
     @property
     def backend_url(self):
+        if not self.backend.url.startswith("http"):
+            self.backend.url = f"http://{self.backend.url}"
         return self.backend.url
 
     @property

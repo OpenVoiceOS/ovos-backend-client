@@ -47,7 +47,7 @@ class OVOSAPIBackend(AbstractPartialBackend):
                    "lon": lon,
                    "units": units,
                    "lang": lang}
-        url = f'{self.url}/weather/onecall_weather_report/{self.uuid}'
+        url = f'{self.backend_url}/weather/onecall_weather_report/{self.uuid}'
         response = self.post(url, data=reqdata, headers={"backend": "OWM"})
         if response.status_code != 200:
             raise RuntimeError(f"OWM api failed, status_code {response.status_code}")
@@ -69,7 +69,7 @@ class OVOSAPIBackend(AbstractPartialBackend):
                    "lon": lon,
                    "units": units,
                    "lang": lang}
-        url = f'{self.url}/weather/generate_current_weather_report/{self.uuid}'
+        url = f'{self.backend_url}/weather/generate_current_weather_report/{self.uuid}'
         response = self.post(url, data=reqdata, headers={"backend": "OWM"})
         if response.status_code != 200:
             raise RuntimeError(f"OWM api failed, status_code {response.status_code}")
@@ -92,7 +92,7 @@ class OVOSAPIBackend(AbstractPartialBackend):
                    "lon": lon,
                    "units": units,
                    "lang": lang}
-        url = f'{self.url}/weather/generate_hourly_weather_report/{self.uuid}'
+        url = f'{self.backend_url}/weather/generate_hourly_weather_report/{self.uuid}'
         response = self.post(url, data=reqdata, headers={"backend": "OWM"})
         if response.status_code != 200:
             raise RuntimeError(f"OWM api failed, status_code {response.status_code}")
@@ -119,7 +119,7 @@ class OVOSAPIBackend(AbstractPartialBackend):
                   "geolocation": "{},{}".format(*lat_lon),
                   'units': units,
                   **optional_params}
-        url = f'{self.url}/wolframalpha/spoken/{self.uuid}'
+        url = f'{self.backend_url}/wolframalpha/spoken/{self.uuid}'
         data = self.post(url=url, params=params)
         return data.text
 
@@ -131,9 +131,8 @@ class OVOSAPIBackend(AbstractPartialBackend):
                   "geolocation": "{},{}".format(*lat_lon),
                   'units': units,
                   **optional_params}
-        url = f'{self.url}/wolframalpha/simple/{self.uuid}'
+        url = f'{self.backend_url}/wolframalpha/simple/{self.uuid}'
         data = self.get(url=url, params=params)
-        # TODO - this is returning an image ???
         return data.text
 
     def wolfram_full_results(self, query, units="metric", lat_lon=None, optional_params=None):
@@ -153,7 +152,7 @@ class OVOSAPIBackend(AbstractPartialBackend):
                   "geolocation": "{},{}".format(*lat_lon),
                   "output": "json",
                   **optional_params}
-        url = f'{self.url}/wolframalpha/full/{self.uuid}'
+        url = f'{self.backend_url}/wolframalpha/full/{self.uuid}'
         data = self.get(url=url, params=params)
         return data.json()
 
@@ -167,7 +166,7 @@ class OVOSAPIBackend(AbstractPartialBackend):
         Returns:
             str: JSON structure with lookup results
         """
-        url = f"{self.url}/geolocate/location/config"
+        url = f"{self.backend_url}/geolocate/location/config"
         location = self.get(url, params={"address": location})
         location = location.json()
         if "timezone" not in location:
@@ -197,7 +196,12 @@ class OVOSAPIBackend(AbstractPartialBackend):
 
     # Email API
     def email_send(self, title, body, sender):
-        raise NotImplementedError()
+        reqdata = {"recipient": recipient,
+                   "subject": subject,
+                   "body": body}
+        url = f"{self.backend_url}/send/mail/{self.uuid}"
+        requests.post(url, data=reqdata, headers=self.headers)
+
 
 
 if __name__ == "__main__":

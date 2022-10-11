@@ -10,6 +10,7 @@ from ovos_config.config import update_mycroft_config
 from ovos_plugin_manager.stt import OVOSSTTFactory, get_stt_config
 from ovos_utils.smtp_utils import send_smtp
 
+from ovos_backend_client.identity import IdentityManager
 from ovos_backend_client.backends.base import AbstractBackend, BackendType
 from ovos_backend_client.database import BackendDatabase
 
@@ -372,7 +373,7 @@ class OfflineBackend(AbstractBackend):
                     "refresh": "OVOS66c5SpAiSpXbpHlq9HNGl1vsw_srX49t5tCv88JkhuE=",
                     "expires_at": time.time() + 9999999999}
         # save identity file
-        self.identity.save(identity)
+        IdentityManager.save(identity)
         return identity
 
     def admin_set_device_location(self, uuid, loc):

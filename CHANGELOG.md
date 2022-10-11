@@ -2,7 +2,15 @@
 
 ## [Unreleased](https://github.com/OpenVoiceOS/ovos-backend-client/tree/HEAD)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.5...HEAD)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.6a1...HEAD)
+
+**Fixed bugs:**
+
+- fix/pairing\_code\_callback [\#16](https://github.com/OpenVoiceOS/ovos-backend-client/pull/16) ([JarbasAl](https://github.com/JarbasAl))
+
+## [V0.0.6a1](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.0.6a1) (2022-10-11)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.5...V0.0.6a1)
 
 **Fixed bugs:**
 

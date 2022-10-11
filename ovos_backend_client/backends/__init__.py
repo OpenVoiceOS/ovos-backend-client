@@ -52,7 +52,7 @@ API_REGISTRY = {
         "geolocate": True,
         "stt": True,
         "owm": True,
-        "email": False,
+        "email": True,
         "oauth": True  # fake support -> cast to offline backend type
     }
 }

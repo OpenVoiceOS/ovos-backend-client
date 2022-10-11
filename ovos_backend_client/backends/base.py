@@ -25,6 +25,8 @@ class AbstractBackend:
         self.backend_type = backend_type
         self._identity_file = identity_file
         self.backend_version = version
+        if not url.startswith("http"):
+            url = f"http://{url}"
         self.url = url
         self.credentials = credentials or {}
 
@@ -59,6 +61,8 @@ class AbstractBackend:
 
     def get(self, url=None, *args, **kwargs):
         url = url or self.url
+        if not url.startswith("http"):
+            url = f"http://{url}"
         headers = self.headers
         if "headers" in kwargs:
             headers.update(kwargs.pop("headers"))
@@ -67,6 +71,8 @@ class AbstractBackend:
 
     def post(self, url=None, *args, **kwargs):
         url = url or self.url
+        if not url.startswith("http"):
+            url = f"http://{url}"
         headers = self.headers
         if "headers" in kwargs:
             headers.update(kwargs.pop("headers"))
@@ -75,6 +81,8 @@ class AbstractBackend:
 
     def put(self, url=None, *args, **kwargs):
         url = url or self.url
+        if not url.startswith("http"):
+            url = f"http://{url}"
         headers = self.headers
         if "headers" in kwargs:
             headers.update(kwargs.pop("headers"))
@@ -83,6 +91,8 @@ class AbstractBackend:
 
     def patch(self, url=None, *args, **kwargs):
         url = url or self.url
+        if not url.startswith("http"):
+            url = f"http://{url}"
         headers = self.headers
         if "headers" in kwargs:
             headers.update(kwargs.pop("headers"))

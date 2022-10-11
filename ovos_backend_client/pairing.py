@@ -9,9 +9,10 @@ from ovos_utils.log import LOG
 from ovos_utils.messagebus import Message, FakeBus
 from ovos_utils.network_utils import is_connected
 
-from ovos_backend_client.api import DeviceApi
+from ovos_backend_client.api import DeviceApi, BackendType
 from ovos_backend_client.exceptions import BackendDown, InternetDown, HTTPError
 from ovos_backend_client.identity import IdentityManager
+from ovos_backend_client.backends.selene import SELENE_API_URL
 
 
 def is_backend_disabled():
@@ -107,7 +108,10 @@ class PairingManager:
                  restart_callback=None,
                  end_callback=None,
                  pairing_url="home.mycroft.ai",
-                 api_url="api.mycroft.ai"):
+                 api_url=SELENE_API_URL,
+                 version="v1",
+                 identity_file=None,
+                 backend_type=None):
         self.pairing_url = pairing_url
         self.api_url = api_url
         self.restart_callback = restart_callback
@@ -118,8 +122,9 @@ class PairingManager:
         self.end_callback = end_callback
 
         self.bus = bus or FakeBus()
-        self.enclosure = enclosure or EnclosureAPI(self.bus, "skill-ovos-setup.openvoiceos")
-        self.api = DeviceApi(url=api_url)
+        self.enclosure = enclosure or EnclosureAPI(self.bus, "ovos-backend-client.openvoiceos")
+        self.api = DeviceApi(url=api_url, version=version,
+                             identity_file=identity_file, backend_type=backend_type)
         self.data = None
         self.time_code_expires = None
         self.uuid = str(uuid4())
@@ -130,9 +135,13 @@ class PairingManager:
         self.count = -1  # for repeating pairing code. -1 = not running
         self.num_failed_codes = 0
 
-    def set_api_url(self, url):
+    def set_api_url(self, url,  version="v1", identity_file=None, backend_type=BackendType.SELENE):
+        if not url.startswith("http"):
+            url = f"http://{url}"
         self.api_url = url
-        self.api = DeviceApi(url)
+        self.api = DeviceApi(url, version=version,
+                             identity_file=identity_file,
+                             backend_type=backend_type)
 
     def shutdown(self):
         with self.activator_lock:
@@ -218,6 +227,7 @@ class PairingManager:
                     # Something must be seriously wrong
                     LOG.debug("Second save attempt failed: " + repr(e2))
                     self.abort_and_restart()
+                    return
 
             # Assume speaking is the pairing code.  Stop TTS of that.
             self.bus.emit(Message("mycroft.audio.speech.stop"))
@@ -294,7 +304,7 @@ class PairingManager:
                 self.activator.start()
 
     def handle_pairing_code(self):
-        """Speak pairing code."""
+        """Log pairing code."""
         code = self.data.get("code")
         LOG.info("Pairing code: " + code)
         if self.enclosure:

@@ -169,6 +169,7 @@ class PairingManager:
         try:
             # Obtain a pairing code from the backend
             self.data = self.api.get_code(self.uuid)
+            self.handle_pairing_code()
 
             # Keep track of when the code was obtained.  The codes expire
             # after 20 hours.

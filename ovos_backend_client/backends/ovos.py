@@ -196,6 +196,12 @@ class OVOSAPIBackend(AbstractPartialBackend):
 
     # Email API
     def email_send(self, title, body, sender):
+        # get default recipient from config,
+        # in ovos we dont have email tied to user accounts
+        mail_config = self.credentials["email"]
+        recipient = mail_config.get("recipient") or \
+                    mail_config.get("smtp", {}).get("username")
+
         reqdata = {"recipient": recipient,
                    "subject": subject,
                    "body": body}

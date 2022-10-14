@@ -210,7 +210,11 @@ class PairingManager:
             # backend, this will succeed.  Otherwise it throws and HTTPError()
 
             token = self.data.get("token")
+            LOG.info(f"Attempting device activation @ {self.api_url}")
             login = self.api.activate(self.uuid, token)  # HTTPError() thrown
+            if not login:
+                raise ValueError("Received empty identity data!")
+            LOG.info(f"Identity data received!: {login.get('uuid')}")
 
             # When we get here, the pairing code has been entered on the
             # backend and pairing can now be saved.

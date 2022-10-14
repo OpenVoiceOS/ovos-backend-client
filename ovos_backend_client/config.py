@@ -6,6 +6,7 @@ from ovos_utils.log import LOG
 
 from ovos_backend_client.api import DeviceApi
 from ovos_backend_client.pairing import is_paired
+from ovos_backend_client.identity import IdentityManager
 
 
 def _is_remote_list(values):
@@ -73,7 +74,7 @@ class RemoteConfigManager:
     def download(self):
         if not is_paired(url=self.api.backend_url,
                          version=self.api.backend_version,
-                         identity_file=self.api._identity_file):
+                         identity_file=IdentityManager.IDENTITY_FILE):
             self.config = {"server": {"disabled": True}}
             return
         else:

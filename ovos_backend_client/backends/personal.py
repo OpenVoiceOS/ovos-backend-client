@@ -223,9 +223,9 @@ class PersonalBackend(AbstractPartialBackend):
         r = self.post(f"{self.backend_url}/{self.backend_version}/device/activate", json=data)
         try:
             return r.json()
-        except json.JSONDecodeError:
-            LOG.error(f"Device activation failed! {r.text}")
-            raise
+        except:
+            # raise expected exception handled by pairing manager, any other resets pairing process
+            raise HTTPError(f"Device activation failed! {r.status_code}")
 
     def device_update_version(self,
                               core_version="unknown",

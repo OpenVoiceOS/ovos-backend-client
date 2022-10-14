@@ -2,7 +2,15 @@
 
 ## [Unreleased](https://github.com/OpenVoiceOS/ovos-backend-client/tree/HEAD)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.6a6...HEAD)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.6a7...HEAD)
+
+**Merged pull requests:**
+
+- deprecate/mk1\_hardcoded\_pairing\_flow [\#21](https://github.com/OpenVoiceOS/ovos-backend-client/pull/21) ([JarbasAl](https://github.com/JarbasAl))
+
+## [V0.0.6a7](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.0.6a7) (2022-10-14)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.6a6...V0.0.6a7)
 
 **Fixed bugs:**
 

@@ -4,7 +4,6 @@ from threading import Timer, Lock
 from uuid import uuid4
 
 from ovos_config.config import Configuration
-from ovos_utils.enclosure.api import EnclosureAPI
 from ovos_utils.log import LOG
 from ovos_utils.messagebus import Message, FakeBus
 from ovos_utils.network_utils import is_connected
@@ -100,7 +99,8 @@ def check_remote_pairing(ignore_errors, url=None, version="v1", identity_file=No
 class PairingManager:
     poll_frequency = 5  # secs between checking server for activation
 
-    def __init__(self, bus=None, enclosure=None,
+    def __init__(self, bus=None,
+                 enclosure=None,
                  code_callback=None,
                  error_callback=None,
                  success_callback=None,
@@ -112,6 +112,8 @@ class PairingManager:
                  version="v1",
                  identity_file=None,
                  backend_type=None):
+        if enclosure:
+            LOG.warning("enclosure argument has been deprecated, it is no longer used")
         self.pairing_url = pairing_url
         self.api_url = api_url
         self.restart_callback = restart_callback
@@ -122,7 +124,6 @@ class PairingManager:
         self.end_callback = end_callback
 
         self.bus = bus or FakeBus()
-        self.enclosure = enclosure or EnclosureAPI(self.bus, "ovos-backend-client.openvoiceos")
         self.api = DeviceApi(url=api_url, version=version,
                              identity_file=identity_file, backend_type=backend_type)
         self.data = None
@@ -189,11 +190,6 @@ class PairingManager:
 
         self.num_failed_codes = 0  # Reset counter on success
 
-        # Make sure code stays on display
-        if self.enclosure:
-            self.enclosure.deactivate_mouth_events()
-            self.enclosure.mouth_text(self.pairing_url + "      ")
-
         if self.start_callback:
             self.start_callback()
 
@@ -210,6 +206,7 @@ class PairingManager:
             # backend, this will succeed.  Otherwise it throws and HTTPError()
 
             token = self.data.get("token")
+
             LOG.info(f"Attempting device activation @ {self.api_url}")
             login = self.api.activate(self.uuid, token)  # HTTPError() thrown
             if not login:
@@ -238,8 +235,7 @@ class PairingManager:
             self.bus.emit(Message("mycroft.audio.speech.stop"))
 
             self.bus.emit(Message("mycroft.paired", login))
-            if self.enclosure:
-                self.enclosure.activate_mouth_events()  # clears the display
+
             if self.success_callback:
                 self.success_callback()
 
@@ -285,8 +281,6 @@ class PairingManager:
     def abort_and_restart(self, quiet=False):
         # restart pairing sequence
         LOG.debug("Aborting Pairing")
-        if self.enclosure:
-            self.enclosure.activate_mouth_events()
         # Reset state variables for a new pairing session
         with self.counter_lock:
             self.count = -1
@@ -312,8 +306,8 @@ class PairingManager:
         """Log pairing code."""
         code = self.data.get("code")
         LOG.info("Pairing code: " + code)
-        if self.enclosure:
-            self.enclosure.deactivate_mouth_events()
-            self.enclosure.mouth_text(code)
+        # emit info message, allows PHAL plugins to perform actions
+        # eg. the mk1 faceplate scrolls the code
+        self.bus.emit(Message("mycroft.pairing.code", self.data))
         if self.code_callback:
             self.code_callback(code)

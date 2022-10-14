@@ -206,10 +206,6 @@ class PairingManager:
             # backend, this will succeed.  Otherwise it throws and HTTPError()
 
             token = self.data.get("token")
-            if token:
-                # emit info message, allows PHAL plugins to perform actions
-                # eg. the mk1 faceplate scrolls the code
-                self.bus.emit(Message("mycroft.pairing.code", self.data))
 
             LOG.info(f"Attempting device activation @ {self.api_url}")
             login = self.api.activate(self.uuid, token)  # HTTPError() thrown
@@ -310,5 +306,8 @@ class PairingManager:
         """Log pairing code."""
         code = self.data.get("code")
         LOG.info("Pairing code: " + code)
+        # emit info message, allows PHAL plugins to perform actions
+        # eg. the mk1 faceplate scrolls the code
+        self.bus.emit(Message("mycroft.pairing.code", self.data))
         if self.code_callback:
             self.code_callback(code)

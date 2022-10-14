@@ -220,7 +220,12 @@ class PersonalBackend(AbstractPartialBackend):
                 "platform": platform,
                 "platform_build": platform_build,
                 "enclosureVersion": enclosure_version}
-        return self.post(f"{self.backend_url}/{self.backend_version}/device/activate", json=data).json()
+        r = self.post(f"{self.backend_url}/{self.backend_version}/device/activate", json=data)
+        try:
+            return r.json()
+        except json.JSONDecodeError:
+            LOG.error(f"Device activation failed! {r.text}")
+            raise
 
     def device_update_version(self,
                               core_version="unknown",

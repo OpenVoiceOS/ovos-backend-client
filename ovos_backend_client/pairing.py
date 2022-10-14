@@ -122,6 +122,7 @@ class PairingManager:
         self.end_callback = end_callback
 
         self.bus = bus or FakeBus()
+        # TODO - deprecate usage of enclosure, make PHAL plugins listen to pairing events directly
         self.enclosure = enclosure or EnclosureAPI(self.bus, "ovos-backend-client.openvoiceos")
         self.api = DeviceApi(url=api_url, version=version,
                              identity_file=identity_file, backend_type=backend_type)
@@ -191,6 +192,7 @@ class PairingManager:
 
         # Make sure code stays on display
         if self.enclosure:
+            # TODO - make mk1 plugin react to mycroft.not.paired directly and remove this
             self.enclosure.deactivate_mouth_events()
             self.enclosure.mouth_text(self.pairing_url + "      ")
 
@@ -210,6 +212,11 @@ class PairingManager:
             # backend, this will succeed.  Otherwise it throws and HTTPError()
 
             token = self.data.get("token")
+            if token:
+                # emit info message, allows PHAL plugins to perform actions
+                # eg. the mk1 faceplate scrolls the code
+                self.bus.emit(Message("mycroft.pairing.code", self.data))
+
             LOG.info(f"Attempting device activation @ {self.api_url}")
             login = self.api.activate(self.uuid, token)  # HTTPError() thrown
             if not login:
@@ -238,8 +245,11 @@ class PairingManager:
             self.bus.emit(Message("mycroft.audio.speech.stop"))
 
             self.bus.emit(Message("mycroft.paired", login))
+
+            # TODO - make mk1 plugin react to mycroft.paired directly and remove this
             if self.enclosure:
                 self.enclosure.activate_mouth_events()  # clears the display
+
             if self.success_callback:
                 self.success_callback()
 
@@ -286,6 +296,7 @@ class PairingManager:
         # restart pairing sequence
         LOG.debug("Aborting Pairing")
         if self.enclosure:
+            # TODO - make mk1 plugin react to mycroft.not.paired directly and remove this
             self.enclosure.activate_mouth_events()
         # Reset state variables for a new pairing session
         with self.counter_lock:
@@ -313,6 +324,7 @@ class PairingManager:
         code = self.data.get("code")
         LOG.info("Pairing code: " + code)
         if self.enclosure:
+            # TODO - make mk1 plugin react to mycroft.pairing.code directly and remove this
             self.enclosure.deactivate_mouth_events()
             self.enclosure.mouth_text(code)
         if self.code_callback:

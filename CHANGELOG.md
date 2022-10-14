@@ -2,7 +2,15 @@
 
 ## [Unreleased](https://github.com/OpenVoiceOS/ovos-backend-client/tree/HEAD)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.6a3...HEAD)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.6a4...HEAD)
+
+**Fixed bugs:**
+
+- fix/remote\_config [\#19](https://github.com/OpenVoiceOS/ovos-backend-client/pull/19) ([JarbasAl](https://github.com/JarbasAl))
+
+## [V0.0.6a4](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.0.6a4) (2022-10-11)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.6a3...V0.0.6a4)
 
 **Fixed bugs:**
 

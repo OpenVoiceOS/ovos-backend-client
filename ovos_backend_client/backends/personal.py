@@ -203,7 +203,7 @@ class PersonalBackend(AbstractPartialBackend):
 
     def device_put_skill_settings_v1(self, data=None):
         """ old style bidirectional skill settings api, still available!"""
-        self.put(f"{self.backend_url}/{self.backend_version}/device/{self.uuid}/skill", json=data).json()
+        self.put(f"{self.backend_url}/{self.backend_version}/device/{self.uuid}/skill", json=data)
 
     def device_get_code(self, state=None):
         state = state or self.uuid

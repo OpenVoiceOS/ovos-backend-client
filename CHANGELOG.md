@@ -2,7 +2,15 @@
 
 ## [Unreleased](https://github.com/OpenVoiceOS/ovos-backend-client/tree/HEAD)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.6a8...HEAD)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.6a9...HEAD)
+
+**Implemented enhancements:**
+
+- port shared oauth db utils [\#24](https://github.com/OpenVoiceOS/ovos-backend-client/pull/24) ([JarbasAl](https://github.com/JarbasAl))
+
+## [V0.0.6a9](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.0.6a9) (2022-10-17)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.6a8...V0.0.6a9)
 
 **Fixed bugs:**
 

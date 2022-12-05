@@ -6,8 +6,44 @@ from ovos_config.config import Configuration
 from ovos_utils.configuration import get_xdg_data_save_path
 
 
+class OAuthTokenDatabase(JsonStorageXDG):
+    """ This helper class creates ovos-config-assistant/ovos-backend-manager compatible json databases
+        This allows users to use oauth even when not using a backend"""
+    def __init__(self):
+        super().__init__("ovos_oauth")
+
+    def add_token(self, oauth_service, token_data):
+        self[oauth_service] = token_data
+
+    def total_tokens(self):
+        return len(self)
+
+
+class OAuthApplicationDatabase(JsonStorageXDG):
+    """ This helper class creates ovos-config-assistant/ovos-backend-manager compatible json databases
+        This allows users to use oauth even when not using a backend"""
+    def __init__(self):
+        super().__init__("ovos_oauth_apps")
+
+    def add_application(self, oauth_service,
+                        client_id, client_secret,
+                        auth_endpoint, token_endpoint, refresh_endpoint,
+                        callback_endpoint, scope):
+        self[oauth_service] = {"oauth_service": oauth_service,
+                               "client_id": client_id,
+                               "client_secret": client_secret,
+                               "auth_endpoint": auth_endpoint,
+                               "token_endpoint": token_endpoint,
+                               "refresh_endpoint": refresh_endpoint,
+                               "callback_endpoint": callback_endpoint,
+                               "scope": scope}
+
+    def total_apps(self):
+        return len(self)
+
+
 class BackendDatabase:
-    """ This helper class creates ovos-backend-ui compatible json databases
+    """ This helper class creates ovos-config-assistant/ovos-backend-manager compatible json databases
     This allows users to visualize metrics, tag wake words and configure devices
     even when not using a backend"""
 

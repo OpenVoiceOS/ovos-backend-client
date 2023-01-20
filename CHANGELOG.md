@@ -2,7 +2,15 @@
 
 ## [Unreleased](https://github.com/OpenVoiceOS/ovos-backend-client/tree/HEAD)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.6a9...HEAD)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.6a10...HEAD)
+
+**Merged pull requests:**
+
+- add shell\_integration key for oauth db [\#25](https://github.com/OpenVoiceOS/ovos-backend-client/pull/25) ([AIIX](https://github.com/AIIX))
+
+## [V0.0.6a10](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.0.6a10) (2022-12-05)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.6a9...V0.0.6a10)
 
 **Implemented enhancements:**
 

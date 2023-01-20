@@ -28,7 +28,7 @@ class OAuthApplicationDatabase(JsonStorageXDG):
     def add_application(self, oauth_service,
                         client_id, client_secret,
                         auth_endpoint, token_endpoint, refresh_endpoint,
-                        callback_endpoint, scope):
+                        callback_endpoint, scope, shell_integration=True):
         self[oauth_service] = {"oauth_service": oauth_service,
                                "client_id": client_id,
                                "client_secret": client_secret,
@@ -36,7 +36,8 @@ class OAuthApplicationDatabase(JsonStorageXDG):
                                "token_endpoint": token_endpoint,
                                "refresh_endpoint": refresh_endpoint,
                                "callback_endpoint": callback_endpoint,
-                               "scope": scope}
+                               "scope": scope,
+                               "shell_integration": shell_integration}
 
     def total_apps(self):
         return len(self)

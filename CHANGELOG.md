@@ -2,7 +2,15 @@
 
 ## [Unreleased](https://github.com/OpenVoiceOS/ovos-backend-client/tree/HEAD)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.6a10...HEAD)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.6a11...HEAD)
+
+**Merged pull requests:**
+
+- Update offline backend to only load remote config instead of all config [\#26](https://github.com/OpenVoiceOS/ovos-backend-client/pull/26) ([NeonDaniel](https://github.com/NeonDaniel))
+
+## [V0.0.6a11](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.0.6a11) (2023-01-20)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.6a10...V0.0.6a11)
 
 **Merged pull requests:**
 

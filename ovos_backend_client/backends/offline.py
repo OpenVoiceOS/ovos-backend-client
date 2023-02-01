@@ -8,6 +8,7 @@ from json_database import JsonStorageXDG
 from ovos_config.config import Configuration
 from ovos_config.config import update_mycroft_config
 from ovos_plugin_manager.stt import OVOSSTTFactory, get_stt_config
+from ovos_utils.log import LOG
 from ovos_utils.smtp_utils import send_smtp
 
 from ovos_backend_client.identity import IdentityManager
@@ -204,7 +205,9 @@ class OfflineBackend(AbstractBackend):
         Returns:
             str: JSON string with user configuration information.
         """
-        return Configuration()  # TODO format keys or not needed ?
+        LOG.warning("Offline Backend, you may want to reference "
+                    "`ovos_config.Configuration()` to get full config")
+        return Configuration.remote
 
     def device_get_skill_settings_v1(self):
         """ old style bidirectional skill settings api, still available!"""

@@ -204,7 +204,7 @@ class OfflineBackend(AbstractBackend):
         Returns:
             str: JSON string with user configuration information.
         """
-        return Configuration()  # TODO format keys or not needed ?
+        return Configuration.remote
 
     def device_get_skill_settings_v1(self):
         """ old style bidirectional skill settings api, still available!"""

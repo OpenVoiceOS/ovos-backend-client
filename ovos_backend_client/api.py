@@ -360,7 +360,7 @@ class GeolocationApi(BaseApi):
         Returns:
             str: JSON structure with lookup results
         """
-        return self.backend.geolocation_get(location)
+        return self.backend.reverse_geolocation_get(lat, lon)
 
 
 class WolframAlphaApi(BaseApi):

@@ -201,23 +201,28 @@ class OfflineBackend(AbstractBackend):
             str: JSON structure with lookup results
         """
         url = "https://nominatim.openstreetmap.org/reverse"
-        details = self.get(url, params={"lat": lat, "lon": lon, "format": "json"}).json()[0]
+        details = self.get(url, params={"lat": lat, "lon": lon, "format": "json"}).json()
+        address = details.get("address")
         location = {
+            "address": details["display_name"],
             "city": {
-                "code": details["addresstags"].get("postcode") or details["calculated_postcode"] or "",
-                "name": details["localname"],
+                "code": address.get("postcode") or "",
+                "name": address.get("city") or
+                        address.get("village") or
+                        address.get("county") or "",
                 "state": {
-                    "code": details["addresstags"].get("state_code") or details["calculated_postcode"] or "",
-                    "name": details["addresstags"].get("state") or data["display_name"].split(", ")[0],
+                    "code": address.get("state_code") or
+                            address.get("ISO3166-2-lvl4") or "",
+                    "name": address.get("state") or "",
                     "country": {
-                        "code": details["country_code"].upper() or details["addresstags"].get("country"),
-                        "name": data["display_name"].split(", ")[-1]
+                        "code": address.get("country_code") or "",
+                        "name": address.get("country") or "",
                     }
                 }
             },
             "coordinate": {
-                "latitude": data["lat"],
-                "longitude": data["lon"]
+                "latitude": details.get("lat") or lat,
+                "longitude": details.get("lon") or lon
             }
         }
         if "timezone" not in location:

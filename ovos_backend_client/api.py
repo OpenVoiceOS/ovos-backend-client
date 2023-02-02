@@ -350,6 +350,18 @@ class GeolocationApi(BaseApi):
         """
         return self.backend.geolocation_get(location)
 
+    def get_reverse_geolocation(self, lat, lon):
+        """"Call the reverse geolocation endpoint.
+
+        Args:
+            lat (float): latitude
+            lon (float): longitude
+
+        Returns:
+            str: JSON structure with lookup results
+        """
+        return self.backend.geolocation_get(location)
+
 
 class WolframAlphaApi(BaseApi):
 

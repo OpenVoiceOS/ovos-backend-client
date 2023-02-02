@@ -190,6 +190,42 @@ class OfflineBackend(AbstractBackend):
                 lat=location["coordinate"]["latitude"])
         return location
 
+    def reverse_geolocation_get(self, lat, lon):
+        """Call the reverse geolocation endpoint.
+
+        Args:
+            lat (float): latitude
+            lon (float): longitude
+
+        Returns:
+            str: JSON structure with lookup results
+        """
+        url = "https://nominatim.openstreetmap.org/reverse"
+        details = self.get(url, params={"lat": lat, "lon": lon, "format": "json"}).json()[0]
+        location = {
+            "city": {
+                "code": details["addresstags"].get("postcode") or details["calculated_postcode"] or "",
+                "name": details["localname"],
+                "state": {
+                    "code": details["addresstags"].get("state_code") or details["calculated_postcode"] or "",
+                    "name": details["addresstags"].get("state") or data["display_name"].split(", ")[0],
+                    "country": {
+                        "code": details["country_code"].upper() or details["addresstags"].get("country"),
+                        "name": data["display_name"].split(", ")[-1]
+                    }
+                }
+            },
+            "coordinate": {
+                "latitude": data["lat"],
+                "longitude": data["lon"]
+            }
+        }
+        if "timezone" not in location:
+            location["timezone"] = self._get_timezone(
+                lon=location["coordinate"]["longitude"],
+                lat=location["coordinate"]["latitude"])
+        return location
+
     # Device Api
     def device_get(self):
         """ Retrieve all device information from the web backend """

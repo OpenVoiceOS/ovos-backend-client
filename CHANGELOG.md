@@ -1,5 +1,17 @@
 # Changelog
 
+## [Unreleased](https://github.com/OpenVoiceOS/ovos-backend-client/tree/HEAD)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.6...HEAD)
+
+**Implemented enhancements:**
+
+- Add reverse geo api [\#27](https://github.com/OpenVoiceOS/ovos-backend-client/pull/27) ([JarbasAl](https://github.com/JarbasAl))
+
+## [V0.0.6](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.0.6) (2023-02-01)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.6a12...V0.0.6)
+
 ## [V0.0.6a12](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.0.6a12) (2023-02-01)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.6a11...V0.0.6a12)

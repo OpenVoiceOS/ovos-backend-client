@@ -4,16 +4,18 @@ from io import BytesIO, StringIO
 from tempfile import NamedTemporaryFile
 from uuid import uuid4
 
+import requests
 from json_database import JsonStorageXDG
 from ovos_config.config import Configuration
 from ovos_config.config import update_mycroft_config
 from ovos_plugin_manager.stt import OVOSSTTFactory, get_stt_config
 from ovos_utils.log import LOG
-from ovos_utils.smtp_utils import send_smtp
 from ovos_utils.network_utils import get_external_ip
-from ovos_backend_client.identity import IdentityManager
+from ovos_utils.smtp_utils import send_smtp
+
 from ovos_backend_client.backends.base import AbstractBackend, BackendType
 from ovos_backend_client.database import BackendDatabase
+from ovos_backend_client.identity import IdentityManager
 
 
 class OfflineBackend(AbstractBackend):
@@ -212,8 +214,12 @@ class OfflineBackend(AbstractBackend):
                         address.get("county") or "",
                 "state": {
                     "code": address.get("state_code") or
-                            address.get("ISO3166-2-lvl4") or "",
-                    "name": address.get("state") or "",
+                            address.get("ISO3166-2-lvl4") or
+                            address.get("ISO3166-2-lvl6")
+                            or "",
+                    "name": address.get("state") or
+                            address.get("county")
+                            or "",
                     "country": {
                         "code": address.get("country_code") or "",
                         "name": address.get("country") or "",
@@ -573,6 +579,9 @@ class AbstractPartialBackend(OfflineBackend):
 
 if __name__ == "__main__":
     b = OfflineBackend()
+    l = b.ip_geolocation_get("0.0.0.0")
+    print(l)
+
     b.load_stt_plugin({"module": "ovos-stt-plugin-vosk"})
     # a = b.geolocation_get("Fafe")
     # a = b.wolfram_full_results("2+2")

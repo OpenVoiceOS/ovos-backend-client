@@ -495,3 +495,8 @@ class AbstractBackend:
                 "lang": "en-us"}
         """
         raise NotImplementedError()
+
+    # Chatbot API
+    @abc.abstractmethod
+    def chatbox_ask(self, prompt, lang=None, params=None):
+        return None

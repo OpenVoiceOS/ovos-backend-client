@@ -425,3 +425,7 @@ class PersonalBackend(AbstractPartialBackend):
         """
         return self.put(f"{self.backend_url}/{self.backend_version}/admin/{uuid}/device", json=info,
                         headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+
+    # Chatbot API
+    def chatbox_ask(self, prompt, chat_engine="gpt", lang=None, params=None):
+        raise RuntimeError(f"ChatbotAPI not available for {self.backend_type}")

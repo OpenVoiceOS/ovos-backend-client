@@ -566,6 +566,28 @@ class OfflineBackend(AbstractBackend):
             tx = [tx]
         return tx
 
+    # Chatbot API
+    def chatbox_ask(self, prompt, chat_engine="gpt", lang=None, params=None):
+        params = params or {}
+        if chat_engine != "gpt":
+            # TODO - NeonSolver plugin here
+            # currently those are used in fallback skilsl but can be plugged here
+            # bringing free lang support / auto translation
+            # eg. wolfram alpha in other langs
+            raise NotImplementedError("Placeholder for future feature")
+
+        import openai as ai
+
+        ai.api_key = self.credentials["openai"]
+        engine = params.get("engine", "ada")  # cheaper and faster
+        stop = params.get("stop", "\nHuman: ")
+        response = ai.Completion().create(prompt=prompt, engine=engine, temperature=0.85,
+                                          top_p=1, frequency_penalty=0,
+                                          presence_penalty=0.7, best_of=2, max_tokens=100,
+                                          stop=stop)
+        if response:
+            return response.choices[0].text
+
 
 class AbstractPartialBackend(OfflineBackend):
     """ helper class that internally delegates unimplemented methods to offline backend implementation
@@ -579,9 +601,14 @@ class AbstractPartialBackend(OfflineBackend):
 
 if __name__ == "__main__":
     b = OfflineBackend()
+
+    print(b.chatbox_ask("what is the meaning of life?"))
+
+
     l = b.ip_geolocation_get("0.0.0.0")
     print(l)
 
+    exit(0)
     b.load_stt_plugin({"module": "ovos-stt-plugin-vosk"})
     # a = b.geolocation_get("Fafe")
     # a = b.wolfram_full_results("2+2")

@@ -206,12 +206,23 @@ class OVOSAPIBackend(AbstractPartialBackend):
                    "subject": subject,
                    "body": body}
         url = f"{self.backend_url}/send/mail/{self.uuid}"
-        requests.post(url, data=reqdata, headers=self.headers)
+        self.post(url, data=reqdata, headers=self.headers)
 
+    # Chatbot API
+    def chatbox_ask(self, prompt, chat_engine="gpt", lang=None, params=None):
+        #if chat_engine != "gpt":
+        #    raise NotImplementedError("only gpt chat_engine supported")
+
+        url = f"{self.backend_url}/cgpt/call_request/{self.uuid}"
+        data = self.post(url, data={"prompt": prompt}, headers=self.headers)
+        if data.status_code == 200:
+            return data.text
 
 
 if __name__ == "__main__":
     b = OVOSAPIBackend()
+    print(b.chatbox_ask("what is the meaning of life?"))
+
     # a = b.geolocation_get("Fafe")
     a = b.wolfram_full_results("2+2")
     print(a)

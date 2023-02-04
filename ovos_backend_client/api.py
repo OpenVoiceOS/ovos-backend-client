@@ -552,6 +552,34 @@ class OAuthApi(BaseApi):
         return self.backend.oauth_get_token(dev_cred)
 
 
+class ChatbotApi(BaseApi):
+
+    def __init__(self, url=None, version="v1", identity_file=None, backend_type=None, key=None):
+        super().__init__(url, version, identity_file, backend_type, credentials={"openai": key})
+
+    def validate_backend_type(self):
+        if not API_REGISTRY[self.backend_type]["chatbot"]:
+            raise ValueError(f"{self.__class__.__name__} not available for {self.backend_type}")
+        if self.backend_type == BackendType.OVOS_API:
+            self.url = f"{self.backend_url}/cgpt"
+        elif self.backend_type == BackendType.OFFLINE:
+            self.url = "https://chat.openai.com/chat"
+        else:
+            self.url = f"{self.backend_url}/{self.backend_version}/chatbot"
+
+    def validate_engine(self, engine):
+        engine = engine.lower()
+        if engine == "gpt" and self.backend_type == BackendType.OFFLINE:
+            if not self.credentials["openai"]:
+                raise ValueError("OpenAI api key not set!")
+            # raise import error if not optional requirement not installed
+            import openai as ai
+
+    def ask(self, prompt, chat_engine="gpt", lang=None, params=None):
+        self.validate_engine(chat_engine)
+        return self.backend.chatbox_ask(prompt, chat_engine, lang, params)
+
+
 if __name__ == "__main__":
     # d = DeviceApi(FAKE_BACKEND_URL)
 

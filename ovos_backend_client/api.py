@@ -567,16 +567,7 @@ class ChatbotApi(BaseApi):
         else:
             self.url = f"{self.backend_url}/{self.backend_version}/chatbot"
 
-    def validate_engine(self, engine):
-        engine = engine.lower()
-        if engine == "gpt" and self.backend_type == BackendType.OFFLINE:
-            if not self.credentials["openai"]:
-                raise ValueError("OpenAI api key not set!")
-            # raise import error if not optional requirement not installed
-            import openai as ai
-
     def ask(self, prompt, chat_engine="gpt", lang=None, params=None):
-        self.validate_engine(chat_engine)
         return self.backend.chatbox_ask(prompt, chat_engine, lang, params)
 
 

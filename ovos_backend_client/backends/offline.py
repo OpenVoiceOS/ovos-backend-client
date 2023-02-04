@@ -583,32 +583,10 @@ class OfflineBackend(AbstractBackend):
         return tx
 
     # Chatbot API
-    def _chatgpt(self, prompt, params):
-        import openai as ai
-        ai.api_key = self.credentials["openai"]
-        engine = params.get("engine", "ada")  # cheaper and faster
-        stop = params.get("stop", "\nHuman: ")
-        response = ai.Completion().create(prompt=prompt, engine=engine, temperature=0.85,
-                                          top_p=1, frequency_penalty=0,
-                                          presence_penalty=0.7, best_of=2, max_tokens=100,
-                                          stop=stop)
-        if response:
-            return response.choices[0].text
-
-    def _neonsolvers(self, prompt, lang, params):
-        # currently those are used in fallback skills but can be plugged here
-        # bringing free lang support / auto translation
-        # eg. wolfram alpha in other langs
+    def chatbox_ask(self, prompt, chat_engine="neon_solvers", lang=None, params=None):
         context = {"lang": lang} if lang else {}
+        # TODO - check explicit loaded plugins against chat_engine
         return self.solvers.spoken_answer(prompt, context)
-
-    def chatbox_ask(self, prompt, chat_engine="gpt", lang=None, params=None):
-        params = params or {}
-        if chat_engine == "solvers":
-            return self._neonsolvers(prompt, lang, params)
-        if chat_engine != "gpt":
-            raise NotImplementedError("Placeholder for future feature")
-        return self._chatgpt(prompt, params)
 
 
 class AbstractPartialBackend(OfflineBackend):

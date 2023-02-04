@@ -350,6 +350,17 @@ class GeolocationApi(BaseApi):
         """
         return self.backend.geolocation_get(location)
 
+    def get_ip_geolocation(self, ip):
+        """Call the geolocation endpoint.
+
+        Args:
+            ip (str): the ip address to lookup
+
+        Returns:
+            str: JSON structure with lookup results
+        """
+        return self.backend.ip_geolocation_get(ip)
+
     def get_reverse_geolocation(self, lat, lon):
         """"Call the reverse geolocation endpoint.
 

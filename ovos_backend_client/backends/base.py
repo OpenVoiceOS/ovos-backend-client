@@ -224,6 +224,31 @@ class AbstractBackend:
         """
         raise NotImplementedError()
 
+    @abc.abstractmethod
+    def reverse_geolocation_get(self, lat, lon):
+        """Call the reverse geolocation endpoint.
+
+        Args:
+            lat (float): latitude
+            lon (float): longitude
+
+        Returns:
+            str: JSON structure with lookup results
+        """
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def ip_geolocation_get(self, ip):
+        """Call the geolocation endpoint.
+
+        Args:
+            ip (str): the ip address to lookup
+
+        Returns:
+            str: JSON structure with lookup results
+        """
+        raise NotImplementedError()
+
     # STT Api
     @abc.abstractmethod
     def stt_get(self, audio, language="en-us", limit=1):

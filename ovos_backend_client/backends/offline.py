@@ -4,16 +4,18 @@ from io import BytesIO, StringIO
 from tempfile import NamedTemporaryFile
 from uuid import uuid4
 
+import requests
 from json_database import JsonStorageXDG
 from ovos_config.config import Configuration
 from ovos_config.config import update_mycroft_config
 from ovos_plugin_manager.stt import OVOSSTTFactory, get_stt_config
 from ovos_utils.log import LOG
+from ovos_utils.network_utils import get_external_ip
 from ovos_utils.smtp_utils import send_smtp
 
-from ovos_backend_client.identity import IdentityManager
 from ovos_backend_client.backends.base import AbstractBackend, BackendType
 from ovos_backend_client.database import BackendDatabase
+from ovos_backend_client.identity import IdentityManager
 
 
 class OfflineBackend(AbstractBackend):
@@ -189,6 +191,81 @@ class OfflineBackend(AbstractBackend):
                 lon=location["coordinate"]["longitude"],
                 lat=location["coordinate"]["latitude"])
         return location
+
+    def reverse_geolocation_get(self, lat, lon):
+        """Call the reverse geolocation endpoint.
+
+        Args:
+            lat (float): latitude
+            lon (float): longitude
+
+        Returns:
+            str: JSON structure with lookup results
+        """
+        url = "https://nominatim.openstreetmap.org/reverse"
+        details = self.get(url, params={"lat": lat, "lon": lon, "format": "json"}).json()
+        address = details.get("address")
+        location = {
+            "address": details["display_name"],
+            "city": {
+                "code": address.get("postcode") or "",
+                "name": address.get("city") or
+                        address.get("village") or
+                        address.get("county") or "",
+                "state": {
+                    "code": address.get("state_code") or
+                            address.get("ISO3166-2-lvl4") or
+                            address.get("ISO3166-2-lvl6")
+                            or "",
+                    "name": address.get("state") or
+                            address.get("county")
+                            or "",
+                    "country": {
+                        "code": address.get("country_code") or "",
+                        "name": address.get("country") or "",
+                    }
+                }
+            },
+            "coordinate": {
+                "latitude": details.get("lat") or lat,
+                "longitude": details.get("lon") or lon
+            }
+        }
+        if "timezone" not in location:
+            location["timezone"] = self._get_timezone(
+                lon=location["coordinate"]["longitude"],
+                lat=location["coordinate"]["latitude"])
+        return location
+
+    def ip_geolocation_get(self, ip):
+        """Call the geolocation endpoint.
+
+        Args:
+            ip (str): the ip address to lookup
+
+        Returns:
+            str: JSON structure with lookup results
+        """
+        if not ip or ip in ["0.0.0.0", "127.0.0.1"]:
+            ip = get_external_ip()
+        fields = "status,country,countryCode,region,regionName,city,lat,lon,timezone,query"
+        data = requests.get("http://ip-api.com/json/" + ip,
+                            params={"fields": fields}).json()
+        region_data = {"code": data["region"],
+                       "name": data["regionName"],
+                       "country": {
+                           "code": data["countryCode"],
+                           "name": data["country"]}}
+        city_data = {"code": data["city"],
+                     "name": data["city"],
+                     "state": region_data}
+        timezone_data = {"code": data["timezone"],
+                         "name": data["timezone"]}
+        coordinate_data = {"latitude": float(data["lat"]),
+                           "longitude": float(data["lon"])}
+        return {"city": city_data,
+                "coordinate": coordinate_data,
+                "timezone": timezone_data}
 
     # Device Api
     def device_get(self):
@@ -502,6 +579,9 @@ class AbstractPartialBackend(OfflineBackend):
 
 if __name__ == "__main__":
     b = OfflineBackend()
+    l = b.ip_geolocation_get("0.0.0.0")
+    print(l)
+
     b.load_stt_plugin({"module": "ovos-stt-plugin-vosk"})
     # a = b.geolocation_get("Fafe")
     # a = b.wolfram_full_results("2+2")

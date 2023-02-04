@@ -1,18 +1,19 @@
 import json
+import requests
 import time
 from io import BytesIO, StringIO
-from tempfile import NamedTemporaryFile
-from uuid import uuid4
-
-import requests
 from json_database import JsonStorageXDG
 from ovos_config.config import Configuration
 from ovos_config.config import update_mycroft_config
 from ovos_plugin_manager.stt import OVOSSTTFactory, get_stt_config
 from ovos_utils.log import LOG
+from ovos_utils.messagebus import FakeBus
 from ovos_utils.network_utils import get_external_ip
 from ovos_utils.smtp_utils import send_smtp
+from tempfile import NamedTemporaryFile
+from uuid import uuid4
 
+from neon_solvers import NeonSolversService
 from ovos_backend_client.backends.base import AbstractBackend, BackendType
 from ovos_backend_client.database import BackendDatabase
 from ovos_backend_client.identity import IdentityManager
@@ -23,6 +24,22 @@ class OfflineBackend(AbstractBackend):
     def __init__(self, url="127.0.0.1", version="v1", identity_file=None, credentials=None):
         super().__init__(url, version, identity_file, BackendType.OFFLINE, credentials)
         self.stt = None
+        self.bus = FakeBus()
+        config = Configuration()
+        if "solvers" not in config:
+            # TODO - add at least one to default mycroft.conf and remove this
+            enabled_plugins = {
+                "neon_solver_ddg_plugin": {},
+                "neon_solver_wikipedia_plugin": {},
+                "neon_solver_wolfram_alpha_plugin": {},
+                "neon_solver_wordnet_plugin": {},
+                # "ovos-solver-aiml-plugin": {},
+                # "ovos-solver-rivescript-plugin": {},
+                "ovos-solver-failure-plugin": {}
+            }
+            config = {"solvers": enabled_plugins}
+        self.solvers = NeonSolversService(self.bus, config)
+        LOG.info(f"Loaded spoken answer modules: {list(self.solvers.loaded_modules.keys())}")
 
     # OWM API
     def owm_get_weather(self, lat_lon=None, lang="en-us", units="metric"):
@@ -33,7 +50,6 @@ class OfflineBackend(AbstractBackend):
             lat_lon (tuple): the geologic (latitude, longitude) of the weather location
         """
         # default to configured location
-
         lat, lon = lat_lon or self._get_lat_lon()
         params = {
             "lang": lang,
@@ -567,17 +583,8 @@ class OfflineBackend(AbstractBackend):
         return tx
 
     # Chatbot API
-    def chatbox_ask(self, prompt, chat_engine="gpt", lang=None, params=None):
-        params = params or {}
-        if chat_engine != "gpt":
-            # TODO - NeonSolver plugin here
-            # currently those are used in fallback skilsl but can be plugged here
-            # bringing free lang support / auto translation
-            # eg. wolfram alpha in other langs
-            raise NotImplementedError("Placeholder for future feature")
-
+    def _chatgpt(self, prompt, params):
         import openai as ai
-
         ai.api_key = self.credentials["openai"]
         engine = params.get("engine", "ada")  # cheaper and faster
         stop = params.get("stop", "\nHuman: ")
@@ -587,6 +594,21 @@ class OfflineBackend(AbstractBackend):
                                           stop=stop)
         if response:
             return response.choices[0].text
+
+    def _neonsolvers(self, prompt, lang, params):
+        # currently those are used in fallback skills but can be plugged here
+        # bringing free lang support / auto translation
+        # eg. wolfram alpha in other langs
+        context = {"lang": lang} if lang else {}
+        return self.solvers.spoken_answer(prompt, context)
+
+    def chatbox_ask(self, prompt, chat_engine="gpt", lang=None, params=None):
+        params = params or {}
+        if chat_engine == "solvers":
+            return self._neonsolvers(prompt, lang, params)
+        if chat_engine != "gpt":
+            raise NotImplementedError("Placeholder for future feature")
+        return self._chatgpt(prompt, params)
 
 
 class AbstractPartialBackend(OfflineBackend):
@@ -602,7 +624,9 @@ class AbstractPartialBackend(OfflineBackend):
 if __name__ == "__main__":
     b = OfflineBackend()
 
-    print(b.chatbox_ask("what is the meaning of life?"))
+    print(b.chatbox_ask("what is the speed of light", chat_engine="solvers"))
+    print(b.chatbox_ask("what is the meaning of life?", chat_engine="solvers"))
+    print(b.chatbox_ask("what is your favorite animal?", chat_engine="solvers"))
 
 
     l = b.ip_geolocation_get("0.0.0.0")

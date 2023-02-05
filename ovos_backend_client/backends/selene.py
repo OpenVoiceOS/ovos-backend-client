@@ -33,7 +33,3 @@ class SeleneBackend(PersonalBackend):
 
     def admin_set_device_info(self, uuid, info):
         raise RuntimeError(f"AdminAPI not available for {self.backend_type}")
-
-    # Chatbot API
-    def chatbox_ask(self, prompt, chat_engine="gpt", lang=None, params=None):
-        raise RuntimeError(f"ChatbotAPI not available for {self.backend_type}")

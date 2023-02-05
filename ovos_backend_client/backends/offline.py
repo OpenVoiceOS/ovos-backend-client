@@ -24,21 +24,7 @@ class OfflineBackend(AbstractBackend):
     def __init__(self, url="127.0.0.1", version="v1", identity_file=None, credentials=None):
         super().__init__(url, version, identity_file, BackendType.OFFLINE, credentials)
         self.stt = None
-        self.bus = FakeBus()
-        config = Configuration()
-        if "solvers" not in config:
-            # TODO - add at least one to default mycroft.conf and remove this
-            enabled_plugins = {
-                "neon_solver_ddg_plugin": {},
-                "neon_solver_wikipedia_plugin": {},
-                "neon_solver_wolfram_alpha_plugin": {},
-                "neon_solver_wordnet_plugin": {},
-                # "ovos-solver-aiml-plugin": {},
-                # "ovos-solver-rivescript-plugin": {},
-                "ovos-solver-failure-plugin": {}
-            }
-            config = {"solvers": enabled_plugins}
-        self.solvers = NeonSolversService(self.bus, config)
+        self.solvers = NeonSolversService()
         LOG.info(f"Loaded spoken answer modules: {list(self.solvers.loaded_modules.keys())}")
 
     # OWM API

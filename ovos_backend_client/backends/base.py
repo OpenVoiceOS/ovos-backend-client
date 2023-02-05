@@ -498,5 +498,5 @@ class AbstractBackend:
 
     # Chatbot API
     @abc.abstractmethod
-    def chatbox_ask(self, prompt, lang=None, params=None):
+    def chatbot_ask(self, prompt, lang=None, params=None):
         return None

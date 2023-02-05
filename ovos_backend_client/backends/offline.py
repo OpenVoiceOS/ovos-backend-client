@@ -569,7 +569,7 @@ class OfflineBackend(AbstractBackend):
         return tx
 
     # Chatbot API
-    def chatbox_ask(self, prompt, chat_engine="neon_solvers", lang=None, params=None):
+    def chatbot_ask(self, prompt, chat_engine="neon_solvers", lang=None, params=None):
         context = {"lang": lang} if lang else {}
         # TODO - check explicit loaded plugins against chat_engine
         return self.solvers.spoken_answer(prompt, context)
@@ -588,9 +588,9 @@ class AbstractPartialBackend(OfflineBackend):
 if __name__ == "__main__":
     b = OfflineBackend()
 
-    print(b.chatbox_ask("what is the speed of light", chat_engine="solvers"))
-    print(b.chatbox_ask("what is the meaning of life?", chat_engine="solvers"))
-    print(b.chatbox_ask("what is your favorite animal?", chat_engine="solvers"))
+    print(b.chatbot_ask("what is the speed of light", chat_engine="solvers"))
+    print(b.chatbot_ask("what is the meaning of life?", chat_engine="solvers"))
+    print(b.chatbot_ask("what is your favorite animal?", chat_engine="solvers"))
 
 
     l = b.ip_geolocation_get("0.0.0.0")

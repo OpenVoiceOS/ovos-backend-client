@@ -209,7 +209,7 @@ class OVOSAPIBackend(AbstractPartialBackend):
         self.post(url, data=reqdata, headers=self.headers)
 
     # Chatbot API
-    def chatbox_ask(self, prompt, chat_engine="gpt", lang=None, params=None):
+    def chatbot_ask(self, prompt, chat_engine="gpt", lang=None, params=None):
         persona = params.get("persona") or "helpful, creative, clever, and very friendly."
         initial_prompt = f"The following is a conversation with an AI assistant. " \
                          f"The assistant understands all languages. " \
@@ -224,7 +224,7 @@ class OVOSAPIBackend(AbstractPartialBackend):
 
 if __name__ == "__main__":
     b = OVOSAPIBackend()
-    print(b.chatbox_ask("what is the meaning of life?"))
+    print(b.chatbot_ask("what is the meaning of life?"))
 
     # a = b.geolocation_get("Fafe")
     a = b.wolfram_full_results("2+2")

@@ -568,7 +568,7 @@ class ChatbotApi(BaseApi):
             self.url = f"{self.backend_url}/{self.backend_version}/chatbot"
 
     def ask(self, prompt, chat_engine="gpt", lang=None, params=None):
-        return self.backend.chatbox_ask(prompt, chat_engine, lang, params)
+        return self.backend.chatbot_ask(prompt, chat_engine, lang, params)
 
 
 if __name__ == "__main__":

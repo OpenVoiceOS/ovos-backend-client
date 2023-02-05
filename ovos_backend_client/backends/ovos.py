@@ -210,9 +210,12 @@ class OVOSAPIBackend(AbstractPartialBackend):
 
     # Chatbot API
     def chatbox_ask(self, prompt, chat_engine="gpt", lang=None, params=None):
-        #if chat_engine != "gpt":
-        #    raise NotImplementedError("only gpt chat_engine supported")
-
+        persona = params.get("persona") or "helpful, creative, clever, and very friendly."
+        initial_prompt = f"The following is a conversation with an AI assistant. " \
+                         f"The assistant understands all languages. " \
+                         f"The assistant gives short and factual answers. " \
+                         f"The assistant is {persona}"
+        prompt = initial_prompt + "\n" + prompt
         url = f"{self.backend_url}/cgpt/call_request/{self.uuid}"
         data = self.post(url, data={"prompt": prompt}, headers=self.headers)
         if data.status_code == 200:

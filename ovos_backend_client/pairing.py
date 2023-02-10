@@ -78,7 +78,7 @@ def check_remote_pairing(ignore_errors, url=None, version="v1", identity_file=No
         True if pairing checks out, otherwise False.
     """
     if Configuration()["server"].get("backend_type") not in PAIRING_BACKENDS:
-        return True # offline / ovos / neon
+        return has_been_paired() # uuid assigned locally
     
     try:
         return bool(DeviceApi(url=url, version=version,

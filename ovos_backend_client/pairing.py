@@ -38,7 +38,7 @@ def has_been_paired():
     Returns:
         bool: True if ever paired with backend (not factory reset)
     """
-    if Configuration()[“server”].get(“backend_type”) not in [“selene”, "personal"]:
+    if Configuration()["server"].get("backend_type") not in ["selene", "personal"]:
         return True # offline / ovos / neon
     
     # This forces a load from the identity file in case the pairing state
@@ -60,7 +60,7 @@ def is_paired(ignore_errors=True, url=None, version="v1", identity_file=None, ba
     if is_backend_disabled():
         return True
 
-    if Configuration()[“server”].get(“backend_type”) not in [“selene”, "personal"]:
+    if Configuration()["server"].get("backend_type") not in ["selene", "personal"]:
         return True # offline / ovos / neon
     
     # check if pairing is valid
@@ -78,7 +78,7 @@ def check_remote_pairing(ignore_errors, url=None, version="v1", identity_file=No
     Returns:
         True if pairing checks out, otherwise False.
     """
-    if Configuration()[“server”].get(“backend_type”) not in [“selene”, "personal"]:
+    if Configuration()["server"].get("backend_type") not in ["selene", "personal"]:
         return True # offline / ovos / neon
     
     try:

@@ -38,6 +38,9 @@ def has_been_paired():
     Returns:
         bool: True if ever paired with backend (not factory reset)
     """
+    if Configuration()[“server”].get(“backend_type”) not in [“selene”, "personal"]:
+        return True # offline / ovos / neon
+    
     # This forces a load from the identity file in case the pairing state
     # has recently changed
     ident = IdentityManager.load()
@@ -57,6 +60,9 @@ def is_paired(ignore_errors=True, url=None, version="v1", identity_file=None, ba
     if is_backend_disabled():
         return True
 
+    if Configuration()[“server”].get(“backend_type”) not in [“selene”, "personal"]:
+        return True # offline / ovos / neon
+    
     # check if pairing is valid
     api = DeviceApi(url=url, version=version, identity_file=identity_file, backend_type=backend_type)
     return api.identity.uuid and check_remote_pairing(ignore_errors, url=url, version=version,
@@ -72,6 +78,9 @@ def check_remote_pairing(ignore_errors, url=None, version="v1", identity_file=No
     Returns:
         True if pairing checks out, otherwise False.
     """
+    if Configuration()[“server”].get(“backend_type”) not in [“selene”, "personal"]:
+        return True # offline / ovos / neon
+    
     try:
         return bool(DeviceApi(url=url, version=version,
                               identity_file=identity_file, backend_type=backend_type).get())

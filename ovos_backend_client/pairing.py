@@ -12,9 +12,11 @@ from ovos_backend_client.api import DeviceApi, BackendType
 from ovos_backend_client.exceptions import BackendDown, InternetDown, HTTPError
 from ovos_backend_client.identity import IdentityManager
 from ovos_backend_client.backends.selene import SELENE_API_URL
+from ovos_backend_client.backends import BackendType
 
 
-PAIRING_BACKENDS = ["personal", "selene"]
+PAIRING_BACKENDS = [BackendType.PERSONAL,
+                    BackendType.SELENE]
 
 
 def is_backend_disabled():
@@ -77,7 +79,8 @@ def check_remote_pairing(ignore_errors, url=None, version="v1", identity_file=No
     Returns:
         True if pairing checks out, otherwise False.
     """
-    if Configuration()["server"].get("backend_type") not in PAIRING_BACKENDS:
+    backend_type = backend_type or Configuration()["server"].get("backend_type") or BackendType.OFFLINE
+    if backend_type not in PAIRING_BACKENDS:
         return has_been_paired() # uuid assigned locally
     
     try:

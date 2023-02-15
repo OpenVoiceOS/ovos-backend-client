@@ -64,10 +64,17 @@ def is_paired(ignore_errors=True, url=None, version="v1", identity_file=None, ba
     if is_backend_disabled():
         return True
 
-    # check if pairing is valid
+    backend_type = backend_type or get_backend_type()
     api = DeviceApi(url=url, version=version, identity_file=identity_file, backend_type=backend_type)
-    return api.identity.uuid and check_remote_pairing(ignore_errors, url=url, version=version,
-                                                      identity_file=identity_file, backend_type=backend_type)
+
+    # check if pairing is valid
+    if backend_type in PAIRING_BACKENDS:
+        return api.identity.uuid and \
+               check_remote_pairing(ignore_errors, url=url, version=version,
+                                    identity_file=identity_file,
+                                    backend_type=backend_type)
+    else:
+        return api.identity.uuid
 
 
 def check_remote_pairing(ignore_errors, url=None, version="v1", identity_file=None, backend_type=None):

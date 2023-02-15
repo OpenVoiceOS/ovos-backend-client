@@ -74,7 +74,7 @@ def is_paired(ignore_errors=True, url=None, version="v1", identity_file=None, ba
                                     identity_file=identity_file,
                                     backend_type=backend_type)
     else:
-        return api.identity.uuid
+        return bool(api.identity.uuid)
 
 
 def check_remote_pairing(ignore_errors, url=None, version="v1", identity_file=None, backend_type=None):

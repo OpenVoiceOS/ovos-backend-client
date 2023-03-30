@@ -5,7 +5,6 @@ from tempfile import NamedTemporaryFile
 from uuid import uuid4
 
 import requests
-from json_database import JsonStorageXDG
 from ovos_config.config import Configuration
 from ovos_config.config import update_mycroft_config
 from ovos_plugin_manager.stt import OVOSSTTFactory, get_stt_config
@@ -14,7 +13,8 @@ from ovos_utils.network_utils import get_external_ip
 from ovos_utils.smtp_utils import send_smtp
 
 from ovos_backend_client.backends.base import AbstractBackend, BackendType
-from ovos_backend_client.database import BackendDatabase
+from ovos_backend_client.database import BackendDatabase, JsonMetricDatabase, DeviceDatabase, SettingsDatabase, \
+    SkillSettings, OAuthTokenDatabase
 from ovos_backend_client.identity import IdentityManager
 
 
@@ -269,31 +269,37 @@ class OfflineBackend(AbstractBackend):
 
     # Device Api
     def device_get(self):
-        """ Retrieve all device information from the web backend """
-        data = JsonStorageXDG("ovos_device_info.json", subfolder="OpenVoiceOS")
-        for k, v in super().device_get().items():
-            if k not in data:
-                data[k] = v
-        return data
+        """ Retrieve all device information from the json db"""
+        # get from local db
+        device = DeviceDatabase().get_device(self.uuid)
+        if device:
+            return device.selene_device
+        return {}
 
     def device_get_settings(self):
-        """ Retrieve device settings information from the web backend
+        """ Retrieve device settings information from the json db
 
         Returns:
             str: JSON string with user configuration information.
         """
         LOG.warning("Offline Backend, you may want to reference "
                     "`ovos_config.Configuration()` to get full config")
-        return Configuration.remote
+        device = DeviceDatabase().get_device(self.uuid)
+        if device:
+            return device.selene_settings
+        return {}
 
     def device_get_skill_settings_v1(self):
         """ old style bidirectional skill settings api, still available!"""
-        # TODO scan skill xdg paths
-        return []
+        return [s.serialize() for s in SettingsDatabase().get_device_settings(self.uuid)]
 
     def device_put_skill_settings_v1(self, data=None):
         """ old style bidirectional skill settings api, still available!"""
-        # do nothing, skills manage their own settings lifecycle
+        # update local db
+        with SettingsDatabase() as db:
+            s = SkillSettings.deserialize(data)
+            db.add_setting(self.uuid, s.skill_id, s.settings, s.meta,
+                           s.display_name, s.remote_id)
         return {}
 
     def device_get_code(self, state=None):
@@ -304,19 +310,14 @@ class OfflineBackend(AbstractBackend):
                         platform="unknown",
                         platform_build="unknown",
                         enclosure_version="unknown"):
-        data = {"state": state,
+        data = {"uuid": state,
                 "token": token,
                 "coreVersion": core_version,
                 "platform": platform,
                 "platform_build": platform_build,
                 "enclosureVersion": enclosure_version}
         identity = self.admin_pair(state)
-        data["uuid"] = data.pop("state")
-        data["token"] = self.access_token
         BackendDatabase(self.uuid).update_device_db(data)
-        db = JsonStorageXDG("ovos_device_info.json", subfolder="OpenVoiceOS")
-        db.update(data)
-        db.store()
         return identity
 
     def device_update_version(self,
@@ -324,21 +325,14 @@ class OfflineBackend(AbstractBackend):
                               platform="unknown",
                               platform_build="unknown",
                               enclosure_version="unknown"):
-        data = {"coreVersion": core_version,
-                "platform": platform,
-                "platform_build": platform_build,
-                "enclosureVersion": enclosure_version,
-                "token": self.access_token}
-        BackendDatabase(self.uuid).update_device_db(data)
-        db = JsonStorageXDG("ovos_device_info.json", subfolder="OpenVoiceOS")
-        db.update(data)
-        db.store()
+        pass  # irrelevant info
 
     def device_report_metric(self, name, data):
-        return self.metrics_upload(name, data)
+        with JsonMetricDatabase() as db:
+            db.add_metric(name, data, self.uuid)
 
     def device_get_location(self):
-        """ Retrieve device location information from the web backend
+        """ Retrieve device location information from Configuration
 
         Returns:
             str: JSON string with user location.
@@ -359,8 +353,8 @@ class OfflineBackend(AbstractBackend):
 
     def device_get_skill_settings(self):
         """Get the remote skill settings for all skills on this device."""
-        # TODO - scan xdg paths ?
-        return {}
+        db = SettingsDatabase()
+        return {s.skill_id: s.settings for s in db.get_device_settings(self.uuid)}
 
     def device_upload_skill_metadata(self, settings_meta):
         """Upload skill metadata.
@@ -368,8 +362,16 @@ class OfflineBackend(AbstractBackend):
         Args:
             settings_meta (dict): skill info and settings in JSON format
         """
-        # Do nothing, skills manage their own settingsmeta.json files
-        return
+        s = SkillSettings.deserialize(settings_meta)
+
+        # save new settings meta to db
+        with SettingsDatabase() as db:
+            # keep old settings, update meta only
+            old_s = db.get_setting(s.skill_id, self.uuid)
+            if old_s:
+                s.settings = old_s.settings
+            db.add_setting(self.uuid, s.skill_id, s.settings, s.meta,
+                           s.display_name, s.remote_id)
 
     def device_upload_skills_data(self, data):
         """ Upload skills.json file. This file contains a manifest of installed
@@ -378,8 +380,7 @@ class OfflineBackend(AbstractBackend):
         Args:
              data: dictionary with skills data from msm
         """
-        with JsonStorageXDG("ovos_skills_meta.json", subfolder="OpenVoiceOS") as db:
-            db.update(data)
+        pass
 
     def device_upload_wake_word_v1(self, audio, params, upload_url=None):
         """ upload precise wake word V1 endpoint - url can be external to backend"""
@@ -442,7 +443,7 @@ class OfflineBackend(AbstractBackend):
             Returns:
                 json string containing token and additional information
         """
-        return JsonStorageXDG("ovos_oauth").get(dev_cred) or {}
+        return OAuthTokenDatabase().get(dev_cred) or {}
 
     # Admin API
     def admin_pair(self, uuid=None):
@@ -498,8 +499,6 @@ class OfflineBackend(AbstractBackend):
                 "tts_module": "ovos-tts-plugin-mimic",
                 "tts_config": {"voice": "ap"}}
         """
-        with JsonStorageXDG("ovos_device_info.json", subfolder="OpenVoiceOS") as db:
-            db.update(prefs)
         cfg = dict(prefs)
         cfg["listener"] = {}
         cfg["hotwords"] = {}
@@ -535,9 +534,9 @@ class OfflineBackend(AbstractBackend):
                 "isolated_skills": False,
                 "lang": "en-us"}
         """
-        update_mycroft_config({"opt_in": info["opt_in"], "lang": info["lang"]})
-        with JsonStorageXDG("ovos_device_info.json", subfolder="OpenVoiceOS") as db:
-            db.update(info)
+        # TODO - email support in credentials
+        update_mycroft_config({"opt_in": info["opt_in"],
+                               "lang": info["lang"]})
 
     # STT Api
     def load_stt_plugin(self, config=None, lang=None):

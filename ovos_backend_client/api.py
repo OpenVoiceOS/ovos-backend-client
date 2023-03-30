@@ -556,7 +556,7 @@ if __name__ == "__main__":
     # d = DeviceApi(FAKE_BACKEND_URL)
 
     # TODO turn these into unittests
-    # ident = load_identity()
+    # voice_id = load_identity()
     # paired = is_paired()
     geo = GeolocationApi(backend_type=BackendType.OFFLINE)
     data = geo.get_geolocation("Missouri Kansas")

@@ -7,19 +7,23 @@ from ovos_backend_client.backends.personal import PersonalBackend
 API_REGISTRY = {
     BackendType.OFFLINE: {
         "admin": True,  # updates mycroft.conf if used
-        "device": True,  # shared database with local backend for UI compat
-        "dataset": True,  # shared database with local backend for ww tagger UI compat
-        "metrics": True,  # shared database with local backend for metrics UI compat
+        "database": True,  # manages local files only
+        "device": True,  # manages local files only
+        "skill_settings": True,  # manages local files only
+        "dataset": True,  # manages local files only
+        "metrics": True,  # manages local files only
         "wolfram": True,  # key needs to be set
         "geolocate": True,  # nominatim - no key needed
         "stt": True,  # uses OPM and reads from mycroft.conf
         "owm": True,  # key needs to be set
         "email": True,  # smtp config needs to be set
-        "oauth": True  # use local backend UI on same device to register apps
+        "oauth": True  # oauth PHAL plugin to register apps
     },
     BackendType.PERSONAL: {
         "admin": True,
+        "database": True,  # requires ovos-personal-backend>=0.2.0
         "device": True,
+        "skill_settings": True,
         "dataset": True,
         "metrics": True,
         "wolfram": True,
@@ -27,7 +31,7 @@ API_REGISTRY = {
         "stt": True,
         "owm": True,
         "email": True,
-        "oauth": True  # can use local backend UI to register apps
+        "oauth": True  # can use personal-backend-manager to register apps
     }
 }
 

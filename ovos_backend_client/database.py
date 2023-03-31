@@ -4,6 +4,8 @@ from copy import deepcopy
 
 from json_database import JsonStorageXDG, JsonDatabaseXDG
 from ovos_config.config import Configuration
+from ovos_utils.configuration import get_xdg_config_save_path
+
 from ovos_backend_client.identity import IdentityManager
 
 
@@ -184,8 +186,7 @@ class SkillSettings:
 
     @property
     def path(self):
-        # TODO - xdg path
-        return f"{self.skill_id}/settings.json"
+        return f"{get_xdg_config_save_path()}/skills/{self.skill_id}/settings.json"
 
     def save(self):
         with open(self.path, "w") as f:

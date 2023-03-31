@@ -1,8 +1,7 @@
 import json
 from io import BytesIO, StringIO
 from os import listdir, makedirs, remove
-from os.path import isfile
-from os.path import join
+from os.path import isfile, isdir, join
 from tempfile import NamedTemporaryFile
 from uuid import uuid4
 
@@ -14,7 +13,7 @@ from ovos_config.locations import USER_CONFIG
 from ovos_plugin_manager.stt import OVOSSTTFactory, get_stt_config
 from ovos_plugin_manager.tts import get_voices, get_voice_id
 from ovos_plugin_manager.wakewords import get_ww_id, get_wws
-from ovos_utils.configuration import get_xdg_data_save_path
+from ovos_utils.configuration import get_xdg_config_save_path, get_xdg_data_save_path
 from ovos_utils.network_utils import get_external_ip
 from ovos_utils.smtp_utils import send_smtp
 from ovos_utils.xdg_utils import xdg_data_home
@@ -519,8 +518,8 @@ class OfflineBackend(AbstractBackend):
                 "isolated_skills": False,
                 "lang": "en-us"}
         """
-        # TODO - email support in credentials
         update_mycroft_config({"opt_in": info["opt_in"],
+                               "email": {"recipient": info.get("email")},
                                "lang": info["lang"]})
 
     # STT Api
@@ -637,7 +636,7 @@ class OfflineBackend(AbstractBackend):
     def db_delete_device(self, uuid):
         # delete identity file/user config/skill settings
 
-        settings_path = f""  # TODO
+        settings_path = f"{get_xdg_config_save_path()}/skills"
 
         skill_ids = listdir(settings_path)
 
@@ -657,15 +656,22 @@ class OfflineBackend(AbstractBackend):
         return self.db_update_device(uuid, *args, **kwargs)
 
     def _get_local_settings(self):
-        settings_path = f""  # TODO
-        skill_ids = listdir(settings_path)
+        settings_path = f"{get_xdg_config_save_path()}/skills"
+        if not isdir(settings_path):
+            return []
+        settings = {}
+        meta = {}
         all_settings = []
-        for skill_id in skill_ids:
+        for skill_id in listdir(settings_path):
             s = f"{settings_path}/{skill_id}/settings.json"
             if isfile(s):
                 with open(s) as f:
                     settings = json.load(f)
-            s = SkillSettings(skill_id, settings)
+            s = f"{settings_path}/{skill_id}/settingsmeta.json"
+            if isfile(s):
+                meta = json.load(f)
+
+            s = SkillSettings(skill_id=skill_id, meta=meta, skill_settings=settings)
             all_settings.append(s)
         return all_settings
 
@@ -673,43 +679,51 @@ class OfflineBackend(AbstractBackend):
         return [s.serialize() for s in self._get_local_settings()]
 
     def db_get_shared_skill_settings(self, skill_id):
-        settings_path = f""  # TODO
-        makedirs(settings_path, exist_ok=True)
-        s = f"{settings_path}/{skill_id}/settings.json"
-        with open(s) as f:
-            settings_json = json.load(f)
-        return SkillSettings(skill_id=skill_id,
-                             skill_settings=settings_json).serialize()
+        settings = self._get_local_settings()
+        for s in settings:
+            if s.skill_id == skill_id:
+                return s.serialize()
 
     def db_update_shared_skill_settings(self, skill_id,
                                         display_name=None,
                                         settings_json=None,
                                         metadata_json=None):
-        settings_path = f""  # TODO
+        settings_path = f"{get_xdg_config_save_path()}/skills/{skill_id}"
         makedirs(settings_path, exist_ok=True)
-        s = f"{settings_path}/{skill_id}/settings.json"
-        with open(s, "w") as f:
-            json.dump(settings_json, f)
+        if metadata_json:
+            s = f"{settings_path}/settingsmeta.json"
+            with open(s, "w") as f:
+                json.dump(metadata_json, f)
+        if settings_json:
+            s = f"{settings_path}/settings.json"
+            with open(s, "w") as f:
+                json.dump(metadata_json, f)
         return SkillSettings(skill_id=skill_id,
                              skill_settings=settings_path,
                              meta=metadata_json,
                              display_name=display_name).serialize()
 
     def db_delete_shared_skill_settings(self, skill_id):
-        settings_path = f""  # TODO
-        makedirs(settings_path, exist_ok=True)
-        s = f"{settings_path}/{skill_id}/settings.json"
+        settings_path = f"{get_xdg_config_save_path()}/skills/{skill_id}"
+        deleted = False
+        s = f"{settings_path}/settingsmeta.json"
         if isfile(s):
             remove(s)
-            return True
-        return False
+            deleted = True
+        s = f"{settings_path}/settings.json"
+        if isfile(s):
+            remove(s)
+            deleted = True
+        return deleted
 
     def db_post_shared_skill_settings(self, skill_id,
                                       display_name,
                                       settings_json,
                                       metadata_json):
-        return self.db_update_shared_skill_settings(skill_id, display_name=display_name,
-                                                    settings_json=settings_json, metadata_json=metadata_json)
+        return self.db_update_shared_skill_settings(skill_id,
+                                                    display_name=display_name,
+                                                    settings_json=settings_json,
+                                                    metadata_json=metadata_json)
 
     def db_list_skill_settings(self, uuid):
         return self.db_list_shared_skill_settings()
@@ -738,20 +752,20 @@ class OfflineBackend(AbstractBackend):
         return OAuthApplicationDatabase().values()
 
     def db_get_oauth_app(self, token_id):
-        raise NotImplementedError()
+        raise NotImplementedError() # TODO
 
     def db_update_oauth_app(self, token_id, client_id=None, client_secret=None,
                             auth_endpoint=None, token_endpoint=None, refresh_endpoint=None,
                             callback_endpoint=None, scope=None, shell_integration=None):
-        raise NotImplementedError()
+        raise NotImplementedError()  # TODO
 
     def db_delete_oauth_app(self, token_id):
-        raise NotImplementedError()
+        raise NotImplementedError()  # TODO
 
     def db_post_oauth_app(self, token_id, client_id, client_secret,
                           auth_endpoint, token_endpoint, refresh_endpoint,
                           callback_endpoint, scope, shell_integration=True):
-        raise NotImplementedError()
+        raise NotImplementedError()  # TODO
 
     def db_list_oauth_tokens(self):
         return OAuthTokenDatabase().values()
@@ -769,40 +783,40 @@ class OfflineBackend(AbstractBackend):
         return OAuthTokenDatabase().get(token_id) or {}
 
     def db_update_oauth_token(self, token_id, token_data):
-        raise NotImplementedError()
+        raise NotImplementedError()  # TODO
 
     def db_delete_oauth_token(self, token_id):
-        raise NotImplementedError()
+        raise NotImplementedError()  # TODO
 
     def db_post_oauth_token(self, token_id, token_data):
-        raise NotImplementedError()
+        raise NotImplementedError() # TODO
 
     def db_list_stt_recordings(self):
-        raise NotImplementedError()
+        raise NotImplementedError() # TODO
 
     def db_get_stt_recording(self, rec_id):
-        raise NotImplementedError()
+        raise NotImplementedError() # TODO
 
     def db_update_stt_recording(self, rec_id, transcription=None, metadata=None):
-        raise NotImplementedError()
+        raise NotImplementedError() # TODO
 
     def db_delete_stt_recording(self, rec_id):
-        raise NotImplementedError()
+        raise NotImplementedError() # TODO
 
     def db_post_stt_recording(self, byte_data, transcription, metadata=None):
-        raise NotImplementedError()
+        raise NotImplementedError() # TODO
 
     def db_list_ww_recordings(self):
-        raise NotImplementedError()
+        raise NotImplementedError() # TODO
 
     def db_get_ww_recording(self, rec_id):
-        raise NotImplementedError()
+        raise NotImplementedError() # TODO
 
     def db_update_ww_recording(self, rec_id, transcription=None, metadata=None):
-        raise NotImplementedError()
+        raise NotImplementedError() # TODO
 
     def db_delete_ww_recording(self, rec_id):
-        raise NotImplementedError()
+        raise NotImplementedError() # TODO
 
     def db_post_ww_recording(self, byte_data, transcription, metadata=None):
         listener_config = Configuration().get("listener", {})
@@ -844,16 +858,16 @@ class OfflineBackend(AbstractBackend):
     def db_list_ww_definitions(self):
         ww_defs = []
         for ww_id, ww_cfg in get_wws().items():  # TODO scan=True once implemented
-                plugin, name, _ = ww_id.split("_", 3)
-                ww_defs.append({
-                    "ww_id": ww_id,
-                    "name": ww_cfg.get("display_name") or name,
-                    "lang": ww_cfg.get("stt_lang") or
-                            ww_cfg.get("lang") or
-                            Configuration.get("lang", "en-us"),
-                    "plugin": ww_cfg.get("module") or plugin,
-                    "ww_config": ww_cfg
-                })
+            plugin, name, _ = ww_id.split("_", 3)
+            ww_defs.append({
+                "ww_id": ww_id,
+                "name": ww_cfg.get("display_name") or name,
+                "lang": ww_cfg.get("stt_lang") or
+                        ww_cfg.get("lang") or
+                        Configuration.get("lang", "en-us"),
+                "plugin": ww_cfg.get("module") or plugin,
+                "ww_config": ww_cfg
+            })
         return ww_defs
 
     def db_get_ww_definition(self, ww_id):

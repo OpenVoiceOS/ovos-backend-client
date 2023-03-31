@@ -43,12 +43,12 @@ class BackendDatabase:
                 for k, v in default.items()}
 
         with DeviceDatabase() as db:
-            db.add_device(**kwargs)
+            return db.add_device(**kwargs)
 
     def update_metrics_db(self, name, data):
         # shared with personal backend for UI compat
         with JsonMetricDatabase() as db:
-            db.add_metric(name, data, self.uuid)
+            return db.add_metric(name, data, self.uuid)
 
     def update_ww_db(self, params):
         listener_config = Configuration().get("listener", {})
@@ -140,6 +140,7 @@ class JsonMetricDatabase(JsonDatabaseXDG):
         metric_id = self.total_metrics() + 1
         metric = Metric(metric_id, metric_type, meta, uuid)
         self.add_item(metric)
+        return metric
 
     def total_metrics(self):
         return len(self)

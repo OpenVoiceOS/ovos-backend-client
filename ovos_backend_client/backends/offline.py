@@ -3,10 +3,11 @@ import time
 from io import BytesIO, StringIO
 from tempfile import NamedTemporaryFile
 from uuid import uuid4
-
+from os import listdir, makedirs, remove
+from os.path import isfile
 import requests
-from ovos_config.config import Configuration
-from ovos_config.config import update_mycroft_config
+from ovos_config.config import Configuration, update_mycroft_config
+from ovos_config.locations import USER_CONFIG
 from ovos_plugin_manager.stt import OVOSSTTFactory, get_stt_config
 from ovos_utils.log import LOG
 from ovos_utils.network_utils import get_external_ip
@@ -14,7 +15,7 @@ from ovos_utils.smtp_utils import send_smtp
 
 from ovos_backend_client.backends.base import AbstractBackend, BackendType
 from ovos_backend_client.database import BackendDatabase, JsonMetricDatabase, DeviceDatabase, SettingsDatabase, \
-    SkillSettings, OAuthTokenDatabase
+    SkillSettings, OAuthTokenDatabase, OAuthApplicationDatabase
 from ovos_backend_client.identity import IdentityManager
 
 
@@ -328,8 +329,7 @@ class OfflineBackend(AbstractBackend):
         pass  # irrelevant info
 
     def device_report_metric(self, name, data):
-        with JsonMetricDatabase() as db:
-            db.add_metric(name, data, self.uuid)
+        self.db_post_metric(name, data)
 
     def device_get_location(self):
         """ Retrieve device location information from Configuration
@@ -443,7 +443,7 @@ class OfflineBackend(AbstractBackend):
             Returns:
                 json string containing token and additional information
         """
-        return OAuthTokenDatabase().get(dev_cred) or {}
+        return self.db_get_oauth_token(dev_cred)
 
     # Admin API
     def admin_pair(self, uuid=None):
@@ -564,6 +564,318 @@ class OfflineBackend(AbstractBackend):
         if isinstance(tx, str):
             tx = [tx]
         return tx
+
+    # Database API
+    def db_list_devices(self):
+        _mail_cfg = Configuration.get("email", {})
+
+        tts_plug = Configuration.get("tts").get("module")
+        tts_config = Configuration.get("tts")[tts_plug]
+
+        default_ww = Configuration.get("listener").get("wake_word", "hey_mycroft")
+        ww_config = Configuration.get("hotwords")[default_ww]
+
+        device = {
+            "uuid": self.uuid,
+            "token": "DUMMYTOKEN123",
+            "isolated_skills": True,
+            "opt_in": Configuration.get("opt_in", False),
+            "name": f"Device-{self.uuid}",
+            "device_location": "somewhere",
+            "email": _mail_cfg.get("recipient") or
+                     _mail_cfg.get("smtp", {}).get("username"),
+            "time_format": Configuration.get("date_format", "full"),
+            "date_format": Configuration.get("date_format", "DMY"),
+            "system_unit": Configuration.get("system_unit", "metric"),
+            "lang": Configuration.get("lang") or "en-us",
+            "location": Configuration.get("location"),
+            "default_tts": tts_plug,
+            "default_tts_cfg": tts_config,
+            "default_ww": default_ww,
+            "default_ww_cfg": ww_config
+        }
+        return [device]
+
+    def db_get_device(self, uuid):
+        if uuid != self.uuid:
+            return None
+        return self.db_list_devices()[0]
+
+    def db_update_device(self, uuid, name=None,
+                         device_location=None, opt_in=None,
+                         location=None, lang=None, date_format=None,
+                         system_unit=None, time_format=None, email=None,
+                         isolated_skills=False, ww_id=None, voice_id=None):
+        if uuid != self.uuid:
+            identity = self.admin_pair(uuid)
+        new_config = {
+
+        }
+        if opt_in is not None:
+            new_config["opt_in"] = opt_in
+        if location is not None:
+            new_config["location"] = location
+        if lang is not None:
+            new_config["lang"] = lang
+        if time_format is not None:
+            new_config["time_format"] = time_format
+        if date_format is not None:
+            new_config["date_format"] = date_format
+        if system_unit is not None:
+            new_config["system_unit"] = system_unit
+        if email is not None:
+            new_config["email"]["recipient"] = email
+        if device_location is not None:
+            pass  # not tracked locally, reserved for future usage
+        if ww_id is not None:
+            ww_def = self.db_get_ww_definition(ww_id)
+            if ww_def:
+                name = ww_def["name"]
+                cfg = ww_def["ww_config"]
+                if "module" not in cfg:
+                    cfg["module"] = ww_def["plugin"]
+                new_config["listener"]["wake_word"] = name
+                new_config["hotwords"][name] = cfg
+
+        if voice_id is not None:
+            ww_def = self.db_get_voice_definition(voice_id)
+            if ww_def:
+                plugin = ww_def["plugin"]
+                cfg = ww_def["tts_config"]
+                # TODO - gender -> persona
+                if ww_def.get("lang"):
+                    cfg["lang"] = ww_def["lang"]
+                new_config["tts"]["module"] = plugin
+                new_config["tts"][plugin] = cfg
+        raise NotImplementedError()
+
+    def db_delete_device(self, uuid):
+        # delete identity file/user config/skill settings
+
+        settings_path = f""  # TODO
+
+        skill_ids = listdir(settings_path)
+
+        # delete skill settings
+        for skill_id in skill_ids:
+            s = f"{settings_path}/{skill_id}/settings.json"
+            if isfile(s):
+                remove(s)
+
+        if isfile(IdentityManager.IDENTITY_FILE):
+            remove(IdentityManager.IDENTITY_FILE)
+
+        if isfile(USER_CONFIG):
+            remove(USER_CONFIG)
+
+    def db_post_device(self, uuid, token, *args, **kwargs):
+        return self.db_update_device(uuid, *args, **kwargs)
+
+    def db_list_shared_skill_settings(self):
+        settings_path = f""  # TODO
+        skill_ids = listdir(settings_path)
+        all_settings = []
+        for skill_id in skill_ids:
+            s = f"{settings_path}/{skill_id}/settings.json"
+            if isfile(s):
+                with open(s) as f:
+                    settings = json.load(f)
+            s = SkillSettings(skill_id, settings)
+            all_settings.append(s.serialize())
+
+        return all_settings
+
+    def db_get_shared_skill_settings(self, skill_id):
+        settings_path = f""  # TODO
+        makedirs(settings_path, exist_ok=True)
+        s = f"{settings_path}/{skill_id}/settings.json"
+        with open(s) as f:
+            settings_json = json.load(f)
+        return SkillSettings(skill_id=skill_id,
+                             skill_settings=settings_json).serialize()
+
+    def db_update_shared_skill_settings(self, skill_id,
+                                        display_name=None,
+                                        settings_json=None,
+                                        metadata_json=None):
+        settings_path = f""  # TODO
+        makedirs(settings_path, exist_ok=True)
+        s = f"{settings_path}/{skill_id}/settings.json"
+        with open(s, "w") as f:
+            json.dump(settings_json, f)
+        return SkillSettings(skill_id=skill_id,
+                             skill_settings=settings_path,
+                             meta=metadata_json,
+                             display_name=display_name).serialize()
+
+    def db_delete_shared_skill_settings(self, skill_id):
+        settings_path = f""  # TODO
+        makedirs(settings_path, exist_ok=True)
+        s = f"{settings_path}/{skill_id}/settings.json"
+        if isfile(s):
+            remove(s)
+            return True
+        return False
+
+    def db_post_shared_skill_settings(self, skill_id,
+                                      display_name,
+                                      settings_json,
+                                      metadata_json):
+        return self.db_update_shared_skill_settings(skill_id, display_name=display_name,
+                                                    settings_json=settings_json, metadata_json=metadata_json)
+
+    def db_list_skill_settings(self, uuid):
+        return self.db_list_shared_skill_settings()
+
+    def db_get_skill_settings(self, uuid, skill_id):
+        return self.db_get_shared_skill_settings(skill_id)
+
+    def db_update_skill_settings(self, uuid, skill_id,
+                                 display_name=None,
+                                 settings_json=None,
+                                 metadata_json=None):
+        return self.db_update_shared_skill_settings(skill_id, display_name=display_name,
+                                                    settings_json=settings_json, metadata_json=metadata_json)
+
+    def db_delete_skill_settings(self, uuid, skill_id):
+        return self.db_delete_shared_skill_settings(skill_id)
+
+    def db_post_skill_settings(self, uuid, skill_id,
+                               display_name,
+                               settings_json,
+                               metadata_json):
+        return self.db_post_shared_skill_settings(skill_id, display_name=display_name,
+                                                  settings_json=settings_json, metadata_json=metadata_json)
+
+    def db_list_oauth_apps(self):
+        return OAuthApplicationDatabase().values()
+
+    def db_get_oauth_app(self, token_id):
+        raise NotImplementedError()
+
+    def db_update_oauth_app(self, token_id, client_id=None, client_secret=None,
+                            auth_endpoint=None, token_endpoint=None, refresh_endpoint=None,
+                            callback_endpoint=None, scope=None, shell_integration=None):
+        raise NotImplementedError()
+
+    def db_delete_oauth_app(self, token_id):
+        raise NotImplementedError()
+
+    def db_post_oauth_app(self, token_id, client_id, client_secret,
+                          auth_endpoint, token_endpoint, refresh_endpoint,
+                          callback_endpoint, scope, shell_integration=True):
+        raise NotImplementedError()
+
+    def db_list_oauth_tokens(self):
+        return OAuthTokenDatabase().values()
+
+    def db_get_oauth_token(self, token_id):
+        """
+            Get Oauth token for dev_credential dev_cred.
+
+            Argument:
+                dev_cred:   development credentials identifier
+
+            Returns:
+                json string containing token and additional information
+        """
+        return OAuthTokenDatabase().get(token_id) or {}
+
+    def db_update_oauth_token(self, token_id, token_data):
+        raise NotImplementedError()
+
+    def db_delete_oauth_token(self, token_id):
+        raise NotImplementedError()
+
+    def db_post_oauth_token(self, token_id, token_data):
+        raise NotImplementedError()
+
+    def db_list_stt_recordings(self):
+        raise NotImplementedError()
+
+    def db_get_stt_recording(self, rec_id):
+        raise NotImplementedError()
+
+    def db_update_stt_recording(self, rec_id, transcription=None, metadata=None):
+        raise NotImplementedError()
+
+    def db_delete_stt_recording(self, rec_id):
+        raise NotImplementedError()
+
+    def db_post_stt_recording(self, rec_id, byte_data, transcription, metadata=None):
+        raise NotImplementedError()
+
+    def db_list_ww_recordings(self):
+        raise NotImplementedError()
+
+    def db_get_ww_recording(self, rec_id):
+        raise NotImplementedError()
+
+    def db_update_ww_recording(self, rec_id, transcription=None, metadata=None):
+        raise NotImplementedError()
+
+    def db_delete_ww_recording(self, rec_id):
+        raise NotImplementedError()
+
+    def db_post_ww_recording(self, rec_id, byte_data, transcription, metadata=None):
+        raise NotImplementedError()
+
+    def db_list_metrics(self):
+        return JsonMetricDatabase().values()
+
+    def db_get_metric(self, metric_id):
+        return JsonMetricDatabase().get(metric_id)
+
+    def db_update_metric(self, metric_id, metadata):
+        m = self.db_get_metric(metric_id)
+        m.meta = metadata
+        with JsonMetricDatabase() as db:
+            db[metric_id] = m
+
+    def db_delete_metric(self, metric_id):
+        with JsonMetricDatabase() as db:
+            if metric_id in db:
+                db.pop(metric_id)
+                return True
+        return False
+
+    def db_post_metric(self, metric_type, metadata):
+        with JsonMetricDatabase() as db:
+            m = db.add_metric(metric_type, metadata, self.uuid)
+        return m.serialize()
+
+    def db_list_ww_definitions(self):
+        raise NotImplementedError()
+
+    def db_get_ww_definition(self, ww_id):
+        raise NotImplementedError()
+
+    def db_update_ww_definition(self, ww_id, name, ww_config, plugin):
+        raise NotImplementedError()
+
+    def db_delete_ww_definition(self, ww_id):
+        raise NotImplementedError()
+
+    def db_post_ww_definition(self, name, ww_config, plugin):
+        raise NotImplementedError()
+
+    def db_list_voice_definitions(self):
+        raise NotImplementedError()
+
+    def db_get_voice_definition(self, voice_id):
+        raise NotImplementedError()
+
+    def db_update_voice_definition(self, voice_id, name=None, lang=None, plugin=None,
+                                   tts_config=None, offline=None, gender=None):
+        raise NotImplementedError()
+
+    def db_delete_voice_definition(self, voice_id):
+        raise NotImplementedError()
+
+    def db_post_voice_definition(self, name, lang, plugin,
+                                 tts_config, offline, gender=None):
+        raise NotImplementedError()
+
 
 
 class AbstractPartialBackend(OfflineBackend):

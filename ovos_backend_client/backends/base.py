@@ -646,7 +646,7 @@ class AbstractBackend:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def db_post_stt_recording(self, rec_id, byte_data, transcription, metadata=None):
+    def db_post_stt_recording(self, byte_data, transcription, metadata=None):
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -666,7 +666,7 @@ class AbstractBackend:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def db_post_ww_recording(self, rec_id, byte_data, transcription, metadata=None):
+    def db_post_ww_recording(self, byte_data, transcription, metadata=None):
         raise NotImplementedError()
 
     @abc.abstractmethod

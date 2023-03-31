@@ -1,66 +1,25 @@
 import enum
 import json
-import os
 from copy import deepcopy
-from os.path import join
 
 from json_database import JsonStorageXDG, JsonDatabaseXDG
 from ovos_config.config import Configuration
-from ovos_utils.configuration import get_xdg_data_save_path
+from ovos_backend_client.identity import IdentityManager
 
 
-class BackendDatabase:
-    """ This helper class creates ovos-config-assistant/ovos-backend-manager compatible json databases
-    This allows users to visualize metrics, tag wake words and configure devices
-    even when not using a backend"""
+class AudioTag(str, enum.Enum):
+    UNTAGGED = "untagged"
+    WAKE_WORD = "wake_word"
+    SPEECH = "speech"
+    NOISE = "noise"
+    SILENCE = "silence"
 
-    def __init__(self, uuid):
-        self.uuid = uuid
 
-    def update_device_db(self, data):
-        cfg = Configuration()
-        tts = cfg.get("tts", {}).get("module")
-        ww = cfg.get("listener", {}).get("wake_word", "hey_mycroft")
-
-        default = {
-            "uuid": self.uuid,
-            "isolated_skills": True,
-            "name": "LocalDevice",
-            "device_location": "127.0.0.1",
-            "email": "",
-            "date_format": cfg.get("date_format") or "DMY",
-            "time_format": cfg.get("time_format") or "full",
-            "system_unit": cfg.get("system_unit") or "metric",
-            "opt_in": cfg.get("opt_in", False),
-            "lang": cfg.get("lang", "en-us"),
-            "location": cfg.get("location", {}),
-            "default_tts": tts,
-            "default_tts_cfg": cfg.get("tts", {}).get(tts, {}),
-            "default_ww": ww,
-            "default_ww_cfg": cfg.get("hotwords", {}).get(ww, {})
-        }
-        kwargs = {k: v if k not in data else data[k]
-                for k, v in default.items()}
-
-        with DeviceDatabase() as db:
-            return db.add_device(**kwargs)
-
-    def update_metrics_db(self, name, data):
-        # shared with personal backend for UI compat
-        with JsonMetricDatabase() as db:
-            return db.add_metric(name, data, self.uuid)
-
-    def update_ww_db(self, params):
-        listener_config = Configuration().get("listener", {})
-        save_path = listener_config.get('save_path', f"{get_xdg_data_save_path()}/listener")
-        saved_wake_words_dir = join(save_path, 'wake_words')
-        filename = join(saved_wake_words_dir,
-                        '_'.join(str(params[k]) for k in sorted(params)) +
-                        '.wav')
-        if os.path.isfile(filename):
-            with JsonWakeWordDatabase() as db:
-                db.add_wakeword(params["name"], filename, params, self.uuid)
-        return filename
+class SpeakerTag(str, enum.Enum):
+    UNTAGGED = "untagged"
+    MALE = "male"
+    FEMALE = "female"
+    CHILDREN = "children"
 
 
 class OAuthTokenDatabase(JsonStorageXDG):
@@ -100,26 +59,6 @@ class OAuthApplicationDatabase(JsonStorageXDG):
 
     def total_apps(self):
         return len(self)
-
-
-# helper classes below originally from personal backend
-# migrated here for offline backend usage
-# personal backend moved to SQL dbs
-
-
-class AudioTag(str, enum.Enum):
-    UNTAGGED = "untagged"
-    WAKE_WORD = "wake_word"
-    SPEECH = "speech"
-    NOISE = "noise"
-    SILENCE = "silence"
-
-
-class SpeakerTag(str, enum.Enum):
-    UNTAGGED = "untagged"
-    MALE = "male"
-    FEMALE = "female"
-    CHILDREN = "children"
 
 
 class Metric:
@@ -171,6 +110,14 @@ class WakeWordRecording:
         self.speaker_type = speaker_type
 
 
+class UtteranceRecording:
+    def __init__(self, utterance_id, transcription, path, uuid="AnonDevice"):
+        self.utterance_id = utterance_id
+        self.transcription = transcription
+        self.path = path
+        self.uuid = uuid
+
+
 class JsonWakeWordDatabase(JsonDatabaseXDG):
     def __init__(self):
         super().__init__("ovos_wakewords")
@@ -197,21 +144,14 @@ class JsonWakeWordDatabase(JsonDatabaseXDG):
             print(e)
 
 
-class UtteranceRecording:
-    def __init__(self, utterance_id, transcription, path, uuid="AnonDevice"):
-        self.utterance_id = utterance_id
-        self.transcription = transcription
-        self.path = path
-        self.uuid = uuid
-
-
 class JsonUtteranceDatabase(JsonDatabaseXDG):
     def __init__(self):
         super().__init__("ovos_utterances")
 
     def add_utterance(self, transcription, path, uuid="AnonDevice"):
         utterance_id = self.total_utterances() + 1
-        utterance = UtteranceRecording(utterance_id, transcription, path, uuid)
+        utterance = UtteranceRecording(utterance_id, transcription,
+                                       path, uuid)
         self.add_item(utterance)
 
     def total_utterances(self):
@@ -232,7 +172,8 @@ class JsonUtteranceDatabase(JsonDatabaseXDG):
 class SkillSettings:
     """ represents skill settings for a individual skill"""
 
-    def __init__(self, skill_id, skill_settings=None, meta=None, display_name=None, remote_id=None):
+    def __init__(self, skill_id, skill_settings=None,
+                 meta=None, display_name=None, remote_id=None):
         self.skill_id = skill_id
         self.display_name = display_name or self.skill_id
         self.settings = skill_settings or {}
@@ -240,6 +181,15 @@ class SkillSettings:
         if not self.remote_id.startswith("@"):
             self.remote_id = f"@|{self.remote_id}"
         self.meta = meta or {}
+
+    @property
+    def path(self):
+        # TODO - xdg path
+        return f"{self.skill_id}/settings.json"
+
+    def save(self):
+        with open(self.path, "w") as f:
+            json.dump(self.settings, f, indent=4, ensure_ascii=False)
 
     def serialize(self):
         # settings meta with updated placeholder values from settings
@@ -318,42 +268,39 @@ class DeviceSettings:
     """ global device settings
     represent some fields from mycroft.conf but also contain some extra fields
     """
+    def __init__(self):
+        identity = IdentityManager.get()
 
-    def __init__(self, uuid, token, name=None, device_location=None, opt_in=True, location=None,
-                 lang=None, date_format=None, system_unit=None, time_format=None, email=None,
-                 isolated_skills=False, default_ww=None, default_tts=None, default_ww_cfg=None, default_tts_cfg=None):
+        default_ww = Configuration.get("listener", {}).get("wake_word", "hey_mycroft")
+        default_tts = Configuration.get("tts", {}).get("module", "ovos-tts-plugin-mimic3-server")
 
-        default_ww = default_ww or Configuration.get("listener", {}).get("wake_word", "hey_mycroft")
-        default_tts = default_tts or Configuration.get("tts", {}).get("module", "ovos-tts-plugin-mimic3-server")
-
-        self.uuid = uuid
-        self.token = token
+        self.uuid = identity["uuid"]
+        self.token = identity["access"]
 
         # ovos exclusive
         # individual skills can also control this via "__shared_settings" flag
-        self.isolated_skills = isolated_skills  # control if skill settings should be shared across all devices
+        self.isolated_skills = True
 
         # extra device info
-        self.name = name or f"Device-{self.uuid}"  # friendly device name
-        self.device_location = device_location or "somewhere"  # indoor location
+        self.name = f"Device-{self.uuid}"  # friendly device name
+        self.device_location = "somewhere"  # indoor location
         mail_cfg = Configuration.get("email", {})
-        self.email = email or \
-                     mail_cfg.get("recipient") or \
+        self.email = mail_cfg.get("recipient") or \
                      mail_cfg.get("smtp", {}).get("username")
         # mycroft.conf values
-        self.date_format = date_format or Configuration.get("date_format") or "DMY"
-        self.system_unit = system_unit or Configuration.get("system_unit") or "metric"
-        self.time_format = time_format or Configuration.get("time_format") or "full"
-        self.opt_in = opt_in
-        self.lang = lang or Configuration.get("lang") or "en-us"
-        self.location = location or Configuration["location"]
+        self.date_format = Configuration.get("date_format") or "DMY"
+        self.system_unit = Configuration.get("system_unit") or "metric"
+        self.time_format = Configuration.get("time_format") or "full"
+        self.opt_in = Configuration.get("opt_in") or False
+        self.lang = Configuration.get("lang") or "en-us"
+        self.location = Configuration["location"]
 
         # default config values
         # these are usually set in selene during pairing process
 
         # tts - 'ttsSettings': {'mimic2': {'voice': 'kusal'}, 'module': 'mimic2'}
         self.default_tts = default_tts
-        self.default_tts_cfg = default_tts_cfg or Configuration.get("tts", {}).get(default_tts, {})
+        self.default_tts_cfg = Configuration.get("tts", {}).get(default_tts, {})
 
         # wake word -  selene returns the full listener config, supports only a single wake word, and support only pocketsphinx....
         # 'listenerSetting': {
@@ -364,7 +311,7 @@ class DeviceSettings:
         # 'wakeWord': '...'}
         self.default_ww = default_ww.replace(" ", "_")
         # this needs to be done due to the convoluted logic in core, a _ will be added in config hotwords section and cause a mismatch otherwise
-        self.default_ww_cfg = default_ww_cfg or Configuration.get("hotwords", {}).get(default_ww, {})
+        self.default_ww_cfg = Configuration.get("hotwords", {}).get(default_ww, {})
 
     @property
     def selene_device(self):
@@ -425,168 +372,3 @@ class DeviceSettings:
         if isinstance(data, str):
             data = json.loads(data)
         return DeviceSettings(**data)
-
-
-class DeviceDatabase(JsonStorageXDG):
-    """ database of paired devices, used to keep track of individual device settings"""
-
-    def __init__(self):
-        super().__init__("ovos_devices")
-
-    def add_device(self, uuid, token, name=None, device_location=None, opt_in=False,
-                   location=None, lang=None, date_format=None, system_unit=None,
-                   time_format=None, email=None, isolated_skills=False,
-                   default_ww="hey mycroft", default_tts="ovos-tts-plugin-mimic2",
-                   default_ww_cfg=None, default_tts_cfg=None):
-        device = DeviceSettings(uuid, token, name, device_location, opt_in,
-                                location, lang, date_format, system_unit,
-                                time_format, email, isolated_skills,
-                                default_ww=default_ww, default_tts=default_tts,
-                                default_ww_cfg=default_ww_cfg, default_tts_cfg=default_tts_cfg)
-        self[uuid] = device.serialize()
-        return device
-
-    def delete_device(self, uuid):
-        if uuid in self:
-            self.pop(uuid)
-
-    def get_device(self, uuid):
-        dev = self.get(uuid)
-        if dev:
-            return DeviceSettings.deserialize(dev)
-        return None
-
-    def update_device(self, device):
-        assert isinstance(device, DeviceSettings)
-        kwargs = device.serialize()
-        self.add_device(**kwargs)
-
-    def total_devices(self):
-        return len(self)
-
-    def __iter__(self):
-        for dev in self.values():
-            yield DeviceSettings.deserialize(dev)
-
-    def __enter__(self):
-        """ Context handler """
-        return self
-
-    def __exit__(self, _type, value, traceback):
-        """ Commits changes and Closes the session """
-        try:
-            self.store()
-        except Exception as e:
-            print(e)
-
-
-class SettingsDatabase(JsonStorageXDG):
-    """ database of device specific skill settings """
-
-    def __init__(self):
-        super().__init__("ovos_skill_settings")
-
-    def add_setting(self, uuid, skill_id, setting, meta, display_name=None,
-                    remote_id=None):
-        remote_id = remote_id or f"@|{skill_id}"
-        # check special flag per skill about shared settings
-        # this is set by SeleneCloud util, can also be set by individual skills
-        shared = setting.get("__shared_settings")
-
-        # check device specific shared settings defaults
-        if not shared:
-            # check if this device is using "isolated_skills" flag
-            # this flag controls if the device keeps it's own unique
-            # settings or if skill settings are synced across all devices
-            dev = DeviceDatabase().get_device(uuid)
-            if dev and not dev.isolated_skills:
-                shared = True
-
-        if shared:
-            # add setting to shared db
-            with SharedSettingsDatabase() as sdb:
-                return sdb.add_setting(skill_id, setting,
-                                       meta, display_name, remote_id)
-
-        remote_id = f"@{uuid}|{skill_id}"  # tied to device
-        # add setting to device specific db
-        skill = SkillSettings(skill_id, setting,
-                              meta, display_name, remote_id)
-        if uuid not in self:
-            self[uuid] = {}
-        self[uuid][skill_id] = skill.serialize()
-        return skill
-
-    def get_setting(self, skill_id, uuid):
-        # check if this device is using "isolated_skills" flag
-        # this flag controls if the device keeps it's own unique
-        # settings or if skill settings are synced across all devices
-        dev = DeviceDatabase().get_device(uuid)
-        if dev and dev.isolated_skills:
-            # get setting from device specific db
-            if uuid in self:
-                skill = self[uuid].get(skill_id)
-                if skill:
-                    return SkillSettings.deserialize(skill)
-
-        # get settings from shared db -> default values if not set per device
-        return SharedSettingsDatabase().get_setting(skill_id)
-
-    def get_device_settings(self, uuid):
-        sets = []
-        # get setting from device specific db
-        if uuid in self:
-            sets += [SkillSettings.deserialize(skill)
-                     for skill in self[uuid].values()]
-
-        # get settings from shared db -> default values if not set per device
-        skills = [s.skill_id for s in sets]
-        sets += [s for s in SharedSettingsDatabase()
-                 if s.skill_id not in skills]
-
-        return sets
-
-    def __enter__(self):
-        """ Context handler """
-        return self
-
-    def __exit__(self, _type, value, traceback):
-        """ Commits changes and Closes the session """
-        try:
-            self.store()
-        except Exception as e:
-            print(e)
-
-
-class SharedSettingsDatabase(JsonStorageXDG):
-    """ database of skill settings shared across all devices """
-
-    def __init__(self):
-        super().__init__("ovos_shared_skill_settings")
-
-    def add_setting(self, skill_id, setting, meta, display_name=None,
-                    remote_id=None):
-        skill = SkillSettings(skill_id, setting, meta, display_name, remote_id)
-        self[skill_id] = skill.serialize()
-        return skill
-
-    def get_setting(self, skill_id):
-        skill = self.get(skill_id)
-        if skill:
-            return SkillSettings.deserialize(skill)
-        return None
-
-    def __iter__(self):
-        for skill in self.values():
-            yield SkillSettings.deserialize(skill)
-
-    def __enter__(self):
-        """ Context handler """
-        return self
-
-    def __exit__(self, _type, value, traceback):
-        """ Commits changes and Closes the session """
-        try:
-            self.store()
-        except Exception as e:
-            print(e)

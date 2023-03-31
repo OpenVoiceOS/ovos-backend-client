@@ -1,21 +1,25 @@
 import json
-import time
 from io import BytesIO, StringIO
-from tempfile import NamedTemporaryFile
-from uuid import uuid4
 from os import listdir, makedirs, remove
 from os.path import isfile
+from os.path import join
+from tempfile import NamedTemporaryFile
+from uuid import uuid4
+
 import requests
-from ovos_config.config import Configuration, update_mycroft_config
+import time
+from ovos_config.config import Configuration
+from ovos_config.config import update_mycroft_config
 from ovos_config.locations import USER_CONFIG
 from ovos_plugin_manager.stt import OVOSSTTFactory, get_stt_config
+from ovos_utils.configuration import get_xdg_data_save_path
 from ovos_utils.log import LOG
 from ovos_utils.network_utils import get_external_ip
 from ovos_utils.smtp_utils import send_smtp
 
 from ovos_backend_client.backends.base import AbstractBackend, BackendType
-from ovos_backend_client.database import BackendDatabase, JsonMetricDatabase, DeviceDatabase, SettingsDatabase, \
-    SkillSettings, OAuthTokenDatabase, OAuthApplicationDatabase
+from ovos_backend_client.database import JsonMetricDatabase, JsonWakeWordDatabase, \
+    SkillSettings, OAuthTokenDatabase, OAuthApplicationDatabase, DeviceSettings
 from ovos_backend_client.identity import IdentityManager
 
 
@@ -271,11 +275,8 @@ class OfflineBackend(AbstractBackend):
     # Device Api
     def device_get(self):
         """ Retrieve all device information from the json db"""
-        # get from local db
-        device = DeviceDatabase().get_device(self.uuid)
-        if device:
-            return device.selene_device
-        return {}
+        device = DeviceSettings()
+        return device.selene_device
 
     def device_get_settings(self):
         """ Retrieve device settings information from the json db
@@ -283,24 +284,18 @@ class OfflineBackend(AbstractBackend):
         Returns:
             str: JSON string with user configuration information.
         """
-        LOG.warning("Offline Backend, you may want to reference "
-                    "`ovos_config.Configuration()` to get full config")
-        device = DeviceDatabase().get_device(self.uuid)
-        if device:
-            return device.selene_settings
-        return {}
+        device = DeviceSettings()
+        return device.selene_settings
 
     def device_get_skill_settings_v1(self):
         """ old style bidirectional skill settings api, still available!"""
-        return [s.serialize() for s in SettingsDatabase().get_device_settings(self.uuid)]
+        return self.db_list_skill_settings(self.uuid)
 
     def device_put_skill_settings_v1(self, data=None):
         """ old style bidirectional skill settings api, still available!"""
         # update local db
-        with SettingsDatabase() as db:
-            s = SkillSettings.deserialize(data)
-            db.add_setting(self.uuid, s.skill_id, s.settings, s.meta,
-                           s.display_name, s.remote_id)
+        s = SkillSettings.deserialize(data)
+        s.store()
         return {}
 
     def device_get_code(self, state=None):
@@ -311,14 +306,7 @@ class OfflineBackend(AbstractBackend):
                         platform="unknown",
                         platform_build="unknown",
                         enclosure_version="unknown"):
-        data = {"uuid": state,
-                "token": token,
-                "coreVersion": core_version,
-                "platform": platform,
-                "platform_build": platform_build,
-                "enclosureVersion": enclosure_version}
         identity = self.admin_pair(state)
-        BackendDatabase(self.uuid).update_device_db(data)
         return identity
 
     def device_update_version(self,
@@ -353,8 +341,8 @@ class OfflineBackend(AbstractBackend):
 
     def device_get_skill_settings(self):
         """Get the remote skill settings for all skills on this device."""
-        db = SettingsDatabase()
-        return {s.skill_id: s.settings for s in db.get_device_settings(self.uuid)}
+        return {s.skill_id: s.settings
+                for s in self._get_local_settings()}
 
     def device_upload_skill_metadata(self, settings_meta):
         """Upload skill metadata.
@@ -363,15 +351,10 @@ class OfflineBackend(AbstractBackend):
             settings_meta (dict): skill info and settings in JSON format
         """
         s = SkillSettings.deserialize(settings_meta)
-
-        # save new settings meta to db
-        with SettingsDatabase() as db:
-            # keep old settings, update meta only
-            old_s = db.get_setting(s.skill_id, self.uuid)
-            if old_s:
-                s.settings = old_s.settings
-            db.add_setting(self.uuid, s.skill_id, s.settings, s.meta,
-                           s.display_name, s.remote_id)
+        old_s = self.db_get_skill_settings(self.uuid, s.skill_id)
+        if old_s: # keep old settings value, update meta values only
+            s.settings = old_s.settings
+        s.save()
 
     def device_upload_skills_data(self, data):
         """ Upload skills.json file. This file contains a manifest of installed
@@ -393,20 +376,20 @@ class OfflineBackend(AbstractBackend):
     # Metrics API
     def metrics_upload(self, name, data):
         """ upload metrics"""
-        BackendDatabase(self.uuid).update_metrics_db(name, data)
-        return {}
+        return self.db_post_metric(name, data)
 
     # Dataset API
     def dataset_upload_wake_word(self, audio, params, upload_url=None):
         """ upload wake word sample - url can be external to backend"""
+        byte_data = audio.get_wav_data()
         if Configuration().get("listener", {}).get('record_wake_words'):
-            BackendDatabase(self.uuid).update_ww_db(params)  # update metadata db for ww tagging UI
+            self.db_post_ww_recording(byte_data, params["name"], params)
 
         upload_url = upload_url or Configuration().get("listener", {}).get("wake_word_upload", {}).get("url")
         if upload_url:
             # upload to arbitrary server
             ww_files = {
-                'audio': BytesIO(audio.get_wav_data()),
+                'audio': BytesIO(byte_data),
                 'metadata': StringIO(json.dumps(params))
             }
             return self.post(upload_url, files=ww_files)
@@ -647,7 +630,7 @@ class OfflineBackend(AbstractBackend):
                     cfg["lang"] = ww_def["lang"]
                 new_config["tts"]["module"] = plugin
                 new_config["tts"][plugin] = cfg
-        raise NotImplementedError()
+        update_mycroft_config(new_config)
 
     def db_delete_device(self, uuid):
         # delete identity file/user config/skill settings
@@ -671,7 +654,7 @@ class OfflineBackend(AbstractBackend):
     def db_post_device(self, uuid, token, *args, **kwargs):
         return self.db_update_device(uuid, *args, **kwargs)
 
-    def db_list_shared_skill_settings(self):
+    def _get_local_settings(self):
         settings_path = f""  # TODO
         skill_ids = listdir(settings_path)
         all_settings = []
@@ -681,9 +664,11 @@ class OfflineBackend(AbstractBackend):
                 with open(s) as f:
                     settings = json.load(f)
             s = SkillSettings(skill_id, settings)
-            all_settings.append(s.serialize())
-
+            all_settings.append(s)
         return all_settings
+
+    def db_list_shared_skill_settings(self):
+        return [s.serialize() for s in self._get_local_settings()]
 
     def db_get_shared_skill_settings(self, skill_id):
         settings_path = f""  # TODO
@@ -802,7 +787,7 @@ class OfflineBackend(AbstractBackend):
     def db_delete_stt_recording(self, rec_id):
         raise NotImplementedError()
 
-    def db_post_stt_recording(self, rec_id, byte_data, transcription, metadata=None):
+    def db_post_stt_recording(self, byte_data, transcription, metadata=None):
         raise NotImplementedError()
 
     def db_list_ww_recordings(self):
@@ -817,8 +802,18 @@ class OfflineBackend(AbstractBackend):
     def db_delete_ww_recording(self, rec_id):
         raise NotImplementedError()
 
-    def db_post_ww_recording(self, rec_id, byte_data, transcription, metadata=None):
-        raise NotImplementedError()
+    def db_post_ww_recording(self, byte_data, transcription, metadata=None):
+        listener_config = Configuration().get("listener", {})
+        save_path = listener_config.get('save_path', f"{get_xdg_data_save_path()}/listener")
+        saved_wake_words_dir = join(save_path, 'wake_words')
+        metadata = metadata or {}
+        if metadata:
+            filename = join(saved_wake_words_dir,
+                            '_'.join(str(metadata[k]) for k in sorted(metadata)) +
+                            '.wav')
+            if isfile(filename):
+                with JsonWakeWordDatabase() as db:
+                    db.add_wakeword(metadata["name"], filename, metadata, self.uuid)
 
     def db_list_metrics(self):
         return JsonMetricDatabase().values()

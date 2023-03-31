@@ -698,7 +698,7 @@ class AbstractBackend:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def db_update_ww_definition(self, ww_id, name, ww_config, plugin):
+    def db_update_ww_definition(self, ww_id, name, lang, ww_config, plugin):
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -706,7 +706,7 @@ class AbstractBackend:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def db_post_ww_definition(self, name, ww_config, plugin):
+    def db_post_ww_definition(self, name, lang, ww_config, plugin):
         raise NotImplementedError()
 
     @abc.abstractmethod

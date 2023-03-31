@@ -12,10 +12,12 @@ from ovos_config.config import Configuration
 from ovos_config.config import update_mycroft_config
 from ovos_config.locations import USER_CONFIG
 from ovos_plugin_manager.stt import OVOSSTTFactory, get_stt_config
+from ovos_plugin_manager.tts import get_voices, get_voice_id
+from ovos_plugin_manager.wakewords import get_ww_id, get_wws
 from ovos_utils.configuration import get_xdg_data_save_path
-from ovos_utils.log import LOG
 from ovos_utils.network_utils import get_external_ip
 from ovos_utils.smtp_utils import send_smtp
+from ovos_utils.xdg_utils import xdg_data_home
 
 from ovos_backend_client.backends.base import AbstractBackend, BackendType
 from ovos_backend_client.database import JsonMetricDatabase, JsonWakeWordDatabase, \
@@ -352,7 +354,7 @@ class OfflineBackend(AbstractBackend):
         """
         s = SkillSettings.deserialize(settings_meta)
         old_s = self.db_get_skill_settings(self.uuid, s.skill_id)
-        if old_s: # keep old settings value, update meta values only
+        if old_s:  # keep old settings value, update meta values only
             s.settings = old_s.settings
         s.save()
 
@@ -840,37 +842,144 @@ class OfflineBackend(AbstractBackend):
         return m.serialize()
 
     def db_list_ww_definitions(self):
-        raise NotImplementedError()
+        ww_defs = []
+        for ww_id, ww_cfg in get_wws().items():  # TODO scan=True once implemented
+                plugin, name, _ = ww_id.split("_", 3)
+                ww_defs.append({
+                    "ww_id": ww_id,
+                    "name": ww_cfg.get("display_name") or name,
+                    "lang": ww_cfg.get("stt_lang") or
+                            ww_cfg.get("lang") or
+                            Configuration.get("lang", "en-us"),
+                    "plugin": ww_cfg.get("module") or plugin,
+                    "ww_config": ww_cfg
+                })
+        return ww_defs
 
     def db_get_ww_definition(self, ww_id):
-        raise NotImplementedError()
+        ww_defs = self.db_list_ww_definitions()
+        for ww in ww_defs:
+            if ww["ww_id"] == ww_id:
+                return ww
 
-    def db_update_ww_definition(self, ww_id, name, ww_config, plugin):
-        raise NotImplementedError()
+    def db_update_ww_definition(self, ww_id, name=None, lang=None, ww_config=None, plugin=None):
+        ww_folders = f"{xdg_data_home()}/OPM/ww_configs"
+        path = ""
+        if not lang:
+            for l in listdir(ww_folders):
+                if isfile(f"{ww_folders}/{l}/{ww_id}.json"):
+                    path = f"{ww_folders}/{l}/{ww_id}.json"
+                    break
+            else:
+                lang = Configuration.get("lang")
+
+        path = path or f"{ww_folders}/{lang}/{ww_id}.json"
+
+        ww_config = ww_config or {}
+        if isfile(path):
+            with open(path) as f:
+                old_cfg = json.load(f)
+            if ww_config:
+                old_cfg.update(ww_config)
+            if plugin:
+                old_cfg["module"] = plugin
+            if name:
+                old_cfg["display_name"] = name
+            if lang:
+                old_cfg["stt_lang"] = lang
+        with open(path, "w") as f:
+            json.dump(ww_config, f, indent=4, ensure_ascii=False)
 
     def db_delete_ww_definition(self, ww_id):
-        raise NotImplementedError()
+        for lang in listdir(f"{xdg_data_home()}/OPM/ww_configs"):
+            if f"_{lang}_" in ww_id:
+                path = f"{xdg_data_home()}/OPM/ww_configs/{lang}/{ww_id}.json"
+                if isfile(path):
+                    remove(path)
+                    return True
+        return False
 
-    def db_post_ww_definition(self, name, ww_config, plugin):
-        raise NotImplementedError()
+    def db_post_ww_definition(self, name, lang, ww_config, plugin):
+        ww_id = get_ww_id(plugin_name=plugin, ww_name=name, ww_config=ww_config)
+        path = f"{xdg_data_home()}/OPM/ww_configs/{lang}/{ww_id}.json"
+        ww_config["stt_lang"] = lang  # tag language in STT step
+        with open(path, "w") as f:
+            json.dump(ww_config, f, indent=4, ensure_ascii=False)
 
     def db_list_voice_definitions(self):
-        raise NotImplementedError()
+        return [{
+            "voice_id": voice_id,
+            "lang": voice_data["meta"].get("lang"),
+            "plugin": voice_data["module"],
+            "tts_config": voice_data,
+            "offline": voice_data["meta"].get("offline"),
+            "gender": voice_data["meta"].get("gender"),
+        } for voice_id, voice_data in get_voices(scan=True).items()]
 
     def db_get_voice_definition(self, voice_id):
-        raise NotImplementedError()
+        voices = get_voices(scan=True)
+        if voice_id in voices:
+            voice_data = voices[voice_id]
+            return {
+                "voice_id": voice_id,
+                "lang": voice_data["meta"].get("lang"),
+                "plugin": voice_data["module"],
+                "tts_config": voice_data,
+                "offline": voice_data["meta"].get("offline"),
+                "gender": voice_data["meta"].get("gender"),
+            }
+        return {}
 
     def db_update_voice_definition(self, voice_id, name=None, lang=None, plugin=None,
                                    tts_config=None, offline=None, gender=None):
-        raise NotImplementedError()
+        VOICES_FOLDER = f"{xdg_data_home()}/OPM/voice_configs"
+        if not lang:
+            for l in listdir(VOICES_FOLDER):
+                if f"_{l}_" in voice_id:
+                    lang = l
+                    break
+
+        path = f"{VOICES_FOLDER}/{lang}/{voice_id}.json"
+        voicedef = {"meta": {}}
+        if isfile(path):
+            with open(path) as f:
+                voicedef = json.load(f)
+        if tts_config:
+            voicedef.update(tts_config)
+        if name:
+            voicedef["meta"]["name"] = name
+        if name:
+            voicedef["meta"]["offline"] = offline
+        if gender:
+            voicedef["meta"]["gender"] = gender
+        if lang:
+            voicedef["lang"] = lang
+            voicedef["meta"]["lang"] = lang
+        if plugin:
+            voicedef["module"] = plugin
+
+        with open(path, "w") as f:
+            json.dump(voicedef, f, indent=4, ensure_ascii=False)
 
     def db_delete_voice_definition(self, voice_id):
-        raise NotImplementedError()
+        VOICES_FOLDER = f"{xdg_data_home()}/OPM/voice_configs"
+        for lang in listdir(VOICES_FOLDER):
+            if f"_{lang}_" in voice_id:
+                path = f"{VOICES_FOLDER}/{lang}/{voice_id}.json"
+                if isfile(path):
+                    remove(path)
+                    return True
+        return False
 
     def db_post_voice_definition(self, name, lang, plugin,
                                  tts_config, offline, gender=None):
-        raise NotImplementedError()
-
+        voice_id = get_voice_id(plugin_name=plugin, lang=lang, tts_config=tts_config)
+        path = f"{xdg_data_home()}/OPM/voice_configs/{lang}/{voice_id}.json"
+        with open(path, "w") as f:
+            tts_config["lang"] = lang
+            tts_config["meta"] = {"offline": offline, "gender": gender,
+                                  "name": name, "lang": lang}
+            json.dump(tts_config, f, indent=4, ensure_ascii=False)
 
 
 class AbstractPartialBackend(OfflineBackend):

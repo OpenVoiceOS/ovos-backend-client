@@ -20,7 +20,7 @@ from ovos_utils.xdg_utils import xdg_data_home
 
 from ovos_backend_client.backends.base import AbstractBackend, BackendType
 from ovos_backend_client.database import JsonMetricDatabase, JsonWakeWordDatabase, \
-    SkillSettings, OAuthTokenDatabase, OAuthApplicationDatabase, DeviceSettings
+    SkillSettingsModel, OAuthTokenDatabase, OAuthApplicationDatabase, DeviceModel, JsonUtteranceDatabase
 from ovos_backend_client.identity import IdentityManager
 
 
@@ -276,7 +276,7 @@ class OfflineBackend(AbstractBackend):
     # Device Api
     def device_get(self):
         """ Retrieve all device information from the json db"""
-        device = DeviceSettings()
+        device = DeviceModel()
         return device.selene_device
 
     def device_get_settings(self):
@@ -285,7 +285,7 @@ class OfflineBackend(AbstractBackend):
         Returns:
             str: JSON string with user configuration information.
         """
-        device = DeviceSettings()
+        device = DeviceModel()
         return device.selene_settings
 
     def device_get_skill_settings_v1(self):
@@ -295,7 +295,7 @@ class OfflineBackend(AbstractBackend):
     def device_put_skill_settings_v1(self, data=None):
         """ old style bidirectional skill settings api, still available!"""
         # update local db
-        s = SkillSettings.deserialize(data)
+        s = SkillSettingsModel.deserialize(data)
         s.store()
         return {}
 
@@ -351,7 +351,7 @@ class OfflineBackend(AbstractBackend):
         Args:
             settings_meta (dict): skill info and settings in JSON format
         """
-        s = SkillSettings.deserialize(settings_meta)
+        s = SkillSettingsModel.deserialize(settings_meta)
         old_s = self.db_get_skill_settings(self.uuid, s.skill_id)
         if old_s:  # keep old settings value, update meta values only
             s.settings = old_s.settings
@@ -671,7 +671,7 @@ class OfflineBackend(AbstractBackend):
             if isfile(s):
                 meta = json.load(f)
 
-            s = SkillSettings(skill_id=skill_id, meta=meta, skill_settings=settings)
+            s = SkillSettingsModel(skill_id=skill_id, meta=meta, skill_settings=settings)
             all_settings.append(s)
         return all_settings
 
@@ -698,10 +698,10 @@ class OfflineBackend(AbstractBackend):
             s = f"{settings_path}/settings.json"
             with open(s, "w") as f:
                 json.dump(metadata_json, f)
-        return SkillSettings(skill_id=skill_id,
-                             skill_settings=settings_path,
-                             meta=metadata_json,
-                             display_name=display_name).serialize()
+        return SkillSettingsModel(skill_id=skill_id,
+                                  skill_settings=settings_path,
+                                  meta=metadata_json,
+                                  display_name=display_name).serialize()
 
     def db_delete_shared_skill_settings(self, skill_id):
         settings_path = f"{get_xdg_config_save_path()}/skills/{skill_id}"
@@ -792,44 +792,54 @@ class OfflineBackend(AbstractBackend):
         raise NotImplementedError() # TODO
 
     def db_list_stt_recordings(self):
-        raise NotImplementedError() # TODO
+        return JsonUtteranceDatabase().values()
 
     def db_get_stt_recording(self, rec_id):
-        raise NotImplementedError() # TODO
+        return JsonUtteranceDatabase.get_utterance(rec_id).serialize()
 
     def db_update_stt_recording(self, rec_id, transcription=None, metadata=None):
-        raise NotImplementedError() # TODO
+        # TODO - metadata unused, extend db
+        return JsonUtteranceDatabase().update_utterance(rec_id, transcription)
 
     def db_delete_stt_recording(self, rec_id):
-        raise NotImplementedError() # TODO
+        return JsonUtteranceDatabase().delete_utterance(rec_id)
 
     def db_post_stt_recording(self, byte_data, transcription, metadata=None):
-        raise NotImplementedError() # TODO
+        # TODO - metadata unused, extend db
+        save_path = Configuration.get("listener", {}).get('save_path') or \
+                    f"{get_xdg_data_save_path()}/listener/utterances"
+        os.makedirs(save_path, exist_ok=True)
+
+        with JsonUtteranceDatabase() as db:
+            n = f"{transcription.lower().replace('/', '_').replace(' ', '_')}_{db.total_utterances() + 1}"
+            with open(f"{save_path}/{n}.wav", "wb") as f:
+                f.write(byte_data)
+            return db.add_utterance(transcription, path, self.uuid)
 
     def db_list_ww_recordings(self):
-        raise NotImplementedError() # TODO
+        return JsonWakeWordDatabase().values()
 
     def db_get_ww_recording(self, rec_id):
-        raise NotImplementedError() # TODO
+        return JsonWakeWordDatabase().get_wakeword(rec_id).serialize()
 
     def db_update_ww_recording(self, rec_id, transcription=None, metadata=None):
-        raise NotImplementedError() # TODO
+        with JsonWakeWordDatabase() as db:
+            db.update_wakeword(rec_id, transcription=transcription, meta=metadata)
 
     def db_delete_ww_recording(self, rec_id):
-        raise NotImplementedError() # TODO
+        with JsonWakeWordDatabase() as db:
+            db.delete_wakeword(rec_id)
 
     def db_post_ww_recording(self, byte_data, transcription, metadata=None):
         listener_config = Configuration().get("listener", {})
-        save_path = listener_config.get('save_path', f"{get_xdg_data_save_path()}/listener")
-        saved_wake_words_dir = join(save_path, 'wake_words')
+        save_path = listener_config.get('save_path', f"{get_xdg_data_save_path()}/listener/wake_words")
+        filename = join(save_path, '_'.join(str(metadata[k]) for k in sorted(metadata)) + '.wav')
+        os.makedirs(save_path, exist_ok=True)
         metadata = metadata or {}
-        if metadata:
-            filename = join(saved_wake_words_dir,
-                            '_'.join(str(metadata[k]) for k in sorted(metadata)) +
-                            '.wav')
-            if isfile(filename):
-                with JsonWakeWordDatabase() as db:
-                    db.add_wakeword(metadata["name"], filename, metadata, self.uuid)
+        with open(save_path, "wb") as f:
+            f.write(byte_data)
+        with JsonWakeWordDatabase() as db:
+            db.add_wakeword(metadata["name"], filename, metadata, self.uuid)
 
     def db_list_metrics(self):
         return JsonMetricDatabase().values()

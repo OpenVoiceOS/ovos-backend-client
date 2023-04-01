@@ -4,7 +4,7 @@ from copy import deepcopy
 
 from json_database import JsonStorageXDG, JsonDatabaseXDG
 from ovos_config.config import Configuration
-from ovos_utils.configuration import get_xdg_config_save_path
+from ovos_utils.configuration import get_xdg_config_save_path, get_xdg_base
 
 from ovos_backend_client.identity import IdentityManager
 
@@ -24,46 +24,20 @@ class SpeakerTag(str, enum.Enum):
     CHILDREN = "children"
 
 
-class OAuthTokenDatabase(JsonStorageXDG):
-    """ This helper class creates ovos-config-assistant/ovos-backend-manager compatible json databases
-        This allows users to use oauth even when not using a backend"""
+class DatabaseModel:
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            self.__setattr__(k ,v)
 
-    def __init__(self):
-        super().__init__("ovos_oauth")
+    def serialize(self):
+        return self.__dict__
 
-    def add_token(self, oauth_service, token_data):
-        self[oauth_service] = token_data
-
-    def total_tokens(self):
-        return len(self)
-
-
-class OAuthApplicationDatabase(JsonStorageXDG):
-    """ This helper class creates ovos-config-assistant/ovos-backend-manager compatible json databases
-        This allows users to use oauth even when not using a backend"""
-
-    def __init__(self):
-        super().__init__("ovos_oauth_apps")
-
-    def add_application(self, oauth_service,
-                        client_id, client_secret,
-                        auth_endpoint, token_endpoint, refresh_endpoint,
-                        callback_endpoint, scope, shell_integration=True):
-        self[oauth_service] = {"oauth_service": oauth_service,
-                               "client_id": client_id,
-                               "client_secret": client_secret,
-                               "auth_endpoint": auth_endpoint,
-                               "token_endpoint": token_endpoint,
-                               "refresh_endpoint": refresh_endpoint,
-                               "callback_endpoint": callback_endpoint,
-                               "scope": scope,
-                               "shell_integration": shell_integration}
-
-    def total_apps(self):
-        return len(self)
+    @classmethod
+    def deserialize(cls, kwargs):
+        return cls(**kwargs)
 
 
-class Metric:
+class MetricModel(DatabaseModel):
     def __init__(self, metric_id, metric_type, meta=None, uuid="AnonDevice"):
         if isinstance(meta, str):
             meta = json.loads(meta)
@@ -73,32 +47,7 @@ class Metric:
         self.uuid = uuid
 
 
-class JsonMetricDatabase(JsonDatabaseXDG):
-    def __init__(self):
-        super().__init__("ovos_metrics")
-
-    def add_metric(self, metric_type=None, meta=None, uuid="AnonDevice"):
-        metric_id = self.total_metrics() + 1
-        metric = Metric(metric_id, metric_type, meta, uuid)
-        self.add_item(metric)
-        return metric
-
-    def total_metrics(self):
-        return len(self)
-
-    def __enter__(self):
-        """ Context handler """
-        return self
-
-    def __exit__(self, _type, value, traceback):
-        """ Commits changes and Closes the session """
-        try:
-            self.commit()
-        except Exception as e:
-            print(e)
-
-
-class WakeWordRecording:
+class WakeWordRecordingModel(DatabaseModel):
     def __init__(self, wakeword_id, transcription, path, meta=None,
                  uuid="AnonDevice", tag=AudioTag.UNTAGGED, speaker_type=SpeakerTag.UNTAGGED):
         self.wakeword_id = wakeword_id
@@ -112,7 +61,7 @@ class WakeWordRecording:
         self.speaker_type = speaker_type
 
 
-class UtteranceRecording:
+class UtteranceRecordingModel(DatabaseModel):
     def __init__(self, utterance_id, transcription, path, uuid="AnonDevice"):
         self.utterance_id = utterance_id
         self.transcription = transcription
@@ -120,58 +69,7 @@ class UtteranceRecording:
         self.uuid = uuid
 
 
-class JsonWakeWordDatabase(JsonDatabaseXDG):
-    def __init__(self):
-        super().__init__("ovos_wakewords")
-
-    def add_wakeword(self, transcription, path, meta=None,
-                     uuid="AnonDevice", tag=AudioTag.UNTAGGED,
-                     speaker_type=SpeakerTag.UNTAGGED):
-        wakeword_id = self.total_wakewords() + 1
-        wakeword = WakeWordRecording(wakeword_id, transcription, path, meta, uuid, tag, speaker_type)
-        self.add_item(wakeword)
-
-    def total_wakewords(self):
-        return len(self)
-
-    def __enter__(self):
-        """ Context handler """
-        return self
-
-    def __exit__(self, _type, value, traceback):
-        """ Commits changes and Closes the session """
-        try:
-            self.commit()
-        except Exception as e:
-            print(e)
-
-
-class JsonUtteranceDatabase(JsonDatabaseXDG):
-    def __init__(self):
-        super().__init__("ovos_utterances")
-
-    def add_utterance(self, transcription, path, uuid="AnonDevice"):
-        utterance_id = self.total_utterances() + 1
-        utterance = UtteranceRecording(utterance_id, transcription,
-                                       path, uuid)
-        self.add_item(utterance)
-
-    def total_utterances(self):
-        return len(self)
-
-    def __enter__(self):
-        """ Context handler """
-        return self
-
-    def __exit__(self, _type, value, traceback):
-        """ Commits changes and Closes the session """
-        try:
-            self.commit()
-        except Exception as e:
-            print(e)
-
-
-class SkillSettings:
+class SkillSettingsModel(DatabaseModel):
     """ represents skill settings for a individual skill"""
 
     def __init__(self, skill_id, skill_settings=None,
@@ -261,14 +159,15 @@ class SkillSettings:
         display_name = data.get("display_name") or \
                        skill_id.split(".")[0].replace("-", " ").replace("_", " ").title()
 
-        return SkillSettings(skill_id, skill_json, skill_meta, display_name,
-                             remote_id=remote_id)
+        return SkillSettingsModel(skill_id, skill_json, skill_meta, display_name,
+                                  remote_id=remote_id)
 
 
-class DeviceSettings:
+class DeviceModel(DatabaseModel):
     """ global device settings
     represent some fields from mycroft.conf but also contain some extra fields
     """
+
     def __init__(self):
         identity = IdentityManager.get()
 
@@ -372,4 +271,172 @@ class DeviceSettings:
     def deserialize(data):
         if isinstance(data, str):
             data = json.loads(data)
-        return DeviceSettings(**data)
+        return DeviceModel(**data)
+
+
+class JsonMetricDatabase(JsonDatabaseXDG):
+    def __init__(self):
+        super().__init__("ovos_metrics", xdg_folder=get_xdg_base())
+
+    def add_metric(self, metric_type=None, meta=None, uuid="AnonDevice"):
+        metric_id = self.total_metrics() + 1
+        metric = MetricModel(metric_id, metric_type, meta, uuid)
+        self.add_item(metric)
+        return metric
+
+    def total_metrics(self):
+        return len(self)
+
+    def __enter__(self):
+        """ Context handler """
+        return self
+
+    def __exit__(self, _type, value, traceback):
+        """ Commits changes and Closes the session """
+        try:
+            self.commit()
+        except Exception as e:
+            print(e)
+
+
+class JsonWakeWordDatabase(JsonDatabaseXDG):
+    def __init__(self):
+        super().__init__("ovos_wakewords", xdg_folder=get_xdg_base())
+
+    def add_wakeword(self, transcription, path, meta=None,
+                     uuid="AnonDevice", tag=AudioTag.UNTAGGED,
+                     speaker_type=SpeakerTag.UNTAGGED):
+        wakeword_id = self.total_wakewords() + 1
+        wakeword = WakeWordRecordingModel(wakeword_id,
+                                          transcription,
+                                          path, meta, uuid,
+                                          tag, speaker_type)
+        self.add_item(wakeword)
+        return wakeword
+
+    def get_wakeword(self, rec_id):
+        ww = self.get(rec_id)
+        if ww:
+            return WakeWordRecordingModel.deserialize(ww)
+        return None
+
+    def update_wakeword(self, rec_id, transcription=None, path=None,
+                        meta=None, tag=AudioTag.UNTAGGED,
+                        speaker_type=SpeakerTag.UNTAGGED):
+        ww = self.get_wakeword(rec_id)
+        if not ww:
+            return None
+        if transcription:
+            ww.transcription = transcription
+        if path:
+            ww.path = path
+        if tag:
+            ww.tag = tag
+        if speaker_type:
+            ww.speaker_type = speaker_type
+        self[rec_id] = ww.serialize()
+        return ww
+
+    def delete_wakeword(self, rec_id):
+        if self.get(rec_id):
+            self.pop(rec_id)
+            return True
+        return False
+
+    def total_wakewords(self):
+        return len(self)
+
+    def __enter__(self):
+        """ Context handler """
+        return self
+
+    def __exit__(self, _type, value, traceback):
+        """ Commits changes and Closes the session """
+        try:
+            self.commit()
+        except Exception as e:
+            print(e)
+
+
+class JsonUtteranceDatabase(JsonDatabaseXDG):
+    def __init__(self):
+        super().__init__("ovos_utterances", xdg_folder=get_xdg_base())
+
+    def add_utterance(self, transcription, path, uuid="AnonDevice"):
+        utterance_id = self.total_utterances() + 1
+        utterance = UtteranceRecordingModel(utterance_id, transcription,
+                                            path, uuid)
+        self.add_item(utterance)
+
+    def get_utterance(self, rec_id):
+        ww = self.get(rec_id)
+        if ww:
+            return UtteranceRecordingModel.deserialize(ww)
+        return None
+
+    def update_utterance(self, rec_id, transcription):
+        ww = self.get_utterance(rec_id)
+        if not ww:
+            return None
+        ww.transcription = transcription
+        self[rec_id] = ww.serialize()
+        return ww
+
+    def delete_utterance(self, rec_id):
+        if self.get(rec_id):
+            self.pop(rec_id)
+            return True
+        return False
+
+    def total_utterances(self):
+        return len(self)
+
+    def __enter__(self):
+        """ Context handler """
+        return self
+
+    def __exit__(self, _type, value, traceback):
+        """ Commits changes and Closes the session """
+        try:
+            self.commit()
+        except Exception as e:
+            print(e)
+
+
+class OAuthTokenDatabase(JsonStorageXDG):
+    """ This helper class creates ovos-config-assistant/ovos-backend-manager compatible json databases
+        This allows users to use oauth even when not using a backend"""
+
+    def __init__(self):
+        super().__init__("ovos_oauth", xdg_folder=get_xdg_base())
+
+    def add_token(self, oauth_service, token_data):
+        self[oauth_service] = token_data
+
+    def total_tokens(self):
+        return len(self)
+
+
+class OAuthApplicationDatabase(JsonStorageXDG):
+    """ This helper class creates ovos-config-assistant/ovos-backend-manager compatible json databases
+        This allows users to use oauth even when not using a backend"""
+
+    def __init__(self):
+        super().__init__("ovos_oauth_apps", xdg_folder=get_xdg_base())
+
+    def add_application(self, oauth_service,
+                        client_id, client_secret,
+                        auth_endpoint, token_endpoint, refresh_endpoint,
+                        callback_endpoint, scope, shell_integration=True):
+        self[oauth_service] = {"oauth_service": oauth_service,
+                               "client_id": client_id,
+                               "client_secret": client_secret,
+                               "auth_endpoint": auth_endpoint,
+                               "token_endpoint": token_endpoint,
+                               "refresh_endpoint": refresh_endpoint,
+                               "callback_endpoint": callback_endpoint,
+                               "scope": scope,
+                               "shell_integration": shell_integration}
+
+    def total_apps(self):
+        return len(self)

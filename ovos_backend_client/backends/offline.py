@@ -1,4 +1,6 @@
 import json
+import os
+import time
 from io import BytesIO, StringIO
 from os import listdir, makedirs, remove
 from os.path import isfile, isdir, join
@@ -6,7 +8,6 @@ from tempfile import NamedTemporaryFile
 from uuid import uuid4
 
 import requests
-import time
 from ovos_config.config import Configuration
 from ovos_config.config import update_mycroft_config
 from ovos_config.locations import USER_CONFIG
@@ -551,7 +552,7 @@ class OfflineBackend(AbstractBackend):
 
     # Database API
     def db_list_devices(self):
-        _mail_cfg = Configuration.get("email", {})
+        _mail_cfg = self.credentials.get("email", {})
 
         tts_plug = Configuration.get("tts").get("module")
         tts_config = Configuration.get("tts")[tts_plug]
@@ -795,7 +796,7 @@ class OfflineBackend(AbstractBackend):
         return JsonUtteranceDatabase().values()
 
     def db_get_stt_recording(self, rec_id):
-        return JsonUtteranceDatabase.get_utterance(rec_id).serialize()
+        return JsonUtteranceDatabase().get_utterance(rec_id).serialize()
 
     def db_update_stt_recording(self, rec_id, transcription=None, metadata=None):
         # TODO - metadata unused, extend db
@@ -814,7 +815,7 @@ class OfflineBackend(AbstractBackend):
             n = f"{transcription.lower().replace('/', '_').replace(' ', '_')}_{db.total_utterances() + 1}"
             with open(f"{save_path}/{n}.wav", "wb") as f:
                 f.write(byte_data)
-            return db.add_utterance(transcription, path, self.uuid)
+            return db.add_utterance(transcription, f"{save_path}/{n}.wav", self.uuid)
 
     def db_list_ww_recordings(self):
         return JsonWakeWordDatabase().values()

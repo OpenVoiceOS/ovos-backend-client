@@ -100,6 +100,17 @@ class AbstractBackend:
         self.check_token()
         return requests.patch(url, headers=headers, timeout=(3.05, 15), *args, **kwargs)
 
+    def delete(self, url=None, *args, **kwargs):
+        url = url or self.url
+        if not url.startswith("http"):
+            url = f"http://{url}"
+        headers = self.headers
+        if "headers" in kwargs:
+            headers.update(kwargs.pop("headers"))
+        self.check_token()
+        return requests.delete(url, headers=headers, timeout=(3.05, 15), *args, **kwargs)
+
+
     # OWM Api
     @staticmethod
     def _get_lat_lon(**kwargs):

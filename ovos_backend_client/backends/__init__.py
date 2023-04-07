@@ -9,6 +9,7 @@ from ovos_backend_client.backends.selene import SELENE_API_URL, SeleneBackend
 API_REGISTRY = {
     BackendType.OFFLINE: {
         "admin": True,  # updates mycroft.conf if used
+        "database": True,  # updates local files
         "device": True,  # shared database with local backend for UI compat
         "dataset": True,  # shared database with local backend for ww tagger UI compat
         "metrics": True,  # shared database with local backend for metrics UI compat
@@ -17,10 +18,11 @@ API_REGISTRY = {
         "stt": True,  # uses OPM and reads from mycroft.conf
         "owm": True,  # key needs to be set
         "email": True,  # smtp config needs to be set
-        "oauth": True  # use local backend UI on same device to register apps
+        "oauth": True  # oauth PHAL plugin to register apps
     },
     BackendType.SELENE: {
-        "admin": False,
+        "admin": False,  # CRUD not exposed
+        "database": False,  # CRUD not exposed
         "device": True,
         "dataset": True,
         "metrics": True,
@@ -33,6 +35,7 @@ API_REGISTRY = {
     },
     BackendType.PERSONAL: {
         "admin": True,
+        "database": True,  # requires ovos-personal-backend/pull/51
         "device": True,
         "dataset": True,
         "metrics": True,
@@ -41,9 +44,10 @@ API_REGISTRY = {
         "stt": True,
         "owm": True,
         "email": True,
-        "oauth": True  # can use local backend UI to register apps
+        "oauth": True  # can use personal-backend-manager to register apps
     },
     BackendType.OVOS_API: {
+        "database": True,  # fake support -> cast to offline backend type
         "admin": True,  # fake support -> cast to offline backend type
         "device": True,  # fake support -> cast to offline backend type
         "dataset": True,  # fake support -> cast to offline backend type

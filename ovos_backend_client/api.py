@@ -1,3 +1,4 @@
+from ovos_config import Configuration
 from ovos_utils import timed_lru_cache
 from ovos_utils.log import LOG
 
@@ -550,6 +551,213 @@ class OAuthApi(BaseApi):
                 json string containing token and additional information
         """
         return self.backend.oauth_get_token(dev_cred)
+
+
+class DatabaseApi(BaseApi):
+    """Web API wrapper for oauth api"""
+
+    def __init__(self, admin_key=None, url=None, version="v1", identity_file=None, backend_type=None):
+        super().__init__(url, version, identity_file, backend_type, credentials={"admin": admin_key})
+        self.url = f"{self.backend_url}/{self.backend_version}/admin"
+
+    def validate_backend_type(self):
+        if not API_REGISTRY[self.backend_type]["database"]:
+            raise ValueError(f"{self.__class__.__name__} not available for {self.backend_type}")
+        if self.backend_type in [BackendType.PERSONAL] and not self.credentials.get("admin"):
+            raise ValueError(f"Admin key not set, can not access remote database")
+
+    def list_devices(self):
+        return self.backend.db_list_devices()
+
+    def get_device(self, uuid):
+        return self.backend.db_get_device(uuid)
+
+    def update_device(self, uuid, name=None,
+                      device_location=None, opt_in=False,
+                      location=None, lang=None, date_format=None,
+                      system_unit=None, time_format=None, email=None,
+                      isolated_skills=False, ww_id=None, voice_id=None):
+        return self.backend.db_update_device(uuid, name, device_location, opt_in,
+                                             location, lang, date_format, system_unit, time_format,
+                                             email, isolated_skills, ww_id, voice_id)
+
+    def delete_device(self, uuid):
+        return self.backend.db_delete_device(uuid)
+
+    def add_device(self, uuid, token, name=None,
+                   device_location="somewhere",
+                   opt_in=Configuration.get("opt_in", False),
+                   location=Configuration.get("location"),
+                   lang=Configuration.get("lang"),
+                   date_format=Configuration.get("date_format", "DMY"),
+                   system_unit=Configuration.get("system_unit", "metric"),
+                   time_format=Configuration.get("date_format", "full"),
+                   email=None,
+                   isolated_skills=False,
+                   ww_id=None,
+                   voice_id=None):
+        return self.backend.db_post_device(uuid, token, name, device_location, opt_in,
+                                           location, lang, date_format, system_unit, time_format,
+                                           email, isolated_skills, ww_id, voice_id)
+
+    def list_shared_skill_settings(self):
+        return self.backend.db_list_shared_skill_settings()
+
+    def get_shared_skill_settings(self, skill_id):
+        return self.backend.db_get_shared_skill_settings(skill_id)
+
+    def update_shared_skill_settings(self, skill_id,
+                                     display_name=None,
+                                     settings_json=None,
+                                     metadata_json=None):
+        return self.backend.db_update_shared_skill_settings(skill_id, display_name,
+                                                            settings_json, metadata_json)
+
+    def delete_shared_skill_settings(self, skill_id):
+        return self.backend.db_delete_shared_skill_settings(skill_id)
+
+    def add_shared_skill_settings(self, skill_id,
+                                  display_name,
+                                  settings_json,
+                                  metadata_json):
+        return self.backend.db_post_shared_skill_settings(skill_id, display_name,
+                                                          settings_json, metadata_json)
+
+    def list_skill_settings(self, uuid):
+        return self.backend.db_list_skill_settings(uuid)
+
+    def get_skill_settings(self, uuid, skill_id):
+        return self.backend.db_get_skill_settings(uuid, skill_id)
+
+    def update_skill_settings(self, uuid, skill_id,
+                              display_name=None,
+                              settings_json=None,
+                              metadata_json=None):
+        return self.backend.db_update_skill_settings(uuid, skill_id, display_name,
+                                                     settings_json, metadata_json)
+
+    def delete_skill_settings(self, uuid, skill_id):
+        return self.backend.db_delete_skill_settings(uuid, skill_id)
+
+    def add_skill_settings(self, uuid, skill_id,
+                           display_name,
+                           settings_json,
+                           metadata_json):
+        return self.backend.db_post_skill_settings(uuid, skill_id, display_name,
+                                                   settings_json, metadata_json)
+
+    def list_oauth_apps(self):
+        return self.backend.db_list_oauth_apps()
+
+    def get_oauth_app(self, token_id):
+        return self.backend.db_get_oauth_app(token_id)
+
+    def update_oauth_app(self, token_id, client_id=None, client_secret=None,
+                         auth_endpoint=None, token_endpoint=None, refresh_endpoint=None,
+                         callback_endpoint=None, scope=None, shell_integration=None):
+        return self.backend.db_update_oauth_app(token_id, client_id, client_secret, auth_endpoint, token_endpoint,
+                                                refresh_endpoint, callback_endpoint, scope, shell_integration)
+
+    def delete_oauth_app(self, token_id):
+        return self.backend.db_delete_oauth_app(token_id)
+
+    def add_oauth_app(self, token_id, client_id, client_secret,
+                      auth_endpoint, token_endpoint, refresh_endpoint,
+                      callback_endpoint, scope, shell_integration=True):
+        return self.backend.db_post_oauth_app(token_id, client_id, client_secret, auth_endpoint, token_endpoint,
+                                              refresh_endpoint, callback_endpoint, scope, shell_integration)
+
+    def list_oauth_tokens(self):
+        return self.backend.db_list_oauth_tokens()
+
+    def get_oauth_token(self, token_id):
+        return self.backend.db_get_oauth_token(token_id)
+
+    def update_oauth_token(self, token_id, token_data):
+        return self.backend.db_update_oauth_token(token_id, token_data)
+
+    def delete_oauth_token(self, token_id):
+        return self.backend.db_delete_oauth_token(token_id)
+
+    def add_oauth_token(self, token_id, token_data):
+        return self.backend.db_post_oauth_token(token_id, token_data)
+
+    def list_stt_recordings(self):
+        return self.backend.db_list_stt_recordings()
+
+    def get_stt_recording(self, rec_id):
+        return self.backend.db_get_stt_recording(rec_id)
+
+    def update_stt_recording(self, rec_id, transcription=None, metadata=None):
+        return self.backend.db_update_stt_recording(rec_id, transcription, metadata)
+
+    def delete_stt_recording(self, rec_id):
+        return self.backend.db_delete_stt_recording(rec_id)
+
+    def add_stt_recording(self, byte_data, transcription, metadata=None):
+        return self.backend.db_post_stt_recording(byte_data, transcription, metadata)
+
+    def list_ww_recordings(self):
+        return self.backend.db_list_ww_recordings()
+
+    def get_ww_recording(self, rec_id):
+        return self.backend.db_get_ww_recording(rec_id)
+
+    def update_ww_recording(self, rec_id, transcription=None, metadata=None):
+        return self.backend.db_update_ww_recording(rec_id, transcription, metadata)
+
+    def delete_ww_recording(self, rec_id):
+        return self.backend.db_delete_ww_recording(rec_id)
+
+    def add_ww_recording(self, byte_data, transcription, metadata=None):
+        return self.backend.db_post_ww_recording(byte_data, transcription, metadata)
+
+    def list_metrics(self):
+        return self.backend.db_list_metrics()
+
+    def get_metric(self, metric_id):
+        return self.backend.db_get_metric(metric_id)
+
+    def update_metric(self, metric_id, metadata):
+        return self.backend.db_update_metric(metric_id, metadata)
+
+    def delete_metric(self, metric_id):
+        return self.backend.db_delete_metric(metric_id)
+
+    def add_metric(self, metric_type, metadata):
+        return self.backend.db_post_metric(metric_type, metadata)
+
+    def list_ww_definitions(self):
+        return self.backend.db_list_ww_definitions()
+
+    def get_ww_definition(self, ww_id):
+        return self.backend.db_get_ww_definition(ww_id)
+
+    def update_ww_definition(self, ww_id, name, lang, ww_config, plugin):
+        return self.backend.db_update_ww_definition(ww_id, name, lang, ww_config, plugin)
+
+    def delete_ww_definition(self, ww_id):
+        return self.backend.db_delete_ww_definition(ww_id)
+
+    def add_ww_definition(self, name, lang, ww_config, plugin):
+        return self.backend.db_post_ww_definition(name, lang, ww_config, plugin)
+
+    def list_voice_definitions(self):
+        return self.backend.db_list_voice_definitions()
+
+    def get_voice_definition(self, voice_id):
+        return self.backend.db_get_voice_definition(voice_id)
+
+    def update_voice_definition(self, voice_id, name=None, lang=None, plugin=None,
+                                tts_config=None, offline=None, gender=None):
+        return self.backend.db_update_voice_definition(voice_id, name, lang, plugin, tts_config, offline, gender)
+
+    def delete_voice_definition(self, voice_id):
+        return self.backend.db_delete_voice_definition(voice_id)
+
+    def add_voice_definition(self, name, lang, plugin,
+                             tts_config, offline, gender=None):
+        return self.backend.db_post_voice_definition(name, lang, plugin, tts_config, offline, gender)
 
 
 if __name__ == "__main__":

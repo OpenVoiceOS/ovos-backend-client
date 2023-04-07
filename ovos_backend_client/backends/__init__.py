@@ -10,9 +10,10 @@ API_REGISTRY = {
     BackendType.OFFLINE: {
         "admin": True,  # updates mycroft.conf if used
         "database": True,  # updates local files
-        "device": True,  # shared database with local backend for UI compat
-        "dataset": True,  # shared database with local backend for ww tagger UI compat
-        "metrics": True,  # shared database with local backend for metrics UI compat
+        "device": True,
+        "skill_settings": True,  # reads local files only
+        "dataset": True,
+        "metrics": True,
         "wolfram": True,  # key needs to be set
         "geolocate": True,  # nominatim - no key needed
         "stt": True,  # uses OPM and reads from mycroft.conf
@@ -24,6 +25,7 @@ API_REGISTRY = {
         "admin": False,  # CRUD not exposed
         "database": False,  # CRUD not exposed
         "device": True,
+        "skill_settings": True,  # TODO
         "dataset": False,  # not anymore
         "metrics": True,
         "wolfram": True,
@@ -37,6 +39,7 @@ API_REGISTRY = {
         "admin": True,
         "database": True,  # requires ovos-personal-backend/pull/51
         "device": True,
+        "skill_settings": True,  # TODO
         "dataset": True,
         "metrics": True,
         "wolfram": True,
@@ -50,6 +53,7 @@ API_REGISTRY = {
         "database": True,  # fake support -> cast to offline backend type
         "admin": True,  # fake support -> cast to offline backend type
         "device": True,  # fake support -> cast to offline backend type
+        "skill_settings": True,  # reads local files only -  fake support -> cast to offline backend type
         "dataset": True,  # fake support -> cast to offline backend type
         "metrics": True,  # fake support -> cast to offline backend type
         "wolfram": True,

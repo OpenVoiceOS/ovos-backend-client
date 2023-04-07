@@ -1,9 +1,15 @@
-from ovos_config import Configuration
+import os
+
 from ovos_utils import timed_lru_cache
 from ovos_utils.log import LOG
-
+import json
+from os import makedirs
+from os.path import isfile
+from ovos_config.config import Configuration
+from ovos_utils.configuration import get_xdg_config_save_path
 from ovos_backend_client.backends import OfflineBackend, OVOSAPIBackend, \
     SeleneBackend, PersonalBackend, BackendType, get_backend_config, API_REGISTRY
+from ovos_backend_client.database import SkillSettingsModel
 
 
 class BaseApi:
@@ -532,18 +538,45 @@ class SkillSettingsApi(BaseApi):
         super().__init__(url, version, identity_file, backend_type)
 
     def validate_backend_type(self):
-        if not API_REGISTRY[self.backend_type]["metrics"]:
+        if not API_REGISTRY[self.backend_type]["skill_settings"]:
             raise ValueError(f"{self.__class__.__name__} not available for {self.backend_type}")
 
     def upload_skill_settings(self):
-        # TODO
-        raise NotImplementedError
-        return self.backend.device_put_skill_settings_v1(data)
+        """ upload skill settings from XDG path"""
+        settings = []
+        settings_path = f"{get_xdg_config_save_path()}/skills"
+        for skill_id in os.listdir(settings_path):
+            skill_path = f"{settings_path}/{skill_id}"
+            makedirs(skill_path, exist_ok=True)
+
+            s = f"{skill_path}/settingsmeta.json"
+            if isfile(s):
+                with open(s) as f:
+                    metadata_json = json.load(f)
+            s = f"{skill_path}/settings.json"
+            if isfile(s):
+                with open(s) as f:
+                    settings_json = json.load(f)
+
+            display_name = skill_id.split(".")[-1].replace("_", "").replace("-", "").title()
+            settings.append(SkillSettingsModel(skill_id=skill_id,
+                                               skill_settings=settings_json,
+                                               meta=metadata_json,
+                                               display_name=display_name))
+        return self.backend.skill_settings_upload(settings)
 
     def download_skill_settings(self):
-        # TODO
-        raise NotImplementedError
-        return self.backend.device_get_skill_settings_v1()
+        """ write downloaded settings to XDG path"""
+        settings = self.backend.skill_settings_download()
+        for s in settings:  # list of SkillSettingsModel or dicts
+            settings_path = f"{get_xdg_config_save_path()}/skills/{s.skill_id}"
+            makedirs(settings_path, exist_ok=True)
+
+            with open( f"{settings_path}/settingsmeta.json", "w") as f:
+                json.dump(s.metadata_json, f, indent=4, ensure_ascii=False)
+            with open(f"{settings_path}/settings.json", "w") as f:
+                json.dump(s.settings_json, f, indent=4, ensure_ascii=False)
+        return settings
 
 
 class DatasetApi(BaseApi):

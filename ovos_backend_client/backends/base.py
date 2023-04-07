@@ -380,6 +380,17 @@ class AbstractBackend:
     def email_send(self, title, body, sender):
         raise NotImplementedError()
 
+    # Skill settings api
+    @abc.abstractmethod
+    def skill_settings_upload(self, skill_settings):
+        # list of SkillSettingsModel or dicts
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def skill_settings_download(self):
+        # return list of SkillSettingsModel
+        raise NotImplementedError()
+
     # Admin Api
     @abc.abstractmethod
     def admin_pair(self, uuid=None):

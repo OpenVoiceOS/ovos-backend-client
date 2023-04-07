@@ -356,7 +356,7 @@ class OfflineBackend(AbstractBackend):
         old_s = self.db_get_skill_settings(self.uuid, s.skill_id)
         if old_s:  # keep old settings value, update meta values only
             s.settings = old_s.settings
-        s.save()
+        s.store()
 
     def device_upload_skills_data(self, data):
         """ Upload skills.json file. This file contains a manifest of installed
@@ -379,6 +379,13 @@ class OfflineBackend(AbstractBackend):
     def metrics_upload(self, name, data):
         """ upload metrics"""
         return self.db_post_metric(name, data)
+
+    # Skill settings api
+    def skill_settings_upload(self, skill_settings):
+        pass  # Do nothing, settings already local
+
+    def skill_settings_download(self):
+        pass  # Do nothing, settings already local
 
     # Dataset API
     def dataset_upload_wake_word(self, audio, params, upload_url=None):

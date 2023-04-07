@@ -72,7 +72,7 @@ class SkillSettingsModel(DatabaseModel):
         super().__init__(skill_id=skill_id, skill_settings=skill_settings or {},
                          meta=meta or {}, display_name=display_name or skill_id, remote_id=remote_id)
 
-    def save(self):
+    def store(self):
         with open(f"{get_xdg_config_save_path()}/skills/{self.skill_id}/settings.json" "w") as f:
             json.dump(self.settings, f, indent=4, ensure_ascii=False)
         # TODO - autogen meta if needed (?)

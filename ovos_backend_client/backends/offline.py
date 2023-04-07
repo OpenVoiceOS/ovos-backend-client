@@ -753,20 +753,28 @@ class OfflineBackend(AbstractBackend):
         return OAuthApplicationDatabase().values()
 
     def db_get_oauth_app(self, token_id):
-        raise NotImplementedError() # TODO
+        return OAuthApplicationDatabase().get_application(token_id)
 
     def db_update_oauth_app(self, token_id, client_id=None, client_secret=None,
                             auth_endpoint=None, token_endpoint=None, refresh_endpoint=None,
                             callback_endpoint=None, scope=None, shell_integration=None):
-        raise NotImplementedError()  # TODO
+        with OAuthApplicationDatabase() as db:
+            return db.add_token(token_id, client_id, client_secret,
+                                auth_endpoint, token_endpoint, refresh_endpoint,
+                                callback_endpoint, scope, shell_integration)
 
     def db_delete_oauth_app(self, token_id):
-        raise NotImplementedError()  # TODO
+        with OAuthApplicationDatabase() as db:
+            return db.delete_application(token_id)
 
     def db_post_oauth_app(self, token_id, client_id, client_secret,
                           auth_endpoint, token_endpoint, refresh_endpoint,
                           callback_endpoint, scope, shell_integration=True):
-        raise NotImplementedError()  # TODO
+        with OAuthApplicationDatabase() as db:
+            return db.add_application(token_id, client_id, client_secret,
+                                      auth_endpoint, token_endpoint,
+                                      refresh_endpoint, callback_endpoint,
+                                      scope, shell_integration)
 
     def db_list_oauth_tokens(self):
         return OAuthTokenDatabase().values()
@@ -781,16 +789,19 @@ class OfflineBackend(AbstractBackend):
             Returns:
                 json string containing token and additional information
         """
-        return OAuthTokenDatabase().get(token_id) or {}
+        return OAuthTokenDatabase().get_token(token_id)
 
     def db_update_oauth_token(self, token_id, token_data):
-        raise NotImplementedError()  # TODO
+        with OAuthTokenDatabase() as db:
+            return db.add_token(token_id, token_data)
 
     def db_delete_oauth_token(self, token_id):
-        raise NotImplementedError()  # TODO
+        with OAuthTokenDatabase() as db:
+            return db.delete_token(token_id)
 
     def db_post_oauth_token(self, token_id, token_data):
-        raise NotImplementedError() # TODO
+        with OAuthTokenDatabase() as db:
+            return db.add_token(token_id, token_data)
 
     def db_list_stt_recordings(self):
         return JsonUtteranceDatabase().values()

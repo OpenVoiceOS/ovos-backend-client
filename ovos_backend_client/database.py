@@ -27,7 +27,7 @@ class SpeakerTag(str, enum.Enum):
 class DatabaseModel:
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
-            self.__setattr__(k ,v)
+            self.__setattr__(k, v)
 
     def serialize(self):
         return self.__dict__
@@ -410,8 +410,20 @@ class OAuthTokenDatabase(JsonStorageXDG):
     def __init__(self):
         super().__init__("ovos_oauth", xdg_folder=get_xdg_base())
 
-    def add_token(self, oauth_service, token_data):
-        self[oauth_service] = token_data
+    def add_token(self, token_id, token_data):
+        self[token_id] = token_data
+
+    def update_token(self, token_id, token_data):
+        self.add_token(token_id, token_data)
+
+    def get_token(self, token_id):
+        return self.get(token_id)
+
+    def delete_token(self, token_id):
+        if token_id in self:
+            self.pop(token_id)
+            return True
+        return False
 
     def total_tokens(self):
         return len(self)
@@ -437,6 +449,24 @@ class OAuthApplicationDatabase(JsonStorageXDG):
                                "callback_endpoint": callback_endpoint,
                                "scope": scope,
                                "shell_integration": shell_integration}
+
+    def get_application(self, oauth_service):
+        return self.get(oauth_service)
+
+    def update_application(self, oauth_service,
+                           client_id, client_secret,
+                           auth_endpoint, token_endpoint, refresh_endpoint,
+                           callback_endpoint, scope, shell_integration=True):
+        self.update_application(oauth_service,
+                                client_id, client_secret,
+                                auth_endpoint, token_endpoint, refresh_endpoint,
+                                callback_endpoint, scope, shell_integration)
+
+    def delete_application(self, oauth_service):
+        if oauth_service in self:
+            self.pop(oauth_service)
+            return True
+        return False
 
     def total_apps(self):
         return len(self)

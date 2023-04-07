@@ -577,26 +577,26 @@ class OfflineBackend(AbstractBackend):
     def db_list_devices(self):
         _mail_cfg = self.credentials.get("email", {})
 
-        tts_plug = Configuration.get("tts").get("module")
-        tts_config = Configuration.get("tts")[tts_plug]
+        tts_plug = Configuration().get("tts").get("module")
+        tts_config = Configuration().get("tts")[tts_plug]
 
-        default_ww = Configuration.get("listener").get("wake_word", "hey_mycroft")
-        ww_config = Configuration.get("hotwords")[default_ww]
+        default_ww = Configuration().get("listener").get("wake_word", "hey_mycroft")
+        ww_config = Configuration().get("hotwords")[default_ww]
 
         device = {
             "uuid": self.uuid,
             "token": "DUMMYTOKEN123",
             "isolated_skills": True,
-            "opt_in": Configuration.get("opt_in", False),
+            "opt_in": Configuration().get("opt_in", False),
             "name": f"Device-{self.uuid}",
             "device_location": "somewhere",
             "email": _mail_cfg.get("recipient") or
                      _mail_cfg.get("smtp", {}).get("username"),
-            "time_format": Configuration.get("date_format", "full"),
-            "date_format": Configuration.get("date_format", "DMY"),
-            "system_unit": Configuration.get("system_unit", "metric"),
-            "lang": Configuration.get("lang") or "en-us",
-            "location": Configuration.get("location"),
+            "time_format": Configuration().get("date_format", "full"),
+            "date_format": Configuration().get("date_format", "DMY"),
+            "system_unit": Configuration().get("system_unit", "metric"),
+            "lang": Configuration().get("lang") or "en-us",
+            "location": Configuration().get("location"),
             "default_tts": tts_plug,
             "default_tts_cfg": tts_config,
             "default_ww": default_ww,
@@ -841,7 +841,7 @@ class OfflineBackend(AbstractBackend):
 
     def db_post_stt_recording(self, byte_data, transcription, metadata=None):
         # TODO - metadata unused, extend db
-        save_path = Configuration.get("listener", {}).get('save_path') or \
+        save_path = Configuration().get("listener", {}).get('save_path') or \
                     f"{get_xdg_data_save_path()}/listener/utterances"
         os.makedirs(save_path, exist_ok=True)
 
@@ -909,7 +909,7 @@ class OfflineBackend(AbstractBackend):
                 "name": ww_cfg.get("display_name") or name,
                 "lang": ww_cfg.get("stt_lang") or
                         ww_cfg.get("lang") or
-                        Configuration.get("lang", "en-us"),
+                        Configuration().get("lang", "en-us"),
                 "plugin": ww_cfg.get("module") or plugin,
                 "ww_config": ww_cfg
             })
@@ -930,7 +930,7 @@ class OfflineBackend(AbstractBackend):
                     path = f"{ww_folders}/{l}/{ww_id}.json"
                     break
             else:
-                lang = Configuration.get("lang")
+                lang = Configuration().get("lang")
 
         path = path or f"{ww_folders}/{lang}/{ww_id}.json"
 

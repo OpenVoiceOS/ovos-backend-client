@@ -160,9 +160,9 @@ class DeviceModel(DatabaseModel):
     def __init__(self):
         identity = IdentityManager.get()
 
-        default_ww = Configuration.get("listener", {}).get("wake_word", "hey_mycroft")
-        default_tts = Configuration.get("tts", {}).get("module", "ovos-tts-plugin-mimic3-server")
-        mail_cfg = Configuration.get("email", {})
+        default_ww = Configuration().get("listener", {}).get("wake_word", "hey_mycroft")
+        default_tts = Configuration().get("tts", {}).get("module", "ovos-tts-plugin-mimic3-server")
+        mail_cfg = Configuration().get("email", {})
 
         uuid = identity["uuid"]
         super().__init__(uuid=uuid, token=identity["access"],
@@ -171,16 +171,16 @@ class DeviceModel(DatabaseModel):
                          device_location="somewhere",  # indoor location
                          email=mail_cfg.get("recipient") or \
                                mail_cfg.get("smtp", {}).get("username"),
-                         date_format=Configuration.get("date_format") or "DMY",
-                         system_unit=Configuration.get("system_unit") or "metric",
-                         time_format=Configuration.get("time_format") or "full",
-                         opt_in=Configuration.get("opt_in") or False,
-                         lang=Configuration.get("lang") or "en-us",
+                         date_format=Configuration().get("date_format") or "DMY",
+                         system_unit=Configuration().get("system_unit") or "metric",
+                         time_format=Configuration().get("time_format") or "full",
+                         opt_in=Configuration().get("opt_in") or False,
+                         lang=Configuration().get("lang") or "en-us",
                          location=Configuration["location"],
                          default_tts=default_tts,
-                         default_tts_cfg=Configuration.get("tts", {}).get(default_tts, {}),
+                         default_tts_cfg=Configuration().get("tts", {}).get(default_tts, {}),
                          default_ww=default_ww.replace(" ", "_"),
-                         default_ww_cfg=Configuration.get("hotwords", {}).get(default_ww, {})
+                         default_ww_cfg=Configuration().get("hotwords", {}).get(default_ww, {})
                          )
 
     @property

@@ -515,6 +515,9 @@ class DatasetApi(BaseApi):
     def upload_wake_word(self, audio, params, upload_url=None):
         return self.backend.dataset_upload_wake_word(audio, params, upload_url)
 
+    def upload_stt_recording(self, audio, params, upload_url=None):
+        return self.backend.dataset_upload_stt(audio, params, upload_url)
+
 
 class MetricsApi(BaseApi):
     """Web API wrapper for netrics collection"""

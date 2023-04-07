@@ -41,32 +41,22 @@ class MetricModel(DatabaseModel):
     def __init__(self, metric_id, metric_type, meta=None, uuid="AnonDevice"):
         if isinstance(meta, str):
             meta = json.loads(meta)
-        self.metric_id = metric_id
-        self.metric_type = metric_type
-        self.meta = meta or {}
-        self.uuid = uuid
+        super().__init__(metric_id=metric_id, metric_type=metric_type, meta=meta, uuid=uuid)
 
 
 class WakeWordRecordingModel(DatabaseModel):
     def __init__(self, wakeword_id, transcription, path, meta=None,
                  uuid="AnonDevice", tag=AudioTag.UNTAGGED, speaker_type=SpeakerTag.UNTAGGED):
-        self.wakeword_id = wakeword_id
-        self.transcription = transcription
-        self.path = path
         if isinstance(meta, str):
             meta = json.loads(meta)
-        self.meta = meta or []
-        self.uuid = uuid
-        self.tag = tag
-        self.speaker_type = speaker_type
+        super().__init__(wakeword_id=wakeword_id, transcription=transcription,
+                         path=path, meta=meta or [], uuid=uuid,
+                         tag=tag, speaker_type=speaker_type)
 
 
 class UtteranceRecordingModel(DatabaseModel):
     def __init__(self, utterance_id, transcription, path, uuid="AnonDevice"):
-        self.utterance_id = utterance_id
-        self.transcription = transcription
-        self.path = path
-        self.uuid = uuid
+        super().__init__(utterance_id=utterance_id, transcription=transcription, path=path, uuid=uuid)
 
 
 class SkillSettingsModel(DatabaseModel):
@@ -74,21 +64,20 @@ class SkillSettingsModel(DatabaseModel):
 
     def __init__(self, skill_id, skill_settings=None,
                  meta=None, display_name=None, remote_id=None):
-        self.skill_id = skill_id
-        self.display_name = display_name or self.skill_id
-        self.settings = skill_settings or {}
-        self.remote_id = remote_id or skill_id
-        if not self.remote_id.startswith("@"):
-            self.remote_id = f"@|{self.remote_id}"
-        self.meta = meta or {}
-
-    @property
-    def path(self):
-        return f"{get_xdg_config_save_path()}/skills/{self.skill_id}/settings.json"
+        remote_id = remote_id or skill_id
+        if not remote_id.startswith("@"):
+            remote_id = f"@|{remote_id}"
+        if isinstance(meta, str):
+            meta = json.loads(meta)
+        super().__init__(skill_id=skill_id, skill_settings=skill_settings or {},
+                         meta=meta or {}, display_name=display_name or skill_id, remote_id=remote_id)
 
     def save(self):
-        with open(self.path, "w") as f:
+        with open(f"{get_xdg_config_save_path()}/skills/{self.skill_id}/settings.json" "w") as f:
             json.dump(self.settings, f, indent=4, ensure_ascii=False)
+        # TODO - autogen meta if needed (?)
+        with open(f"{get_xdg_config_save_path()}/skills/{self.skill_id}/settingsmeta.json" "w") as f:
+            json.dump(self.meta, f, indent=4, ensure_ascii=False)
 
     def serialize(self):
         # settings meta with updated placeholder values from settings
@@ -173,45 +162,26 @@ class DeviceModel(DatabaseModel):
 
         default_ww = Configuration.get("listener", {}).get("wake_word", "hey_mycroft")
         default_tts = Configuration.get("tts", {}).get("module", "ovos-tts-plugin-mimic3-server")
-
-        self.uuid = identity["uuid"]
-        self.token = identity["access"]
-
-        # ovos exclusive
-        # individual skills can also control this via "__shared_settings" flag
-        self.isolated_skills = True
-
-        # extra device info
-        self.name = f"Device-{self.uuid}"  # friendly device name
-        self.device_location = "somewhere"  # indoor location
         mail_cfg = Configuration.get("email", {})
-        self.email = mail_cfg.get("recipient") or \
-                     mail_cfg.get("smtp", {}).get("username")
-        # mycroft.conf values
-        self.date_format = Configuration.get("date_format") or "DMY"
-        self.system_unit = Configuration.get("system_unit") or "metric"
-        self.time_format = Configuration.get("time_format") or "full"
-        self.opt_in = Configuration.get("opt_in") or False
-        self.lang = Configuration.get("lang") or "en-us"
-        self.location = Configuration["location"]
 
-        # default config values
-        # these are usually set in selene during pairing process
-
-        # tts - 'ttsSettings': {'mimic2': {'voice': 'kusal'}, 'module': 'mimic2'}
-        self.default_tts = default_tts
-        self.default_tts_cfg = Configuration.get("tts", {}).get(default_tts, {})
-
-        # wake word -  selene returns the full listener config, supports only a single wake word, and support only pocketsphinx....
-        # 'listenerSetting': {
-        # 'channels': 1, 'energyRatio': 1.5, 'multiplier': 1,  'sampleRate': 16000,
-        # 'uuid': 'd5b2cd4c-c3f1-4afb-b4e0-9212d322786e',   # <- unique ww uuid in selene db (?)
-        # 'phonemes': '...',
-        # 'threshold': '...',
-        # 'wakeWord': '...'}
-        self.default_ww = default_ww.replace(" ", "_")
-        # this needs to be done due to the convoluted logic in core, a _ will be added in config hotwords section and cause a mismatch otherwise
-        self.default_ww_cfg = Configuration.get("hotwords", {}).get(default_ww, {})
+        uuid = identity["uuid"]
+        super().__init__(uuid=uuid, token=identity["access"],
+                         isolated_skills=True,
+                         name=f"Device-{uuid}",
+                         device_location="somewhere",  # indoor location
+                         email=mail_cfg.get("recipient") or \
+                               mail_cfg.get("smtp", {}).get("username"),
+                         date_format=Configuration.get("date_format") or "DMY",
+                         system_unit=Configuration.get("system_unit") or "metric",
+                         time_format=Configuration.get("time_format") or "full",
+                         opt_in=Configuration.get("opt_in") or False,
+                         lang=Configuration.get("lang") or "en-us",
+                         location=Configuration["location"],
+                         default_tts=default_tts,
+                         default_tts_cfg=Configuration.get("tts", {}).get(default_tts, {}),
+                         default_ww=default_ww.replace(" ", "_"),
+                         default_ww_cfg=Configuration.get("hotwords", {}).get(default_ww, {})
+                         )
 
     @property
     def selene_device(self):

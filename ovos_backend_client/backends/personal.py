@@ -344,6 +344,12 @@ class PersonalBackend(AbstractPartialBackend):
             return self.device_upload_wake_word_v1(audio, params, upload_url)
         return self.device_upload_wake_word(audio, params)
 
+    def dataset_upload_stt_recording(self, audio, params, upload_url=None):
+        """ upload stt sample - url can be external to backend"""
+        if upload_url:
+            return super().dataset_upload_stt_recording(audio, params, upload_url)
+        raise NotImplementedError()  # TODO - add to backend, currently needs external url
+
     # OAuth API
     def oauth_get_token(self, dev_cred):
         """

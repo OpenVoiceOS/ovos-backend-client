@@ -397,6 +397,22 @@ class OfflineBackend(AbstractBackend):
             return self.post(upload_url, files=ww_files)
         return {}
 
+    def dataset_upload_stt_recording(self, audio, params, upload_url=None):
+        """ upload stt sample - url can be external to backend"""
+        byte_data = audio.get_wav_data()
+        if Configuration().get("listener", {}).get('record_utterances'):
+            self.db_post_stt_recording(byte_data, params["transcription"], params)
+
+        upload_url = upload_url or Configuration().get("listener", {}).get("utterance_upload", {}).get("url")
+        if upload_url:
+            # upload to arbitrary server
+            ww_files = {
+                'audio': BytesIO(byte_data),
+                'metadata': StringIO(json.dumps(params))
+            }
+            return self.post(upload_url, files=ww_files)
+        return {}
+
     # Email API
     def email_send(self, title, body, sender):
         """ will raise KeyError if SMTP not configured in mycroft.conf"""

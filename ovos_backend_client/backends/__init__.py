@@ -20,11 +20,11 @@ API_REGISTRY = {
         "email": True,  # smtp config needs to be set
         "oauth": True  # oauth PHAL plugin to register apps
     },
-    BackendType.SELENE: {
+    BackendType.SELENE: {   # soon to disappear
         "admin": False,  # CRUD not exposed
         "database": False,  # CRUD not exposed
         "device": True,
-        "dataset": True,
+        "dataset": False,  # not anymore
         "metrics": True,
         "wolfram": True,
         "geolocate": True,

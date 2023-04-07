@@ -155,14 +155,6 @@ class DeviceApi(BaseApi):
         """ Retrieve all device information from the web backend """
         return self.backend.device_get()
 
-    def get_skill_settings_v1(self):
-        """ old style deprecated bidirectional skill settings api, still available! """
-        return self.backend.device_get_skill_settings_v1()
-
-    def put_skill_settings_v1(self, data):
-        """ old style deprecated bidirectional skill settings api, still available! """
-        return self.backend.device_put_skill_settings_v1(data)
-
     def get_settings(self):
         """ Retrieve device settings information from the web backend
 
@@ -189,9 +181,6 @@ class DeviceApi(BaseApi):
                        enclosure_version="unknown"):
         return self.backend.device_update_version(core_version, platform, platform_build, enclosure_version)
 
-    def report_metric(self, name, data):
-        return self.backend.device_report_metric(name, data)
-
     def get_location(self):
         """ Retrieve device location information from the web backend
 
@@ -199,47 +188,6 @@ class DeviceApi(BaseApi):
             str: JSON string with user location.
         """
         return self.backend.device_get_location()
-
-    def get_subscription(self):
-        """
-            Get information about type of subscription this unit is connected
-            to.
-
-            Returns: dictionary with subscription information
-        """
-        return self.backend.device_get_subscription()
-
-    @property
-    def is_subscriber(self):
-        """
-            status of subscription. True if device is connected to a paying
-            subscriber.
-        """
-        return self.backend.is_subscriber
-
-    def get_subscriber_voice_url(self, voice=None, arch=None):
-        return self.backend.device_get_subscriber_voice_url(voice, arch)
-
-    def get_oauth_token(self, dev_cred):
-        """
-            Get Oauth token for dev_credential dev_cred.
-
-            Argument:
-                dev_cred:   development credentials identifier
-
-            Returns:
-                json string containing token and additional information
-        """
-        return self.backend.device_get_oauth_token(dev_cred)
-
-    # cached for 30 seconds because often 1 call per skill is done in quick succession
-    @timed_lru_cache(seconds=30)
-    def get_skill_settings(self):
-        """Get the remote skill settings for all skills on this device."""
-        return self.backend.device_get_skill_settings()
-
-    def send_email(self, title, body, sender):
-        return self.backend.device_send_email(title, body, sender)
 
     def upload_skill_metadata(self, settings_meta):
         """Upload skill metadata.
@@ -286,12 +234,87 @@ class DeviceApi(BaseApi):
 
         return self.backend.device_upload_skills_data(to_send)
 
+    ## DEPRECATED APIS below, use dedicated classes instead
+    def get_oauth_token(self, dev_cred):
+        """
+            Get Oauth token for dev_credential dev_cred.
+
+            Argument:
+                dev_cred:   development credentials identifier
+
+            Returns:
+                json string containing token and additional information
+        """
+        ## DEPRECATED - compat only for old devices
+        LOG.warning("DEPRECATED: use OAuthApi class instead")
+        return self.backend.device_get_oauth_token(dev_cred)
+
+    def report_metric(self, name, data):
+        ## DEPRECATED - compat only for old devices
+        LOG.warning("DEPRECATED: use MetricsApi class instead")
+        return self.backend.device_report_metric(name, data)
+
+    def get_subscription(self):
+        """
+            Get information about type of subscription this unit is connected
+            to.
+
+            Returns: dictionary with subscription information
+        """
+        ## DEPRECATED - compat only for old devices
+        LOG.warning("DEPRECATED: there are no subscriptions")
+        return self.backend.device_get_subscription()
+
+    @property
+    def is_subscriber(self):
+        """
+            status of subscription. True if device is connected to a paying
+            subscriber.
+        """
+        ## DEPRECATED - compat only for old devices
+        LOG.warning("DEPRECATED: there are no subscriptions")
+        return self.backend.is_subscriber
+
+    def get_subscriber_voice_url(self, voice=None, arch=None):
+        ## DEPRECATED - compat only for old devices
+        LOG.warning("DEPRECATED: there are no subscriptions")
+        return self.backend.device_get_subscriber_voice_url(voice, arch)
+
+    def get_skill_settings_v1(self):
+        """ old style deprecated bidirectional skill settings api, still available! """
+        ## DEPRECATED - compat only for old devices
+        LOG.warning("DEPRECATED: use SkillSettingsApi class instead")
+        return self.backend.device_get_skill_settings_v1()
+
+    def put_skill_settings_v1(self, data):
+        """ old style deprecated bidirectional skill settings api, still available! """
+        ## DEPRECATED - compat only for old devices
+        LOG.warning("DEPRECATED: use SkillSettingsApi class instead")
+        return self.backend.device_put_skill_settings_v1(data)
+
+    # cached for 30 seconds because often 1 call per skill is done in quick succession
+    @timed_lru_cache(seconds=30)
+    def get_skill_settings(self):
+        """Get the remote skill settings for all skills on this device."""
+        ## DEPRECATED - compat only for old devices
+        LOG.warning("DEPRECATED: use SkillSettingsApi class instead")
+        return self.backend.device_get_skill_settings()
+
+    def send_email(self, title, body, sender):
+        ## DEPRECATED - compat only for old devices
+        LOG.warning("DEPRECATED: use EmailApi class instead")
+        return self.backend.device_send_email(title, body, sender)
+
     def upload_wake_word_v1(self, audio, params):
         """ upload precise wake word V1 endpoint - DEPRECATED"""
+        ## DEPRECATED - compat only for old devices
+        LOG.warning("DEPRECATED: use DatasetApi class instead")
         return self.backend.device_upload_wake_word_v1(audio, params)
 
     def upload_wake_word(self, audio, params):
         """ upload precise wake word V2 endpoint """
+        ## DEPRECATED - compat only for old devices
+        LOG.warning("DEPRECATED: use DatasetApi class instead")
         return self.backend.device_upload_wake_word(audio, params)
 
 
@@ -500,6 +523,27 @@ class EmailApi(BaseApi):
 
     def send_email(self, title, body, sender):
         return self.backend.email_send(title, body, sender)
+
+
+class SkillSettingsApi(BaseApi):
+    """Web API wrapper for skill settings"""
+
+    def __init__(self, url=None, version="v1", identity_file=None, backend_type=None):
+        super().__init__(url, version, identity_file, backend_type)
+
+    def validate_backend_type(self):
+        if not API_REGISTRY[self.backend_type]["metrics"]:
+            raise ValueError(f"{self.__class__.__name__} not available for {self.backend_type}")
+
+    def upload_skill_settings(self):
+        # TODO
+        raise NotImplementedError
+        return self.backend.device_put_skill_settings_v1(data)
+
+    def download_skill_settings(self):
+        # TODO
+        raise NotImplementedError
+        return self.backend.device_get_skill_settings_v1()
 
 
 class DatasetApi(BaseApi):

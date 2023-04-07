@@ -110,7 +110,6 @@ class AbstractBackend:
         self.check_token()
         return requests.delete(url, headers=headers, timeout=(3.05, 15), *args, **kwargs)
 
-
     # OWM Api
     @staticmethod
     def _get_lat_lon(**kwargs):
@@ -277,18 +276,6 @@ class AbstractBackend:
         raise NotImplementedError()
 
     # Device Api
-    @property
-    def is_subscriber(self):
-        """
-            status of subscription. True if device is connected to a paying
-            subscriber.
-        """
-        try:
-            return self.device_get_subscription().get('@type') != 'free'
-        except Exception:
-            # If can't retrieve, assume not paired and not a subscriber yet
-            return False
-
     def device_get(self):
         """ Retrieve all device information from the web backend """
         return {"uuid": IdentityManager.get().uuid,
@@ -307,16 +294,6 @@ class AbstractBackend:
         Returns:
             str: JSON string with user configuration information.
         """
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def device_get_skill_settings_v1(self):
-        """ old style bidirectional skill settings api, still available!"""
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def device_put_skill_settings_v1(self, data=None):
-        """ old style bidirectional skill settings api, still available!"""
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -340,10 +317,6 @@ class AbstractBackend:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def device_report_metric(self, name, data):
-        raise NotImplementedError()
-
-    @abc.abstractmethod
     def device_get_location(self):
         """ Retrieve device location information from the web backend
 
@@ -351,39 +324,6 @@ class AbstractBackend:
             str: JSON string with user location.
         """
         raise NotImplementedError()
-
-    def device_get_subscription(self):
-        """
-            Get information about type of subscription this unit is connected
-            to.
-
-            Returns: dictionary with subscription information
-        """
-        return {"@type": "free"}
-
-    def device_get_subscriber_voice_url(self, voice=None, arch=None):
-        return None
-
-    @abc.abstractmethod
-    def device_get_oauth_token(self, dev_cred):
-        """
-            Get Oauth token for dev_credential dev_cred.
-
-            Argument:
-                dev_cred:   development credentials identifier
-
-            Returns:
-                json string containing token and additional information
-        """
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def device_get_skill_settings(self):
-        """Get the remote skill settings for all skills on this device."""
-        raise NotImplementedError()
-
-    def device_send_email(self, title, body, sender):
-        return self.email_send(title, body, sender)
 
     @abc.abstractmethod
     def device_upload_skill_metadata(self, settings_meta):
@@ -402,16 +342,6 @@ class AbstractBackend:
         Args:
              data: dictionary with skills data from msm
         """
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def device_upload_wake_word_v1(self, audio, params):
-        """ upload precise wake word V1 endpoint - url can be external to backend"""
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def device_upload_wake_word(self, audio, params):
-        """ upload precise wake word V2 endpoint - integrated with device api"""
         raise NotImplementedError()
 
     # Metrics API
@@ -436,7 +366,12 @@ class AbstractBackend:
 
     # Dataset API
     @abc.abstractmethod
-    def dataset_upload_wake_word(self, audio, params):
+    def dataset_upload_wake_word(self, audio, params, upload_url=None):
+        """ upload wake word sample - url can be external to backend"""
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def dataset_upload_stt_recording(self, audio, params, upload_url=None):
         """ upload wake word sample - url can be external to backend"""
         raise NotImplementedError()
 
@@ -741,3 +676,82 @@ class AbstractBackend:
     def db_post_voice_definition(self, name, lang, plugin,
                                  tts_config, offline, gender=None):
         raise NotImplementedError()
+
+    # DEPRECATED APIS
+    @property
+    def is_subscriber(self):
+        """
+            status of subscription. True if device is connected to a paying
+            subscriber.
+        """
+        ## DEPRECATED - compat only for old devices
+        try:
+            return self.device_get_subscription().get('@type') != 'free'
+        except Exception:
+            # If can't retrieve, assume not paired and not a subscriber yet
+            return False
+
+    def device_report_metric(self, name, data):
+        ## DEPRECATED - compat only for old devices
+        return self.metrics_upload(name, data)
+
+    def device_get_oauth_token(self, dev_cred):
+        """
+            Get Oauth token for dev_credential dev_cred.
+
+            Argument:
+                dev_cred:   development credentials identifier
+
+            Returns:
+                json string containing token and additional information
+        """
+        ## DEPRECATED - compat only for old devices
+        raise self.oauth_get_token(dev_cred)
+
+    @abc.abstractmethod
+    def device_get_skill_settings(self):
+        """Get the remote skill settings for all skills on this device."""
+        ## DEPRECATED - compat only for old devices
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def device_get_skill_settings_v1(self):
+        """ old style bidirectional skill settings api, still available!"""
+        ## DEPRECATED - compat only for old devices
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def device_put_skill_settings_v1(self, data=None):
+        """ old style bidirectional skill settings api, still available!"""
+        ## DEPRECATED - compat only for old devices
+        raise NotImplementedError()
+
+    def device_send_email(self, title, body, sender):
+        ## DEPRECATED - compat only for old devices
+        return self.email_send(title, body, sender)
+
+    @abc.abstractmethod
+    def device_upload_wake_word_v1(self, audio, params):
+        """ upload precise wake word V1 endpoint - url can be external to backend"""
+        ## DEPRECATED - compat only for old devices
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def device_upload_wake_word(self, audio, params):
+        """ upload precise wake word V2 endpoint - integrated with device api"""
+        ## DEPRECATED - compat only for old devices
+        raise NotImplementedError()
+
+    def device_get_subscription(self):
+        """
+            Get information about type of subscription this unit is connected
+            to.
+
+            Returns: dictionary with subscription information
+        """
+        ## DEPRECATED - compat only for old devices
+        return {"@type": "free"}
+
+    def device_get_subscriber_voice_url(self, voice=None, arch=None):
+        ## DEPRECATED - compat only for old devices
+        return None

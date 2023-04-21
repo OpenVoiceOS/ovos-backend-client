@@ -555,6 +555,8 @@ class OfflineBackend(AbstractBackend):
             limit (int): Maximum alternate transcriptions
 
        """
+        from speech_recognition import Recognizer, AudioFile
+
         if self.stt is None:
             self.load_stt_plugin(lang=language)
         with NamedTemporaryFile() as fp:

@@ -5,6 +5,7 @@ from tempfile import NamedTemporaryFile
 from uuid import uuid4
 
 import requests
+from speech_recognition import Recognizer, AudioFile
 from json_database import JsonStorageXDG
 from ovos_config.config import Configuration
 from ovos_config.config import update_mycroft_config
@@ -587,8 +588,6 @@ if __name__ == "__main__":
     # a = b.wolfram_full_results("2+2")
     # a = b.wolfram_spoken("what is the speed of light")
     # a = b.owm_get_weather()
-
-    from speech_recognition import Recognizer, AudioFile
 
     with AudioFile("/home/user/PycharmProjects/selene_api/test/test.wav") as source:
         audio = Recognizer().record(source)

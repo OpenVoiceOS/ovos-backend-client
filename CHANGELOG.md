@@ -2,7 +2,15 @@
 
 ## [Unreleased](https://github.com/OpenVoiceOS/ovos-backend-client/tree/HEAD)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.7a1...HEAD)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.7a2...HEAD)
+
+**Merged pull requests:**
+
+- fix AudioFile offline import [\#35](https://github.com/OpenVoiceOS/ovos-backend-client/pull/35) ([emphasize](https://github.com/emphasize))
+
+## [V0.0.7a2](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.0.7a2) (2023-02-15)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.7a1...V0.0.7a2)
 
 **Fixed bugs:**
 

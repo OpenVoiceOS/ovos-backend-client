@@ -2,7 +2,19 @@
 
 ## [Unreleased](https://github.com/OpenVoiceOS/ovos-backend-client/tree/HEAD)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.7a2...HEAD)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.7a3...HEAD)
+
+**Implemented enhancements:**
+
+- fix offline geolocate [\#33](https://github.com/OpenVoiceOS/ovos-backend-client/pull/33) ([emphasize](https://github.com/emphasize))
+
+**Closed issues:**
+
+- 'what is the weather in baltimore' returns an error \#30 [\#31](https://github.com/OpenVoiceOS/ovos-backend-client/issues/31)
+
+## [V0.0.7a3](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.0.7a3) (2023-04-21)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.7a2...V0.0.7a3)
 
 **Merged pull requests:**
 

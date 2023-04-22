@@ -164,32 +164,42 @@ class OfflineBackend(AbstractBackend):
         """
         url = "https://nominatim.openstreetmap.org/search"
         data = self.get(url, params={"q": location, "format": "json", "limit": 1}).json()[0]
+        lat = data.get("lat")
+        lon = data.get("lon")
+
+        if lat and lon:
+            return self.reverse_geolocation_get(lat, lon)
+
         url = "https://nominatim.openstreetmap.org/details.php?osmtype=W&osmid=38210407&format=json"
         details = self.get(url, params={"osmid": data['osm_id'], "osmtype": data['osm_type'][0].upper(),
                                         "format": "json"}).json()
+        # if no addresstags are present for the location an empty list is sent instead of a dict
+        if not details.get("addresstags"):
+            details["addresstags"] = dict()
 
         location = {
             "city": {
-                "code": details["addresstags"].get("postcode") or details["calculated_postcode"] or "",
-                "name": details["localname"],
+                "code": details.get("addresstags", {}).get("postcode") or \
+                        details.get("calculated_postcode") or "",
+                "name": details.get("localname"),
                 "state": {
-                    "code": details["addresstags"].get("state_code") or details["calculated_postcode"] or "",
-                    "name": details["addresstags"].get("state") or data["display_name"].split(", ")[0],
+                    "code": details.get("addresstags", {}).get("state_code") or \
+                            details.get("calculated_postcode") or "",
+                    "name": details.get("addresstags", {}).get("state") or \
+                            data.get("display_name", "").split(", ")[0] or "",
                     "country": {
-                        "code": details["country_code"].upper() or details["addresstags"].get("country"),
-                        "name": data["display_name"].split(", ")[-1]
+                        "code": details.get("country_code", "").upper() or \
+                                details.get("addresstags", {}).get("country") or "",
+                        "name": data.get("display_name", "").split(", ")[-1]
                     }
                 }
             },
             "coordinate": {
-                "latitude": data["lat"],
-                "longitude": data["lon"]
+                "latitude": lat,
+                "longitude": lon
             }
         }
-        if "timezone" not in location:
-            location["timezone"] = self._get_timezone(
-                lon=location["coordinate"]["longitude"],
-                lat=location["coordinate"]["latitude"])
+
         return location
 
     def reverse_geolocation_get(self, lat, lon):
@@ -221,7 +231,7 @@ class OfflineBackend(AbstractBackend):
                             address.get("county")
                             or "",
                     "country": {
-                        "code": address.get("country_code") or "",
+                        "code": address.get("country_code", "").upper() or "",
                         "name": address.get("country") or "",
                     }
                 }
@@ -229,12 +239,11 @@ class OfflineBackend(AbstractBackend):
             "coordinate": {
                 "latitude": details.get("lat") or lat,
                 "longitude": details.get("lon") or lon
-            }
+            },
+            "timezone": self._get_timezone(lat=details.get("lat") or lat,
+                                           lon=details.get("lon") or lon)
         }
-        if "timezone" not in location:
-            location["timezone"] = self._get_timezone(
-                lon=location["coordinate"]["longitude"],
-                lat=location["coordinate"]["latitude"])
+
         return location
 
     def ip_geolocation_get(self, ip):

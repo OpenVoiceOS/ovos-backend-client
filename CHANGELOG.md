@@ -2,7 +2,19 @@
 
 ## [Unreleased](https://github.com/OpenVoiceOS/ovos-backend-client/tree/HEAD)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.7a3...HEAD)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.7a4...HEAD)
+
+**Fixed bugs:**
+
+- Personal-backend: Workaround deadlock [\#37](https://github.com/OpenVoiceOS/ovos-backend-client/pull/37) ([forslund](https://github.com/forslund))
+
+**Closed issues:**
+
+- Double acquire of combo-lock [\#36](https://github.com/OpenVoiceOS/ovos-backend-client/issues/36)
+
+## [V0.0.7a4](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.0.7a4) (2023-04-22)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.7a3...V0.0.7a4)
 
 **Implemented enhancements:**
 

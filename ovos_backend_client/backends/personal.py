@@ -19,6 +19,7 @@ class PersonalBackend(AbstractPartialBackend):
 
     def refresh_token(self):
         try:
+            self.identity.get() # Ensure loading so identity property doesn't cause deadlock
             identity_lock.acquire(blocking=False)
             # NOTE: requests needs to be used instead of self.get due to self.get calling this
             data = requests.get(f"{self.backend_url}/{self.backend_version}/auth/token", headers=self.headers).json()

@@ -2,7 +2,15 @@
 
 ## [Unreleased](https://github.com/OpenVoiceOS/ovos-backend-client/tree/HEAD)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.7a4...HEAD)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.7a5...HEAD)
+
+**Merged pull requests:**
+
+- add package data [\#38](https://github.com/OpenVoiceOS/ovos-backend-client/pull/38) ([emphasize](https://github.com/emphasize))
+
+## [V0.0.7a5](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.0.7a5) (2023-04-25)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.7a4...V0.0.7a5)
 
 **Fixed bugs:**
 

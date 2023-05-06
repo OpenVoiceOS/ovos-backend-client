@@ -52,6 +52,7 @@ setup(
     name='ovos-backend-client',
     version=get_version(),
     packages=['ovos_backend_client', 'ovos_backend_client.backends'],
+    package_data={'': package_files('ovos_backend_client')},
     url='https://github.com/OpenVoiceOS/ovos-backend-client',
     license='Apache2',
     author='jarbasai',

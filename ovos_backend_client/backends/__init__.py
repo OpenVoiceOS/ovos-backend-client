@@ -3,7 +3,6 @@ from ovos_config.config import Configuration
 from ovos_backend_client.backends.base import BackendType
 from ovos_backend_client.backends.offline import OfflineBackend
 from ovos_backend_client.backends.personal import PersonalBackend
-from ovos_backend_client.backends.selene import SELENE_API_URL, SeleneBackend
 
 API_REGISTRY = {
     BackendType.OFFLINE: {

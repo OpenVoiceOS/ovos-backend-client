@@ -14,8 +14,7 @@ from ovos_backend_client.identity import IdentityManager
 from ovos_backend_client.backends import BackendType, get_backend_type
 
 
-PAIRING_BACKENDS = [BackendType.PERSONAL,
-                    BackendType.SELENE]
+PAIRING_BACKENDS = [BackendType.PERSONAL]
 
 
 def is_backend_disabled():
@@ -153,7 +152,7 @@ class PairingManager:
         self.count = -1  # for repeating pairing code. -1 = not running
         self.num_failed_codes = 0
 
-    def set_api_url(self, url,  version="v1", identity_file=None, backend_type=BackendType.SELENE):
+    def set_api_url(self, url,  version="v1", identity_file=None, backend_type=BackendType.PERSONAL):
         if not url.startswith("http"):
             url = f"http://{url}"
         self.api_url = url

@@ -1,8 +1,16 @@
 # Changelog
 
-## [0.0.7a8](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.0.7a8) (2023-06-07)
+## [0.0.7a9](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.0.7a9) (2023-06-07)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.7a7...0.0.7a8)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.7a8...0.0.7a9)
+
+**Breaking changes:**
+
+- deprecate dead backends [\#39](https://github.com/OpenVoiceOS/ovos-backend-client/pull/39) ([JarbasAl](https://github.com/JarbasAl))
+
+## [V0.0.7a8](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.0.7a8) (2023-06-07)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.7a7...V0.0.7a8)
 
 **Merged pull requests:**
 

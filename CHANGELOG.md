@@ -2,7 +2,55 @@
 
 ## [Unreleased](https://github.com/OpenVoiceOS/ovos-backend-client/tree/HEAD)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.7a1...HEAD)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.7a6...HEAD)
+
+**Implemented enhancements:**
+
+- add cache + fix geolocation [\#40](https://github.com/OpenVoiceOS/ovos-backend-client/pull/40) ([JarbasAl](https://github.com/JarbasAl))
+
+## [V0.0.7a6](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.0.7a6) (2023-05-06)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.7a5...V0.0.7a6)
+
+**Merged pull requests:**
+
+- add package data [\#38](https://github.com/OpenVoiceOS/ovos-backend-client/pull/38) ([emphasize](https://github.com/emphasize))
+
+## [V0.0.7a5](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.0.7a5) (2023-04-25)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.7a4...V0.0.7a5)
+
+**Fixed bugs:**
+
+- Personal-backend: Workaround deadlock [\#37](https://github.com/OpenVoiceOS/ovos-backend-client/pull/37) ([forslund](https://github.com/forslund))
+
+**Closed issues:**
+
+- Double acquire of combo-lock [\#36](https://github.com/OpenVoiceOS/ovos-backend-client/issues/36)
+
+## [V0.0.7a4](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.0.7a4) (2023-04-22)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.7a3...V0.0.7a4)
+
+**Implemented enhancements:**
+
+- fix offline geolocate [\#33](https://github.com/OpenVoiceOS/ovos-backend-client/pull/33) ([emphasize](https://github.com/emphasize))
+
+**Closed issues:**
+
+- 'what is the weather in baltimore' returns an error \#30 [\#31](https://github.com/OpenVoiceOS/ovos-backend-client/issues/31)
+
+## [V0.0.7a3](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.0.7a3) (2023-04-21)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.7a2...V0.0.7a3)
+
+**Merged pull requests:**
+
+- fix AudioFile offline import [\#35](https://github.com/OpenVoiceOS/ovos-backend-client/pull/35) ([emphasize](https://github.com/emphasize))
+
+## [V0.0.7a2](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.0.7a2) (2023-02-15)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.7a1...V0.0.7a2)
 
 **Fixed bugs:**
 

@@ -2,7 +2,15 @@
 
 ## [Unreleased](https://github.com/OpenVoiceOS/ovos-backend-client/tree/HEAD)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.7a5...HEAD)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.7a6...HEAD)
+
+**Implemented enhancements:**
+
+- add cache + fix geolocation [\#40](https://github.com/OpenVoiceOS/ovos-backend-client/pull/40) ([JarbasAl](https://github.com/JarbasAl))
+
+## [V0.0.7a6](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.0.7a6) (2023-05-06)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.7a5...V0.0.7a6)
 
 **Merged pull requests:**
 

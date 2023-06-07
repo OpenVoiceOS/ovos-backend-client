@@ -3,34 +3,27 @@
 Python client library for interaction with several supported backends under a single unified interface
 
 - Personal backend - [self hosted](https://github.com/OpenVoiceOS/OVOS-local-backend)
-- Selene - https://api.mycroft.ai
-- OpenVoiceOS API Service - https://api.openvoiceos.com
 - Offline - support for setting your own api keys and query services directly
 
 ## Backend Overview
 
-| API       | Offline | Personal | Selene | OVOS    | 
-|-----------|---------|----------|--------|---------|
-| Admin     | yes [1] | yes      | no     | no      | 
-| Device    | yes [2] | yes      | yes    | yes [4] | 
-| Metrics   | yes [2] | yes      | yes    | yes [4] | 
-| Dataset   | yes [2] | yes      | yes    | yes [4] | 
-| OAuth     | yes [2] | yes      | yes    | yes [4] |
-| Wolfram   | yes [3] | yes      | yes    | yes     | 
-| Geolocate | yes     | yes      | yes    | yes     |
-| STT       | yes [3] | yes      | yes    | yes     | 
-| Weather   | yes [3] | yes      | yes    | yes     | 
-| Email     | yes [3] | yes      | yes    | yes     |
+| API       | Offline | Personal |
+|-----------|---------|----------|
+| Admin     | yes [1] | yes      |
+| Device    | yes     | yes      |
+| Metrics   | yes     | yes      |
+| Dataset   | yes     | yes      |
+| OAuth     | yes     | yes      |
+| Wolfram   | yes [2] | yes      |
+| Geolocate | yes     | yes      |
+| STT       | yes [2] | yes      |
+| Weather   | yes [2] | yes      |
+| Email     | yes [2] | yes      |
 
     [1] will update user level mycroft.conf
-    [2] shared json database with personal backend for UI compat
-    [3] needs additional configuration (eg. credentials)
-    [4] uses offline_backend functionality
+    [2] needs additional configuration (eg. credentials)
+    [3] uses offline_backend functionality
 
-
-## STT
-
-a companion stt plugin is available - [ovos-stt-plugin-selene](https://github.com/OpenVoiceOS/ovos-stt-plugin-selene)
 
 ## Geolocation
 
@@ -56,6 +49,8 @@ data = owm.get_weather()
 # dict - see api docs from owm onecall api
 ```
 
+DEPRECATED - weather skill now uses open meteo
+
 ## Wolfram Alpha proxy
 
 ```python
@@ -68,6 +63,13 @@ answer = wolf.spoken("what is the speed of light")
 data = wolf.full_results("2+2")
 # dict - see api docs from wolfram
 ```
+
+## STT
+
+a companion stt plugin is available - [ovos-stt-plugin-selene](https://github.com/OpenVoiceOS/ovos-stt-plugin-selene)
+
+DEPRECATED - use https://github.com/OpenVoiceOS/ovos-stt-plugin-server with a public server instead
+
 
 ## Remote Settings
 

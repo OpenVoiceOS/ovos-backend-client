@@ -9,6 +9,7 @@ from json_database import JsonStorageXDG
 from ovos_config.config import Configuration
 from ovos_config.config import update_mycroft_config
 from ovos_plugin_manager.stt import OVOSSTTFactory, get_stt_config
+from ovos_utils import timed_lru_cache
 from ovos_utils.log import LOG
 from ovos_utils.network_utils import get_external_ip
 from ovos_utils.smtp_utils import send_smtp
@@ -25,6 +26,7 @@ class OfflineBackend(AbstractBackend):
         self.stt = None
 
     # OWM API
+    @timed_lru_cache(seconds=600)  # cache results for 10 mins
     def owm_get_weather(self, lat_lon=None, lang="en-us", units="metric"):
         """Issue an API call and map the return value into a weather report
 
@@ -45,6 +47,7 @@ class OfflineBackend(AbstractBackend):
         response = self.get(url, params=params)
         return response.json()
 
+    @timed_lru_cache(seconds=600)  # cache results for 10 mins
     def owm_get_current(self, lat_lon=None, lang="en-us", units="metric"):
         """Issue an API call and map the return value into a weather report
 
@@ -65,6 +68,7 @@ class OfflineBackend(AbstractBackend):
         response = self.get(url, params=params)
         return response.json()
 
+    @timed_lru_cache(seconds=600)  # cache results for 10 mins
     def owm_get_hourly(self, lat_lon=None, lang="en-us", units="metric"):
         """Issue an API call and map the return value into a weather report
 
@@ -85,6 +89,7 @@ class OfflineBackend(AbstractBackend):
         response = self.get(url, params=params)
         return response.json()
 
+    @timed_lru_cache(seconds=600)  # cache results for 10 mins
     def owm_get_daily(self, lat_lon=None, lang="en-us", units="metric"):
         """Issue an API call and map the return value into a weather report
 
@@ -106,6 +111,7 @@ class OfflineBackend(AbstractBackend):
         return response.json()
 
     # Wolfram Alpha Api
+    @timed_lru_cache(seconds=600)  # cache results for 10 mins
     def wolfram_spoken(self, query, units="metric", lat_lon=None, optional_params=None):
         optional_params = optional_params or {}
         if not lat_lon:
@@ -118,6 +124,7 @@ class OfflineBackend(AbstractBackend):
         params["appid"] = self.credentials["wolfram"]
         return self.get(url, params=params).text
 
+    @timed_lru_cache(seconds=600)  # cache results for 10 mins
     def wolfram_simple(self, query, units="metric", lat_lon=None, optional_params=None):
         optional_params = optional_params or {}
         if not lat_lon:
@@ -130,6 +137,7 @@ class OfflineBackend(AbstractBackend):
         params["appid"] = self.credentials["wolfram"]
         return self.get(url, params=params).text
 
+    @timed_lru_cache(seconds=600)  # cache results for 10 mins
     def wolfram_full_results(self, query, units="metric", lat_lon=None, optional_params=None):
         """Wrapper for the WolframAlpha Full Results v2 API.
         https://products.wolframalpha.com/api/documentation/
@@ -153,6 +161,7 @@ class OfflineBackend(AbstractBackend):
         return data.json()
 
     # Geolocation Api
+    @timed_lru_cache(seconds=600)  # cache results for 10 mins
     def geolocation_get(self, location):
         """Call the geolocation endpoint.
 
@@ -170,27 +179,32 @@ class OfflineBackend(AbstractBackend):
         if lat and lon:
             return self.reverse_geolocation_get(lat, lon)
 
-        url = "https://nominatim.openstreetmap.org/details.php?osmtype=W&osmid=38210407&format=json"
+        url = "https://nominatim.openstreetmap.org/details.php"
         details = self.get(url, params={"osmid": data['osm_id'], "osmtype": data['osm_type'][0].upper(),
                                         "format": "json"}).json()
-        # if no addresstags are present for the location an empty list is sent instead of a dict
-        if not details.get("addresstags"):
-            details["addresstags"] = dict()
 
+        # if no addresstags are present for the location an empty list is sent instead of a dict
+        tags = details.get("addresstags") or {}
+
+        place_type = details["extratags"].get("linked_place") or details.get("category") or data.get(
+            "type") or data.get("class")
+        name = details["localname"] or details["names"].get("name") or details["names"].get("official_name") or data[
+            "display_name"]
+        cc = details["country_code"] or tags.get("country") or details["extratags"].get('ISO3166-1:alpha2') or ""
+        # TODO - lang support, official name is reported in various langs
         location = {
+            "address": data["display_name"],
             "city": {
-                "code": details.get("addresstags", {}).get("postcode") or \
-                        details.get("calculated_postcode") or "",
-                "name": details.get("localname"),
+                "code": tags.get("postcode") or
+                        details["calculated_postcode"] or "",
+                "name": name if place_type == "city" else "",
                 "state": {
-                    "code": details.get("addresstags", {}).get("state_code") or \
-                            details.get("calculated_postcode") or "",
-                    "name": details.get("addresstags", {}).get("state") or \
-                            data.get("display_name", "").split(", ")[0] or "",
+                    "code": tags.get("state_code") or
+                            details["calculated_postcode"] or "",
+                    "name": name if place_type == "state" else tags.get("state"),
                     "country": {
-                        "code": details.get("country_code", "").upper() or \
-                                details.get("addresstags", {}).get("country") or "",
-                        "name": data.get("display_name", "").split(", ")[-1]
+                        "code": cc.upper(),
+                        "name": name if place_type == "country" else ""  # TODO - country code to name
                     }
                 }
             },
@@ -199,9 +213,11 @@ class OfflineBackend(AbstractBackend):
                 "longitude": lon
             }
         }
-
+        if "timezone" not in location:
+            location["timezone"] = self._get_timezone(lon=lon, lat=lat)
         return location
 
+    @timed_lru_cache(seconds=600)  # cache results for 10 mins
     def reverse_geolocation_get(self, lat, lon):
         """Call the reverse geolocation endpoint.
 
@@ -239,13 +255,15 @@ class OfflineBackend(AbstractBackend):
             "coordinate": {
                 "latitude": details.get("lat") or lat,
                 "longitude": details.get("lon") or lon
-            },
-            "timezone": self._get_timezone(lat=details.get("lat") or lat,
-                                           lon=details.get("lon") or lon)
+            }
         }
-
+        if "timezone" not in location:
+            location["timezone"] = self._get_timezone(
+                lat=details.get("lat") or lat,
+                lon=details.get("lon") or lon)
         return location
 
+    @timed_lru_cache(seconds=600)  # cache results for 10 mins
     def ip_geolocation_get(self, ip):
         """Call the geolocation endpoint.
 
@@ -564,10 +582,9 @@ class OfflineBackend(AbstractBackend):
             limit (int): Maximum alternate transcriptions
 
        """
-        from speech_recognition import Recognizer, AudioFile
-
         if self.stt is None:
             self.load_stt_plugin(lang=language)
+        from speech_recognition import AudioFile, Recognizer
         with NamedTemporaryFile() as fp:
             fp.write(audio)
             with AudioFile(fp.name) as source:

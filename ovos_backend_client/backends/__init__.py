@@ -17,6 +17,7 @@ API_REGISTRY = {
         "stt": True,  # uses OPM and reads from mycroft.conf
         "owm": True,  # key needs to be set
         "email": True,  # smtp config needs to be set
+        "chatbot": True,  # neon_solvers, depends on installed plugins
         "oauth": True  # use local backend UI on same device to register apps
     },
     BackendType.SELENE: {
@@ -29,6 +30,7 @@ API_REGISTRY = {
         "stt": True,
         "owm": True,
         "email": True,  # only send to email used for registering account
+        "chatbot": True,  # neon_solvers, depends on installed plugins
         "oauth": True
     },
     BackendType.PERSONAL: {
@@ -41,7 +43,8 @@ API_REGISTRY = {
         "stt": True,
         "owm": True,
         "email": True,
-        "oauth": True  # can use local backend UI to register apps
+        "oauth": True,  # can use local backend UI to register apps
+        "chatbot": True,  # neon_solvers, depends on installed plugins
     },
     BackendType.OVOS_API: {
         "admin": True,  # fake support -> cast to offline backend type
@@ -53,6 +56,7 @@ API_REGISTRY = {
         "stt": True,
         "owm": True,
         "email": True,
+        "chatbot": True,  # ChatGPT
         "oauth": True  # fake support -> cast to offline backend type
     }
 }

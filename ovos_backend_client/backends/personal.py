@@ -426,3 +426,4 @@ class PersonalBackend(AbstractPartialBackend):
         """
         return self.put(f"{self.backend_url}/{self.backend_version}/admin/{uuid}/device", json=info,
                         headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+

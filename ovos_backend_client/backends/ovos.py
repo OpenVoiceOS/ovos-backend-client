@@ -206,12 +206,26 @@ class OVOSAPIBackend(AbstractPartialBackend):
                    "subject": subject,
                    "body": body}
         url = f"{self.backend_url}/send/mail/{self.uuid}"
-        requests.post(url, data=reqdata, headers=self.headers)
+        self.post(url, data=reqdata, headers=self.headers)
 
+    # Chatbot API
+    def chatbot_ask(self, prompt, chat_engine="gpt", lang=None, params=None):
+        persona = params.get("persona") or "helpful, creative, clever, and very friendly."
+        initial_prompt = f"The following is a conversation with an AI assistant. " \
+                         f"The assistant understands all languages. " \
+                         f"The assistant gives short and factual answers. " \
+                         f"The assistant is {persona}"
+        prompt = initial_prompt + "\n" + prompt
+        url = f"{self.backend_url}/cgpt/call_request/{self.uuid}"
+        data = self.post(url, data={"prompt": prompt}, headers=self.headers)
+        if data.status_code == 200:
+            return data.text
 
 
 if __name__ == "__main__":
     b = OVOSAPIBackend()
+    print(b.chatbot_ask("what is the meaning of life?"))
+
     # a = b.geolocation_get("Fafe")
     a = b.wolfram_full_results("2+2")
     print(a)

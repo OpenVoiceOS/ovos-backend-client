@@ -1,19 +1,20 @@
 import json
+import requests
 import time
 from io import BytesIO, StringIO
-from tempfile import NamedTemporaryFile
-from uuid import uuid4
-
-import requests
 from json_database import JsonStorageXDG
 from ovos_config.config import Configuration
 from ovos_config.config import update_mycroft_config
 from ovos_plugin_manager.stt import OVOSSTTFactory, get_stt_config
 from ovos_utils import timed_lru_cache
 from ovos_utils.log import LOG
+from ovos_utils.messagebus import FakeBus
 from ovos_utils.network_utils import get_external_ip
 from ovos_utils.smtp_utils import send_smtp
+from tempfile import NamedTemporaryFile
+from uuid import uuid4
 
+from neon_solvers import NeonSolversService
 from ovos_backend_client.backends.base import AbstractBackend, BackendType
 from ovos_backend_client.database import BackendDatabase
 from ovos_backend_client.identity import IdentityManager
@@ -24,6 +25,8 @@ class OfflineBackend(AbstractBackend):
     def __init__(self, url="127.0.0.1", version="v1", identity_file=None, credentials=None):
         super().__init__(url, version, identity_file, BackendType.OFFLINE, credentials)
         self.stt = None
+        self.solvers = NeonSolversService()
+        LOG.info(f"Loaded spoken answer modules: {list(self.solvers.loaded_modules.keys())}")
 
     # OWM API
     @timed_lru_cache(seconds=600)  # cache results for 10 mins
@@ -35,7 +38,6 @@ class OfflineBackend(AbstractBackend):
             lat_lon (tuple): the geologic (latitude, longitude) of the weather location
         """
         # default to configured location
-
         lat, lon = lat_lon or self._get_lat_lon()
         params = {
             "lang": lang,
@@ -594,6 +596,12 @@ class OfflineBackend(AbstractBackend):
             tx = [tx]
         return tx
 
+    # Chatbot API
+    def chatbot_ask(self, prompt, chat_engine="neon_solvers", lang=None, params=None):
+        context = {"lang": lang} if lang else {}
+        # TODO - check explicit loaded plugins against chat_engine
+        return self.solvers.spoken_answer(prompt, context)
+
 
 class AbstractPartialBackend(OfflineBackend):
     """ helper class that internally delegates unimplemented methods to offline backend implementation
@@ -607,9 +615,16 @@ class AbstractPartialBackend(OfflineBackend):
 
 if __name__ == "__main__":
     b = OfflineBackend()
+
+    print(b.chatbot_ask("what is the speed of light", chat_engine="solvers"))
+    print(b.chatbot_ask("what is the meaning of life?", chat_engine="solvers"))
+    print(b.chatbot_ask("what is your favorite animal?", chat_engine="solvers"))
+
+
     l = b.ip_geolocation_get("0.0.0.0")
     print(l)
 
+    exit(0)
     b.load_stt_plugin({"module": "ovos-stt-plugin-vosk"})
     # a = b.geolocation_get("Fafe")
     # a = b.wolfram_full_results("2+2")

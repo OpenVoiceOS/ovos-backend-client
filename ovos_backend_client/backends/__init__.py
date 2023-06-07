@@ -1,6 +1,7 @@
 from ovos_config.config import Configuration
 
 from ovos_backend_client.backends.base import BackendType
+from ovos_backend_client.backends.neon import NEON_API_URL, NeonMQBackend
 from ovos_backend_client.backends.offline import OfflineBackend
 from ovos_backend_client.backends.ovos import OVOS_API_URL, OVOSAPIBackend
 from ovos_backend_client.backends.personal import PersonalBackend
@@ -54,6 +55,18 @@ API_REGISTRY = {
         "owm": True,
         "email": True,
         "oauth": True  # fake support -> cast to offline backend type
+    },
+    BackendType.NEON_MQ: {  # neon_api_proxy extra requirement
+        "admin": True,  # fake support -> cast to offline backend type
+        "device": True,  # fake support -> cast to offline backend type
+        "dataset": True,  # fake support -> cast to offline backend type
+        "metrics": False,  # TODO - True, implement
+        "wolfram": True,
+        "geolocate": False,  # TODO - True (?), implement
+        "stt": False,  # TODO - True (?), implement
+        "owm": True,  # TODO - not all endpoints available upstream
+        "email": True,
+        "oauth": True  # fake support -> cast to offline backend type
     }
 }
 
@@ -73,6 +86,8 @@ def get_backend_type(conf=None):
         return BackendType.OVOS_API
     elif "mycroft.ai" in url:
         return BackendType.SELENE
+    elif "neon.ai" in url:
+        return BackendType.NEON_MQ
     return BackendType.PERSONAL
 
 
@@ -93,6 +108,8 @@ def get_backend_config(url=None, version="v1", identity_file=None, backend_type=
             url = OVOS_API_URL
         elif backend_type == BackendType.PERSONAL:
             url = "http://0.0.0.0:6712"
+        elif backend_type == BackendType.NEON_MQ:
+            url = NEON_API_URL
         else:
             url = "http://127.0.0.1"
 

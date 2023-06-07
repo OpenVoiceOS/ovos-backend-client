@@ -58,6 +58,7 @@ setup(
     author='jarbasai',
     install_requires=required("requirements/requirements.txt"),
     extras_require={
+        'neon': required('requirements/neon.txt'),
         'offline': required('requirements/offline.txt')
     },
     author_email='jarbasai@mailfence.com',

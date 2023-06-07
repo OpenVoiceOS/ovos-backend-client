@@ -5,22 +5,23 @@ Python client library for interaction with several supported backends under a si
 - Personal backend - [self hosted](https://github.com/OpenVoiceOS/OVOS-local-backend)
 - Selene - https://api.mycroft.ai
 - OpenVoiceOS API Service - https://api.openvoiceos.com
+- Neon MQ Service - https://api.neon.ai
 - Offline - support for setting your own api keys and query services directly
 
 ## Backend Overview
 
-| API       | Offline | Personal | Selene | OVOS    | 
-|-----------|---------|----------|--------|---------|
-| Admin     | yes [1] | yes      | no     | no      | 
-| Device    | yes [2] | yes      | yes    | yes [4] | 
-| Metrics   | yes [2] | yes      | yes    | yes [4] | 
-| Dataset   | yes [2] | yes      | yes    | yes [4] | 
-| OAuth     | yes [2] | yes      | yes    | yes [4] |
-| Wolfram   | yes [3] | yes      | yes    | yes     | 
-| Geolocate | yes     | yes      | yes    | yes     |
-| STT       | yes [3] | yes      | yes    | yes     | 
-| Weather   | yes [3] | yes      | yes    | yes     | 
-| Email     | yes [3] | yes      | yes    | yes     |
+| API       | Offline | Personal | Selene | OVOS    | Neon     |
+|-----------|---------|----------|--------|---------|----------|
+| Admin     | yes [1] | yes      | no     | no      | no       |
+| Device    | yes [2] | yes      | yes    | yes [4] | yes [4]  | 
+| Metrics   | yes [2] | yes      | yes    | yes [4] | yes      | 
+| Dataset   | yes [2] | yes      | yes    | yes [4] | yes [4]  |
+| OAuth     | yes [2] | yes      | yes    | yes [4] | yes [4]  |
+| Wolfram   | yes [3] | yes      | yes    | yes     | yes      |
+| Geolocate | yes     | yes      | yes    | yes     | yes      |
+| STT       | yes [3] | yes      | yes    | yes     | yes      |
+| Weather   | yes [3] | yes      | yes    | yes     | yes      |
+| Email     | yes [3] | yes      | yes    | yes     | yes      |
 
     [1] will update user level mycroft.conf
     [2] shared json database with personal backend for UI compat

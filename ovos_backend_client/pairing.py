@@ -11,12 +11,10 @@ from ovos_utils.network_utils import is_connected
 from ovos_backend_client.api import DeviceApi, BackendType
 from ovos_backend_client.exceptions import BackendDown, InternetDown, HTTPError
 from ovos_backend_client.identity import IdentityManager
-from ovos_backend_client.backends.selene import SELENE_API_URL
 from ovos_backend_client.backends import BackendType, get_backend_type
 
 
-PAIRING_BACKENDS = [BackendType.PERSONAL,
-                    BackendType.SELENE]
+PAIRING_BACKENDS = [BackendType.PERSONAL]
 
 
 def is_backend_disabled():
@@ -125,8 +123,8 @@ class PairingManager:
                  start_callback=None,
                  restart_callback=None,
                  end_callback=None,
-                 pairing_url="home.mycroft.ai",
-                 api_url=SELENE_API_URL,
+                 pairing_url="0.0.0.0;6712",
+                 api_url="0.0.0.0;6712",
                  version="v1",
                  identity_file=None,
                  backend_type=None):
@@ -154,7 +152,7 @@ class PairingManager:
         self.count = -1  # for repeating pairing code. -1 = not running
         self.num_failed_codes = 0
 
-    def set_api_url(self, url,  version="v1", identity_file=None, backend_type=BackendType.SELENE):
+    def set_api_url(self, url,  version="v1", identity_file=None, backend_type=BackendType.PERSONAL):
         if not url.startswith("http"):
             url = f"http://{url}"
         self.api_url = url

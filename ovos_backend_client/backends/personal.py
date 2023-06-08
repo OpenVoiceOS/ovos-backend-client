@@ -389,6 +389,11 @@ class PersonalBackend(AbstractPartialBackend):
         IdentityManager.save(identity)
         return identity
 
+    def admin_update_backend_config(self, config):
+        return self.post(f"{self.backend_url}/{self.backend_version}/admin/config",
+                        json={"config": config},
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
+
     def admin_set_device_location(self, uuid, loc):
         """
         loc = {

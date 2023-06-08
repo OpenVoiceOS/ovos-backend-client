@@ -403,6 +403,10 @@ class AbstractBackend:
         raise NotImplementedError()
 
     @abc.abstractmethod
+    def admin_update_backend_config(self, config):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
     def admin_set_device_location(self, uuid, loc):
         """
         loc = {

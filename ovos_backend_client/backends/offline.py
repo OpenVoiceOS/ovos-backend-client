@@ -15,7 +15,7 @@ from ovos_utils.configuration import get_xdg_config_save_path, get_xdg_data_save
 from ovos_utils.network_utils import get_external_ip
 from ovos_utils.smtp_utils import send_smtp
 from ovos_utils.xdg_utils import xdg_data_home
-
+from ovos_utils.log import LOG
 from ovos_backend_client.backends.base import AbstractBackend, BackendType
 from ovos_backend_client.database import JsonMetricDatabase, JsonWakeWordDatabase, \
     SkillSettingsModel, OAuthTokenDatabase, OAuthApplicationDatabase, DeviceModel, JsonUtteranceDatabase
@@ -436,6 +436,9 @@ class OfflineBackend(AbstractBackend):
         return self.db_get_oauth_token(dev_cred)
 
     # Admin API
+    def admin_update_backend_config(self, config):
+        LOG.error("tried to update backend config, but not using a backend. ignoring")
+
     def admin_pair(self, uuid=None):
         uuid = uuid or str(uuid4())
         # create dummy identity file for third parties expecting it for pairing checks

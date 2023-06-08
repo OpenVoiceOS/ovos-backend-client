@@ -9,8 +9,8 @@ from json_database import JsonStorage
 from ovos_config import Configuration
 from ovos_utils import camel_case_split
 from ovos_utils.configuration import get_xdg_config_save_path, get_xdg_data_save_path, get_xdg_data_dirs
-
-from ovos_backend_client.api import DeviceApi
+from ovos_backend_client.database import SkillSettingsModel
+import ovos_backend_client.api as _api
 
 
 def get_display_name(skill_name: str):
@@ -18,6 +18,29 @@ def get_display_name(skill_name: str):
     skill_name = skill_name.replace("_", " ").replace("-", " ")
     skill_name = re.sub(r'(^[Ss]kill|[Ss]kill$)', '', skill_name)
     return camel_case_split(skill_name).title().strip()
+
+
+def get_local_settings():
+    settings_path = f"{get_xdg_config_save_path()}/skills"
+    if not isdir(settings_path):
+        return []
+    settings = {}
+    meta = {}
+    all_settings = []
+    for skill_id in os.listdir(settings_path):
+        s = f"{settings_path}/{skill_id}/settings.json"
+        if isfile(s):
+            with open(s) as f:
+                settings = json.load(f)
+        s = f"{settings_path}/{skill_id}/settingsmeta.json"
+        if isfile(s):
+            meta = json.load(f)
+
+        display_name = skill_id.split(".")[-1].replace("_", "").replace("-", "").title()
+        s = SkillSettingsModel(skill_id=skill_id, meta=meta,
+                               skill_settings=settings, display_name=display_name)
+        all_settings.append(s)
+    return all_settings
 
 
 class RemoteSkillSettings:
@@ -37,7 +60,7 @@ class RemoteSkillSettings:
     """
 
     def __init__(self, skill_id, settings=None, meta=None, url=None, version="v1", remote_id=None):
-        self.api = DeviceApi(url, version)
+        self.api = _api.DeviceApi(url, version)
         self.skill_id = skill_id
         self.identifier = remote_id or \
                           self.selene_gid if not skill_id.startswith("@") else skill_id
@@ -158,7 +181,7 @@ class RemoteSkillSettings:
 
         if s:
             self.meta = s.meta
-            self.settings = s.settings
+            self.settings = s.skill_settings
             # update actual identifier from selene
             self.identifier = s.identifier
 
@@ -272,7 +295,7 @@ class SeleneSkillsManifest(JsonStorage):
         if "skills" not in self:
             self["skills"] = []
             self.store()
-        self.api = api or DeviceApi()
+        self.api = api or _api.DeviceApi()
 
     @staticmethod
     def _get_default_skills_directory(conf=None):
@@ -411,15 +434,15 @@ if __name__ == "__main__":
     print(s.api.get_skill_settings_v1())
     s.download()
     print(s)
-    s.settings["not"] = "yes"  # ignored, not in meta
-    s.settings["show_time"] = True
+    s.skill_settings["not"] = "yes"  # ignored, not in meta
+    s.skill_settings["show_time"] = True
     s.upload()
     s.download()
     print(s)
-    s.settings["not"] = "yes"
+    s.skill_settings["not"] = "yes"
     s.generate_meta()  # now in meta
-    s.settings["not"] = "no"
-    s.settings["show_time"] = False
+    s.skill_settings["not"] = "no"
+    s.skill_settings["show_time"] = False
     s.upload()
     s.download()
     print(s)

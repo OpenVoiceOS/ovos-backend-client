@@ -1,8 +1,16 @@
 # Changelog
 
-## [0.1.0a2](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.0a2) (2023-06-08)
+## [0.1.0a3](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.0a3) (2023-06-08)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.7a9...0.1.0a2)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0a2...0.1.0a3)
+
+**Fixed bugs:**
+
+- hotfix/rebase mess up in \#30 [\#41](https://github.com/OpenVoiceOS/ovos-backend-client/pull/41) ([JarbasAl](https://github.com/JarbasAl))
+
+## [V0.1.0a2](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.1.0a2) (2023-06-08)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.0.7a9...V0.1.0a2)
 
 **Implemented enhancements:**
 

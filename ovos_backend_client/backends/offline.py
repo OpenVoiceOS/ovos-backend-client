@@ -439,7 +439,7 @@ class OfflineBackend(AbstractBackend):
     def admin_update_backend_config(self, config):
         LOG.error("tried to update backend config, but not using a backend. ignoring")
 
-    def admin_get_backend_config(self, config):
+    def admin_get_backend_config(self):
         LOG.error("tried to get backend config, but not using a backend")
         return {}
 

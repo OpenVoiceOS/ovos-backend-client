@@ -86,8 +86,8 @@ class AdminApi(BaseApi):
         if not API_REGISTRY[self.backend_type]["admin"]:
             raise ValueError(f"{self.__class__.__name__} not available for {self.backend_type}")
 
-    def get_backend_config(self, config):
-        return self.backend.admin_get_backend_config(config)
+    def get_backend_config(self):
+        return self.backend.admin_get_backend_config()
 
     def update_backend_config(self, config):
         return self.backend.admin_update_backend_config(config)

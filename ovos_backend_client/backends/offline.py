@@ -577,7 +577,7 @@ class OfflineBackend(AbstractBackend):
             "device_location": "somewhere",
             "email": _mail_cfg.get("recipient") or
                      _mail_cfg.get("smtp", {}).get("username"),
-            "time_format": Configuration().get("date_format", "full"),
+            "time_format": Configuration().get("time_format", "full"),
             "date_format": Configuration().get("date_format", "DMY"),
             "system_unit": Configuration().get("system_unit", "metric"),
             "lang": Configuration().get("lang") or "en-us",

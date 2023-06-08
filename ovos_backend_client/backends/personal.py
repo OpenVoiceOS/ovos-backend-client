@@ -474,7 +474,7 @@ class PersonalBackend(AbstractPartialBackend):
                    "ww_id": ww_id,
                    "voice_id": voice_id}
         return self.put(url=f"{self.backend_url}/{self.backend_version}/admin/devices/{uuid}",
-                        json=payload,
+                        json={k: v for k, v in payload.items() if v is not None},
                         headers={"Authorization": f"Bearer {self.credentials['admin']}"})
 
     def db_delete_device(self, uuid):
@@ -488,7 +488,7 @@ class PersonalBackend(AbstractPartialBackend):
                        lang=Configuration().get("lang"),
                        date_format=Configuration().get("date_format", "DMY"),
                        system_unit=Configuration().get("system_unit", "metric"),
-                       time_format=Configuration().get("date_format", "full"),
+                       time_format=Configuration().get("time_format", "full"),
                        email=None,
                        isolated_skills=False,
                        ww_id=None,

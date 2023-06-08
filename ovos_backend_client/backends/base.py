@@ -403,6 +403,10 @@ class AbstractBackend:
         raise NotImplementedError()
 
     @abc.abstractmethod
+    def admin_get_backend_config(self):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
     def admin_update_backend_config(self, config):
         raise NotImplementedError()
 

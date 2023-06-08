@@ -439,6 +439,10 @@ class OfflineBackend(AbstractBackend):
     def admin_update_backend_config(self, config):
         LOG.error("tried to update backend config, but not using a backend. ignoring")
 
+    def admin_get_backend_config(self, config):
+        LOG.error("tried to get backend config, but not using a backend")
+        return {}
+
     def admin_pair(self, uuid=None):
         uuid = uuid or str(uuid4())
         # create dummy identity file for third parties expecting it for pairing checks

@@ -384,9 +384,9 @@ class PersonalBackend(AbstractPartialBackend):
     # Admin API
     def admin_pair(self, uuid=None):
         identity = self.get(f"{self.backend_url}/{self.backend_version}/admin/{uuid}/pair",
-                            headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                            headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
         # save identity file
-        self.identity.save(identity)
+        IdentityManager.save(identity)
         return identity
 
     def admin_set_device_location(self, uuid, loc):
@@ -502,6 +502,7 @@ class PersonalBackend(AbstractPartialBackend):
                    "system_unit": system_unit,
                    "time_format": time_format,
                    "email": email,
+                   "token": token,
                    "isolated_skills": isolated_skills,
                    "ww_id": ww_id,
                    "voice_id": voice_id,

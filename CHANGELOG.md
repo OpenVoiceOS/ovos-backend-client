@@ -1,8 +1,16 @@
 # Changelog
 
-## [0.1.0a3](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.0a3) (2023-06-08)
+## [0.1.0a4](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.0a4) (2023-06-08)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0a2...0.1.0a3)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0a3...0.1.0a4)
+
+**Implemented enhancements:**
+
+- feat/admin\_update\_backend\_config [\#42](https://github.com/OpenVoiceOS/ovos-backend-client/pull/42) ([JarbasAl](https://github.com/JarbasAl))
+
+## [V0.1.0a3](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.1.0a3) (2023-06-08)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0a2...V0.1.0a3)
 
 **Fixed bugs:**
 

@@ -384,9 +384,9 @@ class PersonalBackend(AbstractPartialBackend):
     # Admin API
     def admin_pair(self, uuid=None):
         identity = self.get(f"{self.backend_url}/{self.backend_version}/admin/{uuid}/pair",
-                            headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                            headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
         # save identity file
-        self.identity.save(identity)
+        IdentityManager.save(identity)
         return identity
 
     def admin_set_device_location(self, uuid, loc):
@@ -450,11 +450,11 @@ class PersonalBackend(AbstractPartialBackend):
     # Database api
     def db_list_devices(self):
         return self.get(url=f"{self.backend_url}/{self.backend_version}/admin/devices/list",
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_get_device(self, uuid):
         return self.get(url=f"{self.backend_url}/{self.backend_version}/admin/devices/{uuid}",
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_update_device(self, uuid, name=None,
                          device_location=None, opt_in=False,
@@ -475,11 +475,11 @@ class PersonalBackend(AbstractPartialBackend):
                    "voice_id": voice_id}
         return self.put(url=f"{self.backend_url}/{self.backend_version}/admin/devices/{uuid}",
                         json={k: v for k, v in payload.items() if v is not None},
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_delete_device(self, uuid):
         return self.delete(url=f"{self.backend_url}/{self.backend_version}/admin/devices/{uuid}",
-                           headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                           headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_post_device(self, uuid, token, name=None,
                        device_location="somewhere",
@@ -502,22 +502,23 @@ class PersonalBackend(AbstractPartialBackend):
                    "system_unit": system_unit,
                    "time_format": time_format,
                    "email": email,
+                   "token": token,
                    "isolated_skills": isolated_skills,
                    "ww_id": ww_id,
                    "voice_id": voice_id,
                    "uuid": uuid}
         return self.post(url=f"{self.backend_url}/{self.backend_version}/admin/devices",
                          json=payload,
-                         headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                         headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_list_shared_skill_settings(self):
         return self.get(url=f"{self.backend_url}/{self.backend_version}/admin/skill_settings/list",
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_get_shared_skill_settings(self, skill_id):
 
         return self.get(url=f"{self.backend_url}/{self.backend_version}/admin/skill_settings/{skill_id}",
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_update_shared_skill_settings(self, skill_id,
                                         display_name=None,
@@ -528,11 +529,11 @@ class PersonalBackend(AbstractPartialBackend):
                    "metadata_json": metadata_json}
         return self.put(url=f"{self.backend_url}/{self.backend_version}/admin/skill_settings/{skill_id}",
                         json=payload,
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_delete_shared_skill_settings(self, skill_id):
         return self.delete(url=f"{self.backend_url}/{self.backend_version}/admin/skill_settings/{skill_id}",
-                           headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                           headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_post_shared_skill_settings(self, skill_id,
                                       display_name,
@@ -544,15 +545,15 @@ class PersonalBackend(AbstractPartialBackend):
                    "metadata_json": metadata_json}
         return self.post(url=f"{self.backend_url}/{self.backend_version}/admin/skill_settings",
                          json=payload,
-                         headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                         headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_list_skill_settings(self, uuid):
         return self.get(url=f"{self.backend_url}/{self.backend_version}/admin/{uuid}/skill_settings/list",
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_get_skill_settings(self, uuid, skill_id):
         return self.get(url=f"{self.backend_url}/{self.backend_version}/admin/{uuid}/skill_settings/{skill_id}",
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_update_skill_settings(self, uuid, skill_id,
                                  display_name=None,
@@ -563,11 +564,11 @@ class PersonalBackend(AbstractPartialBackend):
                    "metadata_json": metadata_json}
         return self.put(url=f"{self.backend_url}/{self.backend_version}/admin/{uuid}/skill_settings/{skill_id}",
                         json=payload,
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_delete_skill_settings(self, uuid, skill_id):
         return self.delete(url=f"{self.backend_url}/{self.backend_version}/admin/{uuid}/skill_settings/{skill_id}",
-                           headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                           headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_post_skill_settings(self, uuid, skill_id,
                                display_name,
@@ -579,15 +580,15 @@ class PersonalBackend(AbstractPartialBackend):
                    "metadata_json": metadata_json}
         return self.post(url=f"{self.backend_url}/{self.backend_version}/admin/{uuid}/skill_settings",
                          json=payload,
-                         headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                         headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_list_oauth_apps(self):
         return self.get(url=f"{self.backend_url}/{self.backend_version}/admin/oauth_apps/list",
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_get_oauth_app(self, token_id):
         return self.get(url=f"{self.backend_url}/{self.backend_version}/admin/oauth_apps/{token_id}",
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_update_oauth_app(self, token_id, client_id=None, client_secret=None,
                             auth_endpoint=None, token_endpoint=None, refresh_endpoint=None,
@@ -600,11 +601,11 @@ class PersonalBackend(AbstractPartialBackend):
                    "scope": scope, "shell_integration": True}
         return self.put(url=f"{self.backend_url}/{self.backend_version}/admin/oauth_apps/{token_id}",
                         json=payload,
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_delete_oauth_app(self, token_id):
         return self.delete(url=f"{self.backend_url}/{self.backend_version}/admin/oauth_apps/{token_id}",
-                           headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                           headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_post_oauth_app(self, token_id, client_id, client_secret,
                           auth_endpoint, token_endpoint, refresh_endpoint,
@@ -619,50 +620,50 @@ class PersonalBackend(AbstractPartialBackend):
                    "scope": scope, "shell_integration": True}
         return self.post(url=f"{self.backend_url}/{self.backend_version}/admin/oauth_apps",
                          json=payload,
-                         headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                         headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_list_oauth_tokens(self):
         return self.get(url=f"{self.backend_url}/{self.backend_version}/admin/oauth_toks/list",
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_get_oauth_token(self, token_id):
         return self.get(url=f"{self.backend_url}/{self.backend_version}/admin/oauth_toks/{token_id}",
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_update_oauth_token(self, token_id, token_data):
         payload = {"token_data": token_data}
         return self.put(url=f"{self.backend_url}/{self.backend_version}/admin/oauth_toks/{token_id}",
                         headers={"Authorization": f"Bearer {self.credentials['admin']}"},
-                        json=payload)
+                        json=payload).json()
 
     def db_delete_oauth_token(self, token_id):
         return self.delete(url=f"{self.backend_url}/{self.backend_version}/admin/oauth_toks/{token_id}",
-                           headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                           headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_post_oauth_token(self, token_id, token_data):
         payload = {"token_data": token_data, "token_id": token_id}
         return self.put(url=f"{self.backend_url}/{self.backend_version}/admin/oauth_toks",
                         json=payload,
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_list_stt_recordings(self):
         return self.get(url=f"{self.backend_url}/{self.backend_version}/admin/voice_recs/list",
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_get_stt_recording(self, rec_id):
         return self.get(url=f"{self.backend_url}/{self.backend_version}/admin/voice_recs/{rec_id}",
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_update_stt_recording(self, rec_id, transcription=None, metadata=None):
         payload = {"transcription": transcription,
                    "metadata": metadata}
         return self.put(url=f"{self.backend_url}/{self.backend_version}/admin/voice_recs/{rec_id}",
                         json=payload,
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_delete_stt_recording(self, rec_id):
         return self.delete(url=f"{self.backend_url}/{self.backend_version}/admin/voice_recs/{rec_id}",
-                           headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                           headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_post_stt_recording(self, byte_data, transcription, metadata=None):
         payload = {"transcription": transcription,
@@ -670,26 +671,26 @@ class PersonalBackend(AbstractPartialBackend):
                    "audio_b64": base64.encodebytes(byte_data)}
         return self.put(url=f"{self.backend_url}/{self.backend_version}/admin/voice_recs",
                         json=payload,
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_list_ww_recordings(self):
         return self.get(url=f"{self.backend_url}/{self.backend_version}/admin/ww_recs/list",
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_get_ww_recording(self, rec_id):
         return self.get(url=f"{self.backend_url}/{self.backend_version}/admin/ww_recs/{rec_id}",
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_update_ww_recording(self, rec_id, transcription=None, metadata=None):
         payload = {"transcription": transcription,
                    "metadata": metadata}
         return self.put(url=f"{self.backend_url}/{self.backend_version}/admin/ww_recs/{rec_id}",
                         json=payload,
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_delete_ww_recording(self, rec_id):
         return self.delete(url=f"{self.backend_url}/{self.backend_version}/admin/ww_recs/{rec_id}",
-                           headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                           headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_post_ww_recording(self, byte_data, transcription, metadata=None):
         payload = {"transcription": transcription,
@@ -697,66 +698,66 @@ class PersonalBackend(AbstractPartialBackend):
                    "audio_b64": base64.encodebytes(byte_data)}
         return self.post(url=f"{self.backend_url}/{self.backend_version}/admin/ww_recs",
                          json=payload,
-                         headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                         headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_list_metrics(self):
         return self.get(url=f"{self.backend_url}/{self.backend_version}/admin/metrics/list",
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_get_metric(self, metric_id):
         return self.get(url=f"{self.backend_url}/{self.backend_version}/admin/metrics/{metric_id}",
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_update_metric(self, metric_id, metadata):
         payload = {"metadata": metadata}
         return self.put(url=f"{self.backend_url}/{self.backend_version}/admin/metrics/{metric_id}",
                         json=payload,
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_delete_metric(self, metric_id):
         return self.delete(url=f"{self.backend_url}/{self.backend_version}/admin/metrics/{metric_id}",
-                           headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                           headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_post_metric(self, metric_type, metadata):
         payload = {"metadata": metadata, "metric_type": metric_type}
         return self.put(url=f"{self.backend_url}/{self.backend_version}/admin/metrics",
                         json=payload,
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_list_ww_definitions(self):
         return self.get(url=f"{self.backend_url}/{self.backend_version}/admin/ww_defs/list",
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_get_ww_definition(self, ww_id):
         return self.get(url=f"{self.backend_url}/{self.backend_version}/admin/ww_defs/{ww_id}",
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_update_ww_definition(self, ww_id, name=None, lang=None, ww_config=None, plugin=None):
         payload = {"name": name, "lang": lang,
                    "plugin": plugin, "ww_config": ww_config}
         return self.put(url=f"{self.backend_url}/{self.backend_version}/admin/ww_defs/{ww_id}",
                         json=payload,
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_delete_ww_definition(self, ww_id):
         return self.delete(url=f"{self.backend_url}/{self.backend_version}/admin/ww_defs/{ww_id}",
-                           headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                           headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_post_ww_definition(self, name, lang, ww_config, plugin):
         payload = {"name": name, "lang": lang,
                    "plugin": plugin, "ww_config": ww_config}
         return self.post(url=f"{self.backend_url}/{self.backend_version}/admin/ww_defs",
                          json=payload,
-                         headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                         headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_list_voice_definitions(self):
 
         return self.get(url=f"{self.backend_url}/{self.backend_version}/admin/voice_defs/list",
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_get_voice_definition(self, voice_id):
         return self.get(url=f"{self.backend_url}/{self.backend_version}/admin/voice_defs/{voice_id}",
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_update_voice_definition(self, voice_id, name=None, lang=None, plugin=None,
                                    tts_config=None, offline=None, gender=None):
@@ -765,11 +766,11 @@ class PersonalBackend(AbstractPartialBackend):
                    "offline": offline, "gender": gender}
         return self.put(url=f"{self.backend_url}/{self.backend_version}/admin/voice_defs/{voice_id}",
                         json=payload,
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_delete_voice_definition(self, voice_id):
         return self.delete(url=f"{self.backend_url}/{self.backend_version}/admin/voice_defs/{voice_id}",
-                           headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                           headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_post_voice_definition(self, name, lang, plugin,
                                  tts_config, offline, gender=None):
@@ -778,4 +779,4 @@ class PersonalBackend(AbstractPartialBackend):
                    "offline": offline, "gender": gender}
         return self.post(url=f"{self.backend_url}/{self.backend_version}/admin/voice_defs",
                          json=payload,
-                         headers={"Authorization": f"Bearer {self.credentials['admin']}"})
+                         headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()

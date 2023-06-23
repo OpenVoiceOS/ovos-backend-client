@@ -7,14 +7,11 @@ from tempfile import NamedTemporaryFile
 from uuid import uuid4
 
 import requests
-from ovos_config.config import Configuration
-from ovos_config.config import update_mycroft_config
-from ovos_config.locations import USER_CONFIG
+from ovos_config.config import Configuration, update_mycroft_config, get_xdg_config_save_path
+from ovos_config.locations import USER_CONFIG, get_xdg_data_save_path, xdg_data_home
 from ovos_utils import timed_lru_cache
-from ovos_utils.configuration import get_xdg_config_save_path, get_xdg_data_save_path
 from ovos_utils.network_utils import get_external_ip
 from ovos_utils.smtp_utils import send_smtp
-from ovos_utils.xdg_utils import xdg_data_home
 from ovos_utils.log import LOG
 from ovos_backend_client.backends.base import AbstractBackend, BackendType
 from ovos_backend_client.database import JsonMetricDatabase, JsonWakeWordDatabase, \

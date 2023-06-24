@@ -3,8 +3,9 @@ import json
 from copy import deepcopy
 
 from json_database import JsonStorageXDG, JsonDatabaseXDG
-from ovos_config.config import Configuration
-from ovos_utils.configuration import get_xdg_config_save_path, get_xdg_base
+from ovos_config.config import Configuration, get_xdg_config_save_path
+from ovos_config.locations import get_xdg_config_save_path
+from ovos_config.meta import get_xdg_base
 
 from ovos_backend_client.identity import IdentityManager
 

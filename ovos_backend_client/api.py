@@ -5,8 +5,7 @@ import json
 import os
 from os import makedirs
 from os.path import isfile
-from ovos_config.config import Configuration
-from ovos_utils.configuration import get_xdg_config_save_path
+from ovos_config.config import Configuration, get_xdg_config_save_path
 from ovos_backend_client.backends import OfflineBackend, \
     PersonalBackend, BackendType, get_backend_config, API_REGISTRY
 from ovos_backend_client.database import SkillSettingsModel

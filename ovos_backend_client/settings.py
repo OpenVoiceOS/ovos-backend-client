@@ -7,8 +7,9 @@ from os.path import dirname, expanduser, join, isfile, isdir
 
 from json_database import JsonStorage
 from ovos_config import Configuration
+from ovos_config.config import get_xdg_config_save_path
+from ovos_config.locations import get_xdg_data_save_path, get_xdg_data_dirs
 from ovos_utils import camel_case_split
-from ovos_utils.configuration import get_xdg_config_save_path, get_xdg_data_save_path, get_xdg_data_dirs
 from ovos_backend_client.database import SkillSettingsModel
 import ovos_backend_client.api as _api
 

@@ -1,8 +1,16 @@
 # Changelog
 
-## [0.1.0a5](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.0a5) (2023-06-21)
+## [0.1.0a6](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.0a6) (2023-06-24)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0a4...0.1.0a5)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0a5...0.1.0a6)
+
+**Merged pull requests:**
+
+- Import more xdg functions from ovos\_config rather than ovos\_utils [\#44](https://github.com/OpenVoiceOS/ovos-backend-client/pull/44) ([PureTryOut](https://github.com/PureTryOut))
+
+## [V0.1.0a5](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.1.0a5) (2023-06-21)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0a4...V0.1.0a5)
 
 **Merged pull requests:**
 

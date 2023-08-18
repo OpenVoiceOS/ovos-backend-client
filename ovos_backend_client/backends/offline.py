@@ -387,14 +387,20 @@ class OfflineBackend(AbstractBackend):
     # Dataset API
     def dataset_upload_wake_word(self, audio, params, upload_url=None):
         """ upload wake word sample - url can be external to backend"""
-        byte_data = audio.get_wav_data()
+        if not isinstance(audio, bytes):
+            byte_data = audio.get_wav_data()
+        else:
+            byte_data = audio
         if Configuration().get("listener", {}).get('record_wake_words'):
             self.db_post_ww_recording(byte_data, params["name"], params)
         return super().dataset_upload_wake_word(audio, params, upload_url)
 
     def dataset_upload_stt_recording(self, audio, params, upload_url=None):
         """ upload stt sample - url can be external to backend"""
-        byte_data = audio.get_wav_data()
+        if not isinstance(audio, bytes):
+            byte_data = audio.get_wav_data()
+        else:
+            byte_data = audio
         if Configuration().get("listener", {}).get('record_utterances'):
             self.db_post_stt_recording(byte_data, params["transcription"], params)
         return super().dataset_upload_stt_recording(audio, params, upload_url)

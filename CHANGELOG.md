@@ -1,8 +1,16 @@
 # Changelog
 
-## [0.1.0a6](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.0a6) (2023-06-24)
+## [0.1.0a7](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.0a7) (2023-08-18)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0a5...0.1.0a6)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0a6...0.1.0a7)
+
+**Fixed bugs:**
+
+- fix stt/ww dataset endpoints mixup [\#46](https://github.com/OpenVoiceOS/ovos-backend-client/pull/46) ([JarbasAl](https://github.com/JarbasAl))
+
+## [V0.1.0a6](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.1.0a6) (2023-06-24)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0a5...V0.1.0a6)
 
 **Merged pull requests:**
 

@@ -165,8 +165,8 @@ class DeviceModel(DatabaseModel):
         default_tts = Configuration().get("tts", {}).get("module", "ovos-tts-plugin-mimic3-server")
         mail_cfg = Configuration().get("email", {})
 
-        uuid = identity["uuid"]
-        super().__init__(uuid=uuid, token=identity["access"],
+        uuid = identity.uuid
+        super().__init__(uuid=uuid, token=identity.access,
                          isolated_skills=True,
                          name=f"Device-{uuid}",
                          device_location="somewhere",  # indoor location

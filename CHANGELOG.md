@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.0a9](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.0a9) (2023-09-13)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0a8...0.1.0a9)
+
+**Fixed bugs:**
+
+- fix DeviceIdentity attribute access [\#49](https://github.com/OpenVoiceOS/ovos-backend-client/pull/49) ([emphasize](https://github.com/emphasize))
+
+## [V0.1.0a8](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.1.0a8) (2023-08-18)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0a7...V0.1.0a8)
+
 ## [V0.1.0a7](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.1.0a7) (2023-08-18)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0a6...V0.1.0a7)

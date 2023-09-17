@@ -1,8 +1,16 @@
 # Changelog
 
-## [0.1.0a9](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.0a9) (2023-09-13)
+## [0.1.0a10](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.0a10) (2023-09-17)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0a8...0.1.0a9)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0a9...0.1.0a10)
+
+**Fixed bugs:**
+
+- fix dataset upload [\#48](https://github.com/OpenVoiceOS/ovos-backend-client/pull/48) ([JarbasAl](https://github.com/JarbasAl))
+
+## [V0.1.0a9](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.1.0a9) (2023-09-13)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0a8...V0.1.0a9)
 
 **Fixed bugs:**
 

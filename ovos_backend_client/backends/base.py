@@ -357,7 +357,10 @@ class AbstractBackend:
     # Dataset API
     def dataset_upload_wake_word(self, audio, params, upload_url=None):
         """ upload wake word sample - url can be external to backend"""
-        byte_data = audio.get_wav_data()
+        if not isinstance(audio, bytes):
+            byte_data = audio.get_wav_data()
+        else:
+            byte_data = audio
         upload_url = upload_url or Configuration().get("listener", {}).get("wake_word_upload", {}).get("url")
         if upload_url:
             # upload to arbitrary server
@@ -370,7 +373,10 @@ class AbstractBackend:
 
     def dataset_upload_stt_recording(self, audio, params, upload_url=None):
         """ upload stt sample - url can be external to backend"""
-        byte_data = audio.get_wav_data()
+        if not isinstance(audio, bytes):
+            byte_data = audio.get_wav_data()
+        else:
+            byte_data = audio
         upload_url = upload_url or Configuration().get("listener", {}).get("utterance_upload", {}).get("url")
         if upload_url:
             # upload to arbitrary server

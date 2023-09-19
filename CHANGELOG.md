@@ -1,8 +1,16 @@
 # Changelog
 
-## [0.1.0a10](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.0a10) (2023-09-17)
+## [0.1.0a11](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.0a11) (2023-09-19)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0a9...0.1.0a10)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0a10...0.1.0a11)
+
+**Fixed bugs:**
+
+- fix remote download loop [\#50](https://github.com/OpenVoiceOS/ovos-backend-client/pull/50) ([emphasize](https://github.com/emphasize))
+
+## [V0.1.0a10](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.1.0a10) (2023-09-17)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0a9...V0.1.0a10)
 
 **Fixed bugs:**
 

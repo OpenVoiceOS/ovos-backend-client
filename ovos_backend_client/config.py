@@ -1,8 +1,10 @@
 import re
 from pprint import pformat
 
+from ovos_config import Configuration
 from ovos_utils import camel_case_split
 from ovos_utils.log import LOG
+from ovos_utils.json_helper import flattened_delete
 
 from ovos_backend_client.api import DeviceApi
 from ovos_backend_client.pairing import is_paired
@@ -69,28 +71,25 @@ class RemoteConfigManager:
 
     def __init__(self, url=None, version="v1", identity_file=None):
         self.api = DeviceApi(url, version, identity_file)
-        self.config = {"server": {"disabled": True}}
+        self.config = dict()
 
     def download(self):
         if not is_paired(url=self.api.backend_url,
                          version=self.api.backend_version,
                          identity_file=IdentityManager.IDENTITY_FILE):
-            self.config = {"server": {"disabled": True}}
             return
-        else:
-            self.config["server"]["disabled"] = False
+        
+        system_constraints = Configuration.get_system_constraints()\
+                             .get("protected_keys", {}).get("remote") or list()
 
         try:
             remote = self.api.get_settings()
 
-            try:  # this call is unnecessary in personal backend but needed in selene
-                location = self.api.get_location()
-                remote["location"] = location
-            except Exception as e:
-                LOG.error(f"Exception fetching remote location: {e}")
-
             # Remove server specific entries
             _translate_remote(self.config, remote)
+            # Remove constrained entries
+            for constrain in system_constraints:
+                flattened_delete(self.config, constrain)
 
         except Exception as e:
             LOG.error(f"Exception fetching remote configuration: {e}")
@@ -121,8 +120,6 @@ if __name__ == "__main__":
     #                            'dst_offset': 3600000,
     #                            'name': 'Europe/Lisbon',
     #                            'offset': -21600000}},
-    #  'opt_in': False,
-    #  'server': {'disabled': False},
     #  'system_unit': 'metric',
     #  'time_format': 'full',
     #  'tts': {'module': 'ovos-tts-plugin-mimic2',

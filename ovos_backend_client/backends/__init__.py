@@ -43,7 +43,7 @@ def get_backend_type(conf=None):
     if conf.get("disabled"):
         return BackendType.OFFLINE
     if "backend_type" in conf:
-        return conf["backend_type"]
+        return BackendType[conf["backend_type"].upper()]
     url = conf.get("url")
     if not url:
         return BackendType.OFFLINE

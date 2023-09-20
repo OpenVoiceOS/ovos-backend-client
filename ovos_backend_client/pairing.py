@@ -123,15 +123,13 @@ class PairingManager:
                  start_callback=None,
                  restart_callback=None,
                  end_callback=None,
-                 pairing_url="0.0.0.0;6712",
-                 api_url="0.0.0.0;6712",
-                 version="v1",
+                 pairing_url=None,
+                 api_url=None,
+                 version=None,
                  identity_file=None,
                  backend_type=None):
         if enclosure:
             LOG.warning("enclosure argument has been deprecated, it is no longer used")
-        self.pairing_url = pairing_url
-        self.api_url = api_url
         self.restart_callback = restart_callback
         self.code_callback = code_callback
         self.error_callback = error_callback
@@ -142,6 +140,8 @@ class PairingManager:
         self.bus = bus or FakeBus()
         self.api = DeviceApi(url=api_url, version=version,
                              identity_file=identity_file, backend_type=backend_type)
+        self.pairing_url = pairing_url or self.api.backend_url
+        
         self.data = None
         self.time_code_expires = None
         self.uuid = str(uuid4())
@@ -155,7 +155,6 @@ class PairingManager:
     def set_api_url(self, url,  version="v1", identity_file=None, backend_type=BackendType.PERSONAL):
         if not url.startswith("http"):
             url = f"http://{url}"
-        self.api_url = url
         self.api = DeviceApi(url, version=version,
                              identity_file=identity_file,
                              backend_type=backend_type)
@@ -223,7 +222,7 @@ class PairingManager:
 
             token = self.data.get("token")
 
-            LOG.info(f"Attempting device activation @ {self.api_url}")
+            LOG.info(f"Attempting device activation @ {self.api.backend_url}")
             login = self.api.activate(self.uuid, token)  # HTTPError() thrown
             if not login:
                 raise ValueError("Received empty identity data!")

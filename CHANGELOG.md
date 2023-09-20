@@ -1,8 +1,16 @@
 # Changelog
 
-## [0.1.0a11](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.0a11) (2023-09-19)
+## [0.1.0a12](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.0a12) (2023-09-20)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0a10...0.1.0a11)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0a11...0.1.0a12)
+
+**Fixed bugs:**
+
+- PM init configured backend api [\#51](https://github.com/OpenVoiceOS/ovos-backend-client/pull/51) ([emphasize](https://github.com/emphasize))
+
+## [V0.1.0a11](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.1.0a11) (2023-09-19)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0a10...V0.1.0a11)
 
 **Fixed bugs:**
 

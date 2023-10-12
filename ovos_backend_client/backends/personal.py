@@ -313,8 +313,13 @@ class PersonalBackend(AbstractPartialBackend):
         if not upload_url:
             config = Configuration().get("listener", {}).get("wake_word_upload", {})
             upload_url = config.get("url") or f"{self.backend_url}/precise/upload"
+        if not isinstance(audio, bytes):
+            byte_data = audio.get_wav_data()
+        else:
+            byte_data = audio
+
         ww_files = {
-            'audio': BytesIO(audio.get_wav_data()),
+            'audio': BytesIO(byte_data),
             'metadata': StringIO(json.dumps(params))
         }
         return self.post(upload_url, files=ww_files)

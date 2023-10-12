@@ -1,8 +1,20 @@
 # Changelog
 
-## [0.1.0a12](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.0a12) (2023-09-20)
+## [0.1.0a13](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.0a13) (2023-10-12)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0a11...0.1.0a12)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0a12...0.1.0a13)
+
+**Fixed bugs:**
+
+- Update WW upload [\#52](https://github.com/OpenVoiceOS/ovos-backend-client/pull/52) ([NeonDaniel](https://github.com/NeonDaniel))
+
+**Closed issues:**
+
+- Unable to upload wake word. [\#47](https://github.com/OpenVoiceOS/ovos-backend-client/issues/47)
+
+## [V0.1.0a12](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.1.0a12) (2023-09-20)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0a11...V0.1.0a12)
 
 **Fixed bugs:**
 

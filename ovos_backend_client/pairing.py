@@ -5,13 +5,16 @@ from uuid import uuid4
 
 from ovos_config.config import Configuration
 from ovos_utils.log import LOG
-from ovos_utils.messagebus import Message, FakeBus
+from ovos_utils.messagebus import FakeBus, Message
 from ovos_utils.network_utils import is_connected
 
 from ovos_backend_client.api import DeviceApi, BackendType
 from ovos_backend_client.exceptions import BackendDown, InternetDown, HTTPError
 from ovos_backend_client.identity import IdentityManager
-from ovos_backend_client.backends.selene import SELENE_API_URL
+from ovos_backend_client.backends import BackendType, get_backend_type
+
+
+PAIRING_BACKENDS = [BackendType.PERSONAL]
 
 
 def is_backend_disabled():
@@ -34,6 +37,8 @@ def requires_backend(f):
 
 def has_been_paired():
     """ Determine if this device has ever been paired with a backend
+    
+    identity2.json must exist, device has been assigned a uuid
 
     Returns:
         bool: True if ever paired with backend (not factory reset)
@@ -57,10 +62,17 @@ def is_paired(ignore_errors=True, url=None, version="v1", identity_file=None, ba
     if is_backend_disabled():
         return True
 
-    # check if pairing is valid
+    backend_type = backend_type or get_backend_type()
     api = DeviceApi(url=url, version=version, identity_file=identity_file, backend_type=backend_type)
-    return api.identity.uuid and check_remote_pairing(ignore_errors, url=url, version=version,
-                                                      identity_file=identity_file, backend_type=backend_type)
+
+    # check if pairing is valid
+    if backend_type in PAIRING_BACKENDS:
+        return api.identity.uuid and \
+               check_remote_pairing(ignore_errors, url=url, version=version,
+                                    identity_file=identity_file,
+                                    backend_type=backend_type)
+    else:
+        return bool(api.identity.uuid)
 
 
 def check_remote_pairing(ignore_errors, url=None, version="v1", identity_file=None, backend_type=None):
@@ -72,6 +84,10 @@ def check_remote_pairing(ignore_errors, url=None, version="v1", identity_file=No
     Returns:
         True if pairing checks out, otherwise False.
     """
+    backend_type = backend_type or get_backend_type()
+    if backend_type not in PAIRING_BACKENDS:
+        return has_been_paired() # uuid assigned locally
+    
     try:
         return bool(DeviceApi(url=url, version=version,
                               identity_file=identity_file, backend_type=backend_type).get())
@@ -107,15 +123,13 @@ class PairingManager:
                  start_callback=None,
                  restart_callback=None,
                  end_callback=None,
-                 pairing_url="home.mycroft.ai",
-                 api_url=SELENE_API_URL,
-                 version="v1",
+                 pairing_url=None,
+                 api_url=None,
+                 version=None,
                  identity_file=None,
                  backend_type=None):
         if enclosure:
             LOG.warning("enclosure argument has been deprecated, it is no longer used")
-        self.pairing_url = pairing_url
-        self.api_url = api_url
         self.restart_callback = restart_callback
         self.code_callback = code_callback
         self.error_callback = error_callback
@@ -126,6 +140,8 @@ class PairingManager:
         self.bus = bus or FakeBus()
         self.api = DeviceApi(url=api_url, version=version,
                              identity_file=identity_file, backend_type=backend_type)
+        self.pairing_url = pairing_url or self.api.backend_url
+        
         self.data = None
         self.time_code_expires = None
         self.uuid = str(uuid4())
@@ -136,10 +152,9 @@ class PairingManager:
         self.count = -1  # for repeating pairing code. -1 = not running
         self.num_failed_codes = 0
 
-    def set_api_url(self, url,  version="v1", identity_file=None, backend_type=BackendType.SELENE):
+    def set_api_url(self, url,  version="v1", identity_file=None, backend_type=BackendType.PERSONAL):
         if not url.startswith("http"):
             url = f"http://{url}"
-        self.api_url = url
         self.api = DeviceApi(url, version=version,
                              identity_file=identity_file,
                              backend_type=backend_type)
@@ -207,7 +222,7 @@ class PairingManager:
 
             token = self.data.get("token")
 
-            LOG.info(f"Attempting device activation @ {self.api_url}")
+            LOG.info(f"Attempting device activation @ {self.api.backend_url}")
             login = self.api.activate(self.uuid, token)  # HTTPError() thrown
             if not login:
                 raise ValueError("Received empty identity data!")

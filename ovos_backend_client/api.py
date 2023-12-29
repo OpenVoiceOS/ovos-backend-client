@@ -1,8 +1,15 @@
 from ovos_utils import timed_lru_cache
 from ovos_utils.log import LOG
 
-from ovos_backend_client.backends import OfflineBackend, OVOSAPIBackend, \
-    SeleneBackend, PersonalBackend, BackendType, get_backend_config, API_REGISTRY
+import json
+import os
+from os import makedirs
+from os.path import isfile
+from ovos_config.config import Configuration, get_xdg_config_save_path
+from ovos_backend_client.backends import OfflineBackend, \
+    PersonalBackend, BackendType, get_backend_config, API_REGISTRY
+from ovos_backend_client.database import SkillSettingsModel
+from ovos_backend_client.settings import get_local_settings
 
 
 class BaseApi:
@@ -11,14 +18,10 @@ class BaseApi:
                                                                        identity_file, backend_type)
         self.url = url
         self.credentials = credentials or {}
-        if backend_type == BackendType.SELENE:
-            self.backend = SeleneBackend(url, version, identity_file)
-        elif backend_type == BackendType.PERSONAL:
-            self.backend = PersonalBackend(url, version, identity_file)
-        elif backend_type == BackendType.OVOS_API:
-            self.backend = OVOSAPIBackend(url, version, identity_file)
+        if backend_type == BackendType.PERSONAL:
+            self.backend = PersonalBackend(url, version, identity_file, credentials=credentials)
         else:  # if backend_type == BackendType.OFFLINE:
-            self.backend = OfflineBackend(url, version, identity_file)
+            self.backend = OfflineBackend(url, version, identity_file, credentials=credentials)
         self.validate_backend_type()
 
     def validate_backend_type(self):
@@ -81,6 +84,12 @@ class AdminApi(BaseApi):
     def validate_backend_type(self):
         if not API_REGISTRY[self.backend_type]["admin"]:
             raise ValueError(f"{self.__class__.__name__} not available for {self.backend_type}")
+
+    def get_backend_config(self):
+        return self.backend.admin_get_backend_config()
+
+    def update_backend_config(self, config):
+        return self.backend.admin_update_backend_config(config)
 
     def pair(self, uuid=None):
         return self.backend.admin_pair(uuid)
@@ -154,14 +163,6 @@ class DeviceApi(BaseApi):
         """ Retrieve all device information from the web backend """
         return self.backend.device_get()
 
-    def get_skill_settings_v1(self):
-        """ old style deprecated bidirectional skill settings api, still available! """
-        return self.backend.device_get_skill_settings_v1()
-
-    def put_skill_settings_v1(self, data):
-        """ old style deprecated bidirectional skill settings api, still available! """
-        return self.backend.device_put_skill_settings_v1(data)
-
     def get_settings(self):
         """ Retrieve device settings information from the web backend
 
@@ -188,9 +189,6 @@ class DeviceApi(BaseApi):
                        enclosure_version="unknown"):
         return self.backend.device_update_version(core_version, platform, platform_build, enclosure_version)
 
-    def report_metric(self, name, data):
-        return self.backend.device_report_metric(name, data)
-
     def get_location(self):
         """ Retrieve device location information from the web backend
 
@@ -198,47 +196,6 @@ class DeviceApi(BaseApi):
             str: JSON string with user location.
         """
         return self.backend.device_get_location()
-
-    def get_subscription(self):
-        """
-            Get information about type of subscription this unit is connected
-            to.
-
-            Returns: dictionary with subscription information
-        """
-        return self.backend.device_get_subscription()
-
-    @property
-    def is_subscriber(self):
-        """
-            status of subscription. True if device is connected to a paying
-            subscriber.
-        """
-        return self.backend.is_subscriber
-
-    def get_subscriber_voice_url(self, voice=None, arch=None):
-        return self.backend.device_get_subscriber_voice_url(voice, arch)
-
-    def get_oauth_token(self, dev_cred):
-        """
-            Get Oauth token for dev_credential dev_cred.
-
-            Argument:
-                dev_cred:   development credentials identifier
-
-            Returns:
-                json string containing token and additional information
-        """
-        return self.backend.device_get_oauth_token(dev_cred)
-
-    # cached for 30 seconds because often 1 call per skill is done in quick succession
-    @timed_lru_cache(seconds=30)
-    def get_skill_settings(self):
-        """Get the remote skill settings for all skills on this device."""
-        return self.backend.device_get_skill_settings()
-
-    def send_email(self, title, body, sender):
-        return self.backend.device_send_email(title, body, sender)
 
     def upload_skill_metadata(self, settings_meta):
         """Upload skill metadata.
@@ -285,12 +242,87 @@ class DeviceApi(BaseApi):
 
         return self.backend.device_upload_skills_data(to_send)
 
+    ## DEPRECATED APIS below, use dedicated classes instead
+    def get_oauth_token(self, dev_cred):
+        """
+            Get Oauth token for dev_credential dev_cred.
+
+            Argument:
+                dev_cred:   development credentials identifier
+
+            Returns:
+                json string containing token and additional information
+        """
+        ## DEPRECATED - compat only for old devices
+        LOG.warning("DEPRECATED: use OAuthApi class instead")
+        return self.backend.device_get_oauth_token(dev_cred)
+
+    def report_metric(self, name, data):
+        ## DEPRECATED - compat only for old devices
+        LOG.warning("DEPRECATED: use MetricsApi class instead")
+        return self.backend.device_report_metric(name, data)
+
+    def get_subscription(self):
+        """
+            Get information about type of subscription this unit is connected
+            to.
+
+            Returns: dictionary with subscription information
+        """
+        ## DEPRECATED - compat only for old devices
+        LOG.warning("DEPRECATED: there are no subscriptions")
+        return self.backend.device_get_subscription()
+
+    @property
+    def is_subscriber(self):
+        """
+            status of subscription. True if device is connected to a paying
+            subscriber.
+        """
+        ## DEPRECATED - compat only for old devices
+        LOG.warning("DEPRECATED: there are no subscriptions")
+        return self.backend.is_subscriber
+
+    def get_subscriber_voice_url(self, voice=None, arch=None):
+        ## DEPRECATED - compat only for old devices
+        LOG.warning("DEPRECATED: there are no subscriptions")
+        return self.backend.device_get_subscriber_voice_url(voice, arch)
+
+    def get_skill_settings_v1(self):
+        """ old style deprecated bidirectional skill settings api, still available! """
+        ## DEPRECATED - compat only for old devices
+        LOG.warning("DEPRECATED: use SkillSettingsApi class instead")
+        return self.backend.device_get_skill_settings_v1()
+
+    def put_skill_settings_v1(self, data):
+        """ old style deprecated bidirectional skill settings api, still available! """
+        ## DEPRECATED - compat only for old devices
+        LOG.warning("DEPRECATED: use SkillSettingsApi class instead")
+        return self.backend.device_put_skill_settings_v1(data)
+
+    # cached for 30 seconds because often 1 call per skill is done in quick succession
+    @timed_lru_cache(seconds=30)
+    def get_skill_settings(self):
+        """Get the remote skill settings for all skills on this device."""
+        ## DEPRECATED - compat only for old devices
+        LOG.warning("DEPRECATED: use SkillSettingsApi class instead")
+        return self.backend.device_get_skill_settings()
+
+    def send_email(self, title, body, sender):
+        ## DEPRECATED - compat only for old devices
+        LOG.warning("DEPRECATED: use EmailApi class instead")
+        return self.backend.device_send_email(title, body, sender)
+
     def upload_wake_word_v1(self, audio, params):
         """ upload precise wake word V1 endpoint - DEPRECATED"""
+        ## DEPRECATED - compat only for old devices
+        LOG.warning("DEPRECATED: use DatasetApi class instead")
         return self.backend.device_upload_wake_word_v1(audio, params)
 
     def upload_wake_word(self, audio, params):
         """ upload precise wake word V2 endpoint """
+        ## DEPRECATED - compat only for old devices
+        LOG.warning("DEPRECATED: use DatasetApi class instead")
         return self.backend.device_upload_wake_word(audio, params)
 
 
@@ -332,9 +364,7 @@ class GeolocationApi(BaseApi):
     def validate_backend_type(self):
         if not API_REGISTRY[self.backend_type]["geolocate"]:
             raise ValueError(f"{self.__class__.__name__} not available for {self.backend_type}")
-        if self.backend_type == BackendType.OVOS_API:
-            self.url = f"{self.backend_url}/geolocate"
-        elif self.backend_type == BackendType.OFFLINE:
+        if self.backend_type == BackendType.OFFLINE:
             self.url = "https://nominatim.openstreetmap.org"
         else:
             self.url = f"{self.backend_url}/{self.backend_version}/geolocation"
@@ -350,6 +380,29 @@ class GeolocationApi(BaseApi):
         """
         return self.backend.geolocation_get(location)
 
+    def get_ip_geolocation(self, ip):
+        """Call the geolocation endpoint.
+
+        Args:
+            ip (str): the ip address to lookup
+
+        Returns:
+            str: JSON structure with lookup results
+        """
+        return self.backend.ip_geolocation_get(ip)
+
+    def get_reverse_geolocation(self, lat, lon):
+        """"Call the reverse geolocation endpoint.
+
+        Args:
+            lat (float): latitude
+            lon (float): longitude
+
+        Returns:
+            str: JSON structure with lookup results
+        """
+        return self.backend.reverse_geolocation_get(lat, lon)
+
 
 class WolframAlphaApi(BaseApi):
 
@@ -362,9 +415,7 @@ class WolframAlphaApi(BaseApi):
         if self.backend_type == BackendType.OFFLINE and not self.credentials["wolfram"]:
             raise ValueError("WolframAlpha api key not set!")
 
-        if self.backend_type == BackendType.OVOS_API:
-            self.url = f"{self.backend_url}/wolframalpha"
-        elif self.backend_type == BackendType.OFFLINE:
+        if self.backend_type == BackendType.OFFLINE:
             self.url = "https://api.wolframalpha.com"
         else:
             self.url = f"{self.backend_url}/{self.backend_version}/wolframAlpha"
@@ -400,9 +451,7 @@ class OpenWeatherMapApi(BaseApi):
             raise ValueError(f"{self.__class__.__name__} not available for {self.backend_type}")
         if self.backend_type == BackendType.OFFLINE and not self.backend.credentials["owm"]:
             raise ValueError("OWM api key not set!")
-        if self.backend_type == BackendType.OVOS_API:
-            self.url = f"{self.backend_url}/weather"
-        elif self.backend_type == BackendType.OFFLINE:
+        if self.backend_type == BackendType.OFFLINE:
             self.url = "https://api.openweathermap.org/data/2.5"
         else:
             self.url = f"{self.backend_url}/{self.backend_version}/owm"
@@ -478,6 +527,33 @@ class EmailApi(BaseApi):
         return self.backend.email_send(title, body, sender)
 
 
+class SkillSettingsApi(BaseApi):
+    """Web API wrapper for skill settings"""
+
+    def __init__(self, url=None, version="v1", identity_file=None, backend_type=None):
+        super().__init__(url, version, identity_file, backend_type)
+
+    def validate_backend_type(self):
+        if not API_REGISTRY[self.backend_type]["skill_settings"]:
+            raise ValueError(f"{self.__class__.__name__} not available for {self.backend_type}")
+
+    def upload_skill_settings(self):
+        """ upload skill settings from XDG path"""
+        return self.backend.skill_settings_upload(get_local_settings())
+
+    def download_skill_settings(self):
+        """ write downloaded settings to XDG path"""
+        settings = self.backend.skill_settings_download()
+        for s in settings:  # list of SkillSettingsModel or dicts
+            settings_path = f"{get_xdg_config_save_path()}/skills/{s.skill_id}"
+            makedirs(settings_path, exist_ok=True)
+            with open( f"{settings_path}/settingsmeta.json", "w") as f:
+                json.dump(s.meta, f, indent=4, ensure_ascii=False)
+            with open(f"{settings_path}/settings.json", "w") as f:
+                json.dump(s.skill_settings, f, indent=4, ensure_ascii=False)
+        return settings
+
+
 class DatasetApi(BaseApi):
     """Web API wrapper for dataset collection"""
 
@@ -490,6 +566,9 @@ class DatasetApi(BaseApi):
 
     def upload_wake_word(self, audio, params, upload_url=None):
         return self.backend.dataset_upload_wake_word(audio, params, upload_url)
+
+    def upload_stt_recording(self, audio, params, upload_url=None):
+        return self.backend.dataset_upload_stt_recording(audio, params, upload_url)
 
 
 class MetricsApi(BaseApi):
@@ -529,11 +608,218 @@ class OAuthApi(BaseApi):
         return self.backend.oauth_get_token(dev_cred)
 
 
+class DatabaseApi(BaseApi):
+    """Web API wrapper for oauth api"""
+
+    def __init__(self, admin_key=None, url=None, version="v1", identity_file=None, backend_type=None):
+        super().__init__(url, version, identity_file, backend_type, credentials={"admin": admin_key})
+        self.url = f"{self.backend_url}/{self.backend_version}/admin"
+
+    def validate_backend_type(self):
+        if not API_REGISTRY[self.backend_type]["database"]:
+            raise ValueError(f"{self.__class__.__name__} not available for {self.backend_type}")
+        if self.backend_type in [BackendType.PERSONAL] and not self.credentials.get("admin"):
+            raise ValueError(f"Admin key not set, can not access remote database")
+
+    def list_devices(self):
+        return self.backend.db_list_devices()
+
+    def get_device(self, uuid):
+        return self.backend.db_get_device(uuid)
+
+    def update_device(self, uuid, name=None,
+                      device_location=None, opt_in=False,
+                      location=None, lang=None, date_format=None,
+                      system_unit=None, time_format=None, email=None,
+                      isolated_skills=False, ww_id=None, voice_id=None):
+        return self.backend.db_update_device(uuid, name, device_location, opt_in,
+                                             location, lang, date_format, system_unit, time_format,
+                                             email, isolated_skills, ww_id, voice_id)
+
+    def delete_device(self, uuid):
+        return self.backend.db_delete_device(uuid)
+
+    def add_device(self, uuid, token, name=None,
+                   device_location="somewhere",
+                   opt_in=Configuration().get("opt_in", False),
+                   location=Configuration().get("location"),
+                   lang=Configuration().get("lang"),
+                   date_format=Configuration().get("date_format", "DMY"),
+                   system_unit=Configuration().get("system_unit", "metric"),
+                   time_format=Configuration().get("date_format", "full"),
+                   email=None,
+                   isolated_skills=False,
+                   ww_id=None,
+                   voice_id=None):
+        return self.backend.db_post_device(uuid, token, name, device_location, opt_in,
+                                           location, lang, date_format, system_unit, time_format,
+                                           email, isolated_skills, ww_id, voice_id)
+
+    def list_shared_skill_settings(self):
+        return self.backend.db_list_shared_skill_settings()
+
+    def get_shared_skill_settings(self, skill_id):
+        return self.backend.db_get_shared_skill_settings(skill_id)
+
+    def update_shared_skill_settings(self, skill_id,
+                                     display_name=None,
+                                     settings_json=None,
+                                     metadata_json=None):
+        return self.backend.db_update_shared_skill_settings(skill_id, display_name,
+                                                            settings_json, metadata_json)
+
+    def delete_shared_skill_settings(self, skill_id):
+        return self.backend.db_delete_shared_skill_settings(skill_id)
+
+    def add_shared_skill_settings(self, skill_id,
+                                  display_name,
+                                  settings_json,
+                                  metadata_json):
+        return self.backend.db_post_shared_skill_settings(skill_id, display_name,
+                                                          settings_json, metadata_json)
+
+    def list_skill_settings(self, uuid):
+        return self.backend.db_list_skill_settings(uuid)
+
+    def get_skill_settings(self, uuid, skill_id):
+        return self.backend.db_get_skill_settings(uuid, skill_id)
+
+    def update_skill_settings(self, uuid, skill_id,
+                              display_name=None,
+                              settings_json=None,
+                              metadata_json=None):
+        return self.backend.db_update_skill_settings(uuid, skill_id, display_name,
+                                                     settings_json, metadata_json)
+
+    def delete_skill_settings(self, uuid, skill_id):
+        return self.backend.db_delete_skill_settings(uuid, skill_id)
+
+    def add_skill_settings(self, uuid, skill_id,
+                           display_name,
+                           settings_json,
+                           metadata_json):
+        return self.backend.db_post_skill_settings(uuid, skill_id, display_name,
+                                                   settings_json, metadata_json)
+
+    def list_oauth_apps(self):
+        return self.backend.db_list_oauth_apps()
+
+    def get_oauth_app(self, token_id):
+        return self.backend.db_get_oauth_app(token_id)
+
+    def update_oauth_app(self, token_id, client_id=None, client_secret=None,
+                         auth_endpoint=None, token_endpoint=None, refresh_endpoint=None,
+                         callback_endpoint=None, scope=None, shell_integration=None):
+        return self.backend.db_update_oauth_app(token_id, client_id, client_secret, auth_endpoint, token_endpoint,
+                                                refresh_endpoint, callback_endpoint, scope, shell_integration)
+
+    def delete_oauth_app(self, token_id):
+        return self.backend.db_delete_oauth_app(token_id)
+
+    def add_oauth_app(self, token_id, client_id, client_secret,
+                      auth_endpoint, token_endpoint, refresh_endpoint,
+                      callback_endpoint, scope, shell_integration=True):
+        return self.backend.db_post_oauth_app(token_id, client_id, client_secret, auth_endpoint, token_endpoint,
+                                              refresh_endpoint, callback_endpoint, scope, shell_integration)
+
+    def list_oauth_tokens(self):
+        return self.backend.db_list_oauth_tokens()
+
+    def get_oauth_token(self, token_id):
+        return self.backend.db_get_oauth_token(token_id)
+
+    def update_oauth_token(self, token_id, token_data):
+        return self.backend.db_update_oauth_token(token_id, token_data)
+
+    def delete_oauth_token(self, token_id):
+        return self.backend.db_delete_oauth_token(token_id)
+
+    def add_oauth_token(self, token_id, token_data):
+        return self.backend.db_post_oauth_token(token_id, token_data)
+
+    def list_stt_recordings(self):
+        return self.backend.db_list_stt_recordings()
+
+    def get_stt_recording(self, rec_id):
+        return self.backend.db_get_stt_recording(rec_id)
+
+    def update_stt_recording(self, rec_id, transcription=None, metadata=None):
+        return self.backend.db_update_stt_recording(rec_id, transcription, metadata)
+
+    def delete_stt_recording(self, rec_id):
+        return self.backend.db_delete_stt_recording(rec_id)
+
+    def add_stt_recording(self, byte_data, transcription, metadata=None):
+        return self.backend.db_post_stt_recording(byte_data, transcription, metadata)
+
+    def list_ww_recordings(self):
+        return self.backend.db_list_ww_recordings()
+
+    def get_ww_recording(self, rec_id):
+        return self.backend.db_get_ww_recording(rec_id)
+
+    def update_ww_recording(self, rec_id, transcription=None, metadata=None):
+        return self.backend.db_update_ww_recording(rec_id, transcription, metadata)
+
+    def delete_ww_recording(self, rec_id):
+        return self.backend.db_delete_ww_recording(rec_id)
+
+    def add_ww_recording(self, byte_data, transcription, metadata=None):
+        return self.backend.db_post_ww_recording(byte_data, transcription, metadata)
+
+    def list_metrics(self):
+        return self.backend.db_list_metrics()
+
+    def get_metric(self, metric_id):
+        return self.backend.db_get_metric(metric_id)
+
+    def update_metric(self, metric_id, metadata):
+        return self.backend.db_update_metric(metric_id, metadata)
+
+    def delete_metric(self, metric_id):
+        return self.backend.db_delete_metric(metric_id)
+
+    def add_metric(self, metric_type, metadata):
+        return self.backend.db_post_metric(metric_type, metadata)
+
+    def list_ww_definitions(self):
+        return self.backend.db_list_ww_definitions()
+
+    def get_ww_definition(self, ww_id):
+        return self.backend.db_get_ww_definition(ww_id)
+
+    def update_ww_definition(self, ww_id, name, lang, ww_config, plugin):
+        return self.backend.db_update_ww_definition(ww_id, name, lang, ww_config, plugin)
+
+    def delete_ww_definition(self, ww_id):
+        return self.backend.db_delete_ww_definition(ww_id)
+
+    def add_ww_definition(self, name, lang, ww_config, plugin):
+        return self.backend.db_post_ww_definition(name, lang, ww_config, plugin)
+
+    def list_voice_definitions(self):
+        return self.backend.db_list_voice_definitions()
+
+    def get_voice_definition(self, voice_id):
+        return self.backend.db_get_voice_definition(voice_id)
+
+    def update_voice_definition(self, voice_id, name=None, lang=None, plugin=None,
+                                tts_config=None, offline=None, gender=None):
+        return self.backend.db_update_voice_definition(voice_id, name, lang, plugin, tts_config, offline, gender)
+
+    def delete_voice_definition(self, voice_id):
+        return self.backend.db_delete_voice_definition(voice_id)
+
+    def add_voice_definition(self, name, lang, plugin,
+                             tts_config, offline, gender=None):
+        return self.backend.db_post_voice_definition(name, lang, plugin, tts_config, offline, gender)
+
+
 if __name__ == "__main__":
     # d = DeviceApi(FAKE_BACKEND_URL)
 
     # TODO turn these into unittests
-    # ident = load_identity()
+    # voice_id = load_identity()
     # paired = is_paired()
     geo = GeolocationApi(backend_type=BackendType.OFFLINE)
     data = geo.get_geolocation("Missouri Kansas")

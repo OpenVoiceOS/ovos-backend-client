@@ -5,7 +5,8 @@ import time
 from os.path import isfile, dirname, expanduser
 
 from combo_lock import ComboLock
-from ovos_utils.configuration import get_xdg_config_save_path, get_xdg_base
+from ovos_config.config import get_xdg_config_save_path
+from ovos_config.meta import get_xdg_base
 from ovos_utils.log import LOG
 
 identity_lock = ComboLock('/tmp/identity-lock')

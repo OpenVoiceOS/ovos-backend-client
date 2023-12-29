@@ -1,8 +1,16 @@
 # Changelog
 
-## [0.1.0a13](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.0a13) (2023-10-12)
+## [0.1.0a14](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.0a14) (2023-12-29)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0a12...0.1.0a13)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0a13...0.1.0a14)
+
+**Merged pull requests:**
+
+- bump utils [\#54](https://github.com/OpenVoiceOS/ovos-backend-client/pull/54) ([JarbasAl](https://github.com/JarbasAl))
+
+## [V0.1.0a13](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.1.0a13) (2023-10-12)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0a12...V0.1.0a13)
 
 **Fixed bugs:**
 

@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from ovos_config.config import Configuration
 from ovos_utils.log import LOG
-from ovos_utils.messagebus import FakeBus, Message
+from ovos_utils.fakebus import FakeBus, Message
 from ovos_utils.network_utils import is_connected
 
 from ovos_backend_client.api import DeviceApi, BackendType

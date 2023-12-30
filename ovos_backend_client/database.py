@@ -177,7 +177,7 @@ class DeviceModel(DatabaseModel):
                          time_format=Configuration().get("time_format") or "full",
                          opt_in=Configuration().get("opt_in") or False,
                          lang=Configuration().get("lang") or "en-us",
-                         location=Configuration["location"],
+                         location=Configuration().get("location", {}),
                          default_tts=default_tts,
                          default_tts_cfg=Configuration().get("tts", {}).get(default_tts, {}),
                          default_ww=default_ww.replace(" ", "_"),

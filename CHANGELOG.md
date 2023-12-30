@@ -1,8 +1,16 @@
 # Changelog
 
-## [0.1.1a1](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.1a1) (2023-12-29)
+## [0.1.1a2](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.1a2) (2023-12-30)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0...0.1.1a1)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.1a1...0.1.1a2)
+
+**Fixed bugs:**
+
+- Fix location config reference [\#57](https://github.com/OpenVoiceOS/ovos-backend-client/pull/57) ([NeonDaniel](https://github.com/NeonDaniel))
+
+## [V0.1.1a1](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.1.1a1) (2023-12-29)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0...V0.1.1a1)
 
 **Merged pull requests:**
 

@@ -12,6 +12,9 @@ from ovos_backend_client.identity import IdentityManager
 from ovos_utils.xdg_utils import xdg_cache_home
 
 
+_xdg_cache_path = join(xdg_cache_home(), get_xdg_base())
+
+
 class AudioTag(str, enum.Enum):
     UNTAGGED = "untagged"
     WAKE_WORD = "wake_word"
@@ -240,7 +243,7 @@ class DeviceModel(DatabaseModel):
 
 class JsonMetricDatabase(JsonDatabaseXDG):
     def __init__(self):
-        super().__init__("ovos_metrics", xdg_folder=get_xdg_base())
+        super().__init__("ovos_metrics", xdg_folder=_xdg_cache_path)
 
     def add_metric(self, metric_type=None, meta=None, uuid="AnonDevice"):
         metric_id = self.total_metrics() + 1
@@ -265,7 +268,7 @@ class JsonMetricDatabase(JsonDatabaseXDG):
 
 class JsonWakeWordDatabase(JsonDatabaseXDG):
     def __init__(self):
-        super().__init__("ovos_wakewords", xdg_folder=get_xdg_base())
+        super().__init__("ovos_wakewords", xdg_folder=_xdg_cache_path)
 
     def add_wakeword(self, transcription, path, meta=None,
                      uuid="AnonDevice", tag=AudioTag.UNTAGGED,
@@ -324,7 +327,7 @@ class JsonWakeWordDatabase(JsonDatabaseXDG):
 
 class JsonUtteranceDatabase(JsonDatabaseXDG):
     def __init__(self):
-        super().__init__("ovos_utterances", xdg_folder=get_xdg_base())
+        super().__init__("ovos_utterances", xdg_folder=_xdg_cache_path)
 
     def add_utterance(self, transcription, path, uuid="AnonDevice"):
         utterance_id = self.total_utterances() + 1
@@ -372,7 +375,7 @@ class OAuthTokenDatabase(JsonStorageXDG):
         This allows users to use oauth even when not using a backend"""
 
     def __init__(self):
-        super().__init__("ovos_oauth", xdg_folder=get_xdg_base())
+        super().__init__("ovos_oauth", xdg_folder=_xdg_cache_path)
 
     def add_token(self, token_id, token_data):
         self[token_id] = token_data
@@ -398,8 +401,7 @@ class OAuthApplicationDatabase(JsonStorageXDG):
         This allows users to use oauth even when not using a backend"""
 
     def __init__(self):
-        xdg_path = join(xdg_cache_home(), get_xdg_base())
-        super().__init__("ovos_oauth_apps", xdg_folder=xdg_path)
+        super().__init__("ovos_oauth_apps", xdg_folder=_xdg_cache_path)
 
     def add_application(self, oauth_service,
                         client_id, client_secret,

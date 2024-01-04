@@ -1,8 +1,16 @@
 # Changelog
 
-## [0.1.1a2](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.1a2) (2023-12-30)
+## [0.1.1a3](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.1a3) (2024-01-04)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.1a1...0.1.1a2)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.1a2...0.1.1a3)
+
+**Fixed bugs:**
+
+- Fix path errors in Database init [\#58](https://github.com/OpenVoiceOS/ovos-backend-client/pull/58) ([NeonDaniel](https://github.com/NeonDaniel))
+
+## [V0.1.1a2](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.1.1a2) (2023-12-30)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.1a1...V0.1.1a2)
 
 **Fixed bugs:**
 

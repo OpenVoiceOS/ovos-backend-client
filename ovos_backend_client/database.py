@@ -1,6 +1,7 @@
 import enum
 import json
 from copy import deepcopy
+from os.path import join
 
 from json_database import JsonStorageXDG, JsonDatabaseXDG
 from ovos_config.config import Configuration, get_xdg_config_save_path
@@ -8,6 +9,7 @@ from ovos_config.locations import get_xdg_config_save_path
 from ovos_config.meta import get_xdg_base
 
 from ovos_backend_client.identity import IdentityManager
+from ovos_utils.xdg_utils import xdg_cache_home
 
 
 class AudioTag(str, enum.Enum):
@@ -396,7 +398,8 @@ class OAuthApplicationDatabase(JsonStorageXDG):
         This allows users to use oauth even when not using a backend"""
 
     def __init__(self):
-        super().__init__("ovos_oauth_apps", xdg_folder=get_xdg_base())
+        xdg_path = join(xdg_cache_home(), get_xdg_base())
+        super().__init__("ovos_oauth_apps", xdg_folder=xdg_path)
 
     def add_application(self, oauth_service,
                         client_id, client_secret,

@@ -1,18 +1,12 @@
 import enum
 import json
-from copy import deepcopy
-from os.path import join
 
+from copy import deepcopy
 from json_database import JsonStorageXDG, JsonDatabaseXDG
-from ovos_config.config import Configuration, get_xdg_config_save_path
-from ovos_config.locations import get_xdg_config_save_path
-from ovos_config.meta import get_xdg_base
+from ovos_config.config import Configuration
+from ovos_config.locations import get_xdg_config_save_path, get_xdg_cache_save_path
 
 from ovos_backend_client.identity import IdentityManager
-from ovos_utils.xdg_utils import xdg_cache_home
-
-
-_xdg_cache_path = join(xdg_cache_home(), get_xdg_base())
 
 
 class AudioTag(str, enum.Enum):
@@ -47,7 +41,8 @@ class MetricModel(DatabaseModel):
     def __init__(self, metric_id, metric_type, meta=None, uuid="AnonDevice"):
         if isinstance(meta, str):
             meta = json.loads(meta)
-        super().__init__(metric_id=metric_id, metric_type=metric_type, meta=meta, uuid=uuid)
+        super().__init__(metric_id=metric_id, metric_type=metric_type,
+                         meta=meta, uuid=uuid)
 
 
 class WakeWordRecordingModel(DatabaseModel):
@@ -243,7 +238,7 @@ class DeviceModel(DatabaseModel):
 
 class JsonMetricDatabase(JsonDatabaseXDG):
     def __init__(self):
-        super().__init__("ovos_metrics", xdg_folder=_xdg_cache_path)
+        super().__init__("ovos_metrics", xdg_folder=get_xdg_cache_save_path())
 
     def add_metric(self, metric_type=None, meta=None, uuid="AnonDevice"):
         metric_id = self.total_metrics() + 1
@@ -268,12 +263,12 @@ class JsonMetricDatabase(JsonDatabaseXDG):
 
 class JsonWakeWordDatabase(JsonDatabaseXDG):
     def __init__(self):
-        super().__init__("ovos_wakewords", xdg_folder=_xdg_cache_path)
+        super().__init__("ovos_wakewords", xdg_folder=get_xdg_cache_save_path())
 
     def add_wakeword(self, transcription, path, meta=None,
                      uuid="AnonDevice", tag=AudioTag.UNTAGGED,
                      speaker_type=SpeakerTag.UNTAGGED):
-        wakeword_id = self.total_wakewords() + 1
+        wakeword_id = self.total_wakewords()
         wakeword = WakeWordRecordingModel(wakeword_id,
                                           transcription,
                                           path, meta, uuid,
@@ -282,7 +277,10 @@ class JsonWakeWordDatabase(JsonDatabaseXDG):
         return wakeword
 
     def get_wakeword(self, rec_id):
-        ww = self.get(rec_id)
+        try:
+            ww = self[rec_id]
+        except IndexError:
+            ww = None
         if ww:
             return WakeWordRecordingModel.deserialize(ww)
         return None
@@ -327,27 +325,27 @@ class JsonWakeWordDatabase(JsonDatabaseXDG):
 
 class JsonUtteranceDatabase(JsonDatabaseXDG):
     def __init__(self):
-        super().__init__("ovos_utterances", xdg_folder=_xdg_cache_path)
+        super().__init__("ovos_utterances", xdg_folder=get_xdg_cache_save_path())
 
     def add_utterance(self, transcription, path, uuid="AnonDevice"):
-        utterance_id = self.total_utterances() + 1
+        utterance_id = self.total_utterances()
         utterance = UtteranceRecordingModel(utterance_id, transcription,
                                             path, uuid)
         self.add_item(utterance)
 
     def get_utterance(self, rec_id):
-        ww = self.get(rec_id)
-        if ww:
-            return UtteranceRecordingModel.deserialize(ww)
+        utt = self[rec_id]
+        if utt:
+            return UtteranceRecordingModel.deserialize(utt)
         return None
 
     def update_utterance(self, rec_id, transcription):
-        ww = self.get_utterance(rec_id)
-        if not ww:
+        utt = self.get_utterance(rec_id)
+        if not utt:
             return None
-        ww.transcription = transcription
-        self[rec_id] = ww.serialize()
-        return ww
+        utt.transcription = transcription
+        self[rec_id] = utt.serialize()
+        return utt
 
     def delete_utterance(self, rec_id):
         if self.get(rec_id):
@@ -375,7 +373,7 @@ class OAuthTokenDatabase(JsonStorageXDG):
         This allows users to use oauth even when not using a backend"""
 
     def __init__(self):
-        super().__init__("ovos_oauth", xdg_folder=_xdg_cache_path)
+        super().__init__("ovos_oauth", xdg_folder=get_xdg_cache_save_path())
 
     def add_token(self, token_id, token_data):
         self[token_id] = token_data
@@ -401,7 +399,7 @@ class OAuthApplicationDatabase(JsonStorageXDG):
         This allows users to use oauth even when not using a backend"""
 
     def __init__(self):
-        super().__init__("ovos_oauth_apps", xdg_folder=_xdg_cache_path)
+        super().__init__("ovos_oauth_apps", xdg_folder=get_xdg_cache_save_path())
 
     def add_application(self, oauth_service,
                         client_id, client_secret,

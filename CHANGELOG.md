@@ -1,8 +1,16 @@
 # Changelog
 
-## [0.1.1a3](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.1a3) (2024-01-04)
+## [0.1.1a4](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.1a4) (2024-01-16)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.1a2...0.1.1a3)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.1a3...0.1.1a4)
+
+**Fixed bugs:**
+
+- Database: Fix update\_application\(\) method [\#62](https://github.com/OpenVoiceOS/ovos-backend-client/pull/62) ([forslund](https://github.com/forslund))
+
+## [V0.1.1a3](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.1.1a3) (2024-01-04)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.1a2...V0.1.1a3)
 
 **Fixed bugs:**
 

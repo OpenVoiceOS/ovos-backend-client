@@ -111,3 +111,24 @@ class TestDatabase(unittest.TestCase):
         self.assertTrue(exists(test_db.path))
         self.assertTrue(test_db.delete_application("test_service"))
         self.assertFalse(test_db.delete_application("test_service"))
+
+    def test_update_oauth_application_database(self):
+        from ovos_backend_client.database import OAuthApplicationDatabase
+        test_db = OAuthApplicationDatabase()
+        test_application = {"oauth_service": "test_service",
+                            "client_id": "test_client",
+                            "client_secret": "test_secret",
+                            "auth_endpoint": "test_endpoint",
+                            "token_endpoint": "test_token",
+                            "refresh_endpoint": "test_refresh",
+                            "callback_endpoint": "test_callback",
+                            "scope": "test_scope",
+                            "shell_integration": True}
+        test_db.add_application(**test_application)
+        test_application["client_id"] = "test_client2"
+        test_db.update_application(**test_application)
+        self.assertEqual(test_db.get_application("test_service"),
+                         test_application)
+        self.assertEqual(test_db.total_apps(), 1)
+
+        self.assertEqual(basename(test_db.path), "ovos_oauth_apps.json")

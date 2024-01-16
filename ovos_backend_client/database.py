@@ -422,10 +422,10 @@ class OAuthApplicationDatabase(JsonStorageXDG):
                            client_id, client_secret,
                            auth_endpoint, token_endpoint, refresh_endpoint,
                            callback_endpoint, scope, shell_integration=True):
-        self.update_application(oauth_service,
-                                client_id, client_secret,
-                                auth_endpoint, token_endpoint, refresh_endpoint,
-                                callback_endpoint, scope, shell_integration)
+        self.add_application(oauth_service,
+                             client_id, client_secret,
+                             auth_endpoint, token_endpoint, refresh_endpoint,
+                             callback_endpoint, scope, shell_integration)
 
     def delete_application(self, oauth_service):
         if oauth_service in self:

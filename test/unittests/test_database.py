@@ -96,7 +96,6 @@ class TestDatabase(unittest.TestCase):
                             "client_secret": "test_secret",
                             "auth_endpoint": "test_endpoint",
                             "token_endpoint": "test_token",
-                            "refresh_endpoint": "test_refresh",
                             "callback_endpoint": "test_callback",
                             "scope": "test_scope",
                             "shell_integration": True}

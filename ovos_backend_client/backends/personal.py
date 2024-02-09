@@ -370,9 +370,9 @@ class PersonalBackend(AbstractPartialBackend):
         raise NotImplementedError()  # TODO - add to backend, currently needs external url
 
     # OAuth API
-    def oauth_get_token(self, dev_cred):
+    def oauth_refresh_token(self, dev_cred):
         """
-            Get Oauth token for dev_credential dev_cred.
+            Refresh Oauth token for dev_credential dev_cred.
 
             Argument:
                 dev_cred:   development credentials identifier
@@ -380,7 +380,21 @@ class PersonalBackend(AbstractPartialBackend):
             Returns:
                 json string containing token and additional information
         """
-        return self.get(f"{self.backend_url}/{self.backend_version}/device/{self.uuid}/token/{dev_cred}").json()
+        return self.oauth_get_token(dev_cred, auto_refresh=True)
+
+    def oauth_get_token(self, dev_cred, auto_refresh=True):
+        """
+            Get Oauth token for dev_credential dev_cred.
+
+            Argument:
+                dev_cred:   development credentials identifier
+                auto_refresh: refresh expired tokens automatically
+
+            Returns:
+                json string containing token and additional information
+        """
+        return self.get(f"{self.backend_url}/{self.backend_version}/device/{self.uuid}/token/{dev_cred}",
+                        params={"refresh": auto_refresh}).json()
 
     # Email API
     def email_send(self, title, body, sender):

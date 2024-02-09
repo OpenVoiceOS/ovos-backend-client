@@ -1,8 +1,20 @@
 # Changelog
 
-## [0.1.1a4](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.1a4) (2024-01-16)
+## [0.1.1a5](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.1a5) (2024-02-09)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.1a3...0.1.1a4)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.1a4...0.1.1a5)
+
+**Implemented enhancements:**
+
+- feat/refresh\_oauth\_token [\#65](https://github.com/OpenVoiceOS/ovos-backend-client/pull/65) ([JarbasAl](https://github.com/JarbasAl))
+
+**Fixed bugs:**
+
+- OAuthApplicationDatabase update\_application infinite recursion [\#60](https://github.com/OpenVoiceOS/ovos-backend-client/issues/60)
+
+## [V0.1.1a4](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.1.1a4) (2024-01-16)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.1a3...V0.1.1a4)
 
 **Fixed bugs:**
 

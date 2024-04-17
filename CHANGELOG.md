@@ -1,8 +1,16 @@
 # Changelog
 
-## [0.1.1a5](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.1a5) (2024-02-09)
+## [0.1.1a6](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.1a6) (2024-04-17)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.1a4...0.1.1a5)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.1a5...0.1.1a6)
+
+**Fixed bugs:**
+
+- improve geolocation [\#67](https://github.com/OpenVoiceOS/ovos-backend-client/pull/67) ([JarbasAl](https://github.com/JarbasAl))
+
+## [V0.1.1a5](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.1.1a5) (2024-02-09)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.1a4...V0.1.1a5)
 
 **Implemented enhancements:**
 

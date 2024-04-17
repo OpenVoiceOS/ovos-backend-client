@@ -264,6 +264,8 @@ class OfflineBackend(AbstractBackend):
                 "code": address.get("postcode") or "",
                 "name": address.get("city") or
                         address.get("village") or
+                        address.get("town") or
+                        address.get("hamlet") or
                         address.get("county") or "",
                 "state": {
                     "code": address.get("state_code") or

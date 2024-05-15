@@ -307,21 +307,27 @@ class OfflineBackend(AbstractBackend):
         fields = "status,country,countryCode,region,regionName,city,lat,lon,timezone,query"
         data = requests.get("http://ip-api.com/json/" + ip,
                             params={"fields": fields}).json()
-        region_data = {"code": data["region"],
-                       "name": data["regionName"],
-                       "country": {
-                           "code": data["countryCode"],
-                           "name": data["country"]}}
-        city_data = {"code": data["city"],
-                     "name": data["city"],
-                     "state": region_data}
-        timezone_data = {"code": data["timezone"],
-                         "name": data["timezone"]}
-        coordinate_data = {"latitude": float(data["lat"]),
-                           "longitude": float(data["lon"])}
-        return {"city": city_data,
-                "coordinate": coordinate_data,
-                "timezone": timezone_data}
+        if data.get("status") != "success":
+            raise Exception(f"Error response from geolocation endpoint: {data}")
+        LOG.debug(data)
+        try:
+            region_data = {"code": data["region"],
+                           "name": data["regionName"],
+                           "country": {
+                               "code": data["countryCode"],
+                               "name": data["country"]}}
+            city_data = {"code": data["city"],
+                         "name": data["city"],
+                         "state": region_data}
+            timezone_data = {"code": data["timezone"],
+                             "name": data["timezone"]}
+            coordinate_data = {"latitude": float(data["lat"]),
+                               "longitude": float(data["lon"])}
+            return {"city": city_data,
+                    "coordinate": coordinate_data,
+                    "timezone": timezone_data}
+        except KeyError:
+            raise Exception(f"Missing key in {list(data.keys())}")
 
     # Device Api
     def device_get(self):

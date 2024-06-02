@@ -1,8 +1,17 @@
 # Changelog
 
-## [0.1.1a6](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.1a6) (2024-04-17)
+## [0.1.1a7](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.1a7) (2024-06-02)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.1a5...0.1.1a6)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.1a6...0.1.1a7)
+
+**Fixed bugs:**
+
+- Use generic tempdir path for broad support [\#68](https://github.com/OpenVoiceOS/ovos-backend-client/issues/68)
+- fix: allow cross-platform tempdir usage [\#69](https://github.com/OpenVoiceOS/ovos-backend-client/pull/69) ([mikejgray](https://github.com/mikejgray))
+
+## [V0.1.1a6](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.1.1a6) (2024-04-17)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.1a5...V0.1.1a6)
 
 **Fixed bugs:**
 

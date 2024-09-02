@@ -1,8 +1,8 @@
 # Changelog
 
-## [0.1.1a7](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.1a7) (2024-06-02)
+## [V0.1.1a7](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.1.1a7) (2024-06-02)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.1a6...0.1.1a7)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.1a6...V0.1.1a7)
 
 **Fixed bugs:**
 

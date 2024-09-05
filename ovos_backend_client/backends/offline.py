@@ -7,12 +7,14 @@ from tempfile import NamedTemporaryFile
 from uuid import uuid4
 
 import requests
+from oauthlib.oauth2 import WebApplicationClient
 from ovos_config.config import Configuration, update_mycroft_config, get_xdg_config_save_path
 from ovos_config.locations import USER_CONFIG, get_xdg_data_save_path, xdg_data_home
 from ovos_utils import timed_lru_cache
+from ovos_utils.log import LOG
 from ovos_utils.network_utils import get_external_ip
 from ovos_utils.smtp_utils import send_smtp
-from ovos_utils.log import LOG
+
 from ovos_backend_client.backends.base import AbstractBackend, BackendType
 from ovos_backend_client.database import JsonMetricDatabase, JsonWakeWordDatabase, \
     SkillSettingsModel, OAuthTokenDatabase, OAuthApplicationDatabase, DeviceModel, JsonUtteranceDatabase
@@ -262,6 +264,8 @@ class OfflineBackend(AbstractBackend):
                 "code": address.get("postcode") or "",
                 "name": address.get("city") or
                         address.get("village") or
+                        address.get("town") or
+                        address.get("hamlet") or
                         address.get("county") or "",
                 "state": {
                     "code": address.get("state_code") or
@@ -426,9 +430,9 @@ class OfflineBackend(AbstractBackend):
                   host, port)
 
     # OAuth API
-    def oauth_get_token(self, dev_cred):
+    def oauth_refresh_token(self, dev_cred):
         """
-            Get Oauth token for dev_credential dev_cred.
+            Refresh Oauth token for dev_credential dev_cred.
 
             Argument:
                 dev_cred:   development credentials identifier
@@ -436,6 +440,66 @@ class OfflineBackend(AbstractBackend):
             Returns:
                 json string containing token and additional information
         """
+        # Load all needed data for refresh
+        with OAuthApplicationDatabase() as db:
+            app_data = db.get(dev_cred)
+        with OAuthTokenDatabase() as db:
+            token_data = db.get(dev_cred)
+
+        if (app_data is None or
+                token_data is None or 'refresh_token' not in token_data):
+            LOG.warning("Token data doesn't contain a refresh token and "
+                        "cannot be refreshed.")
+            return
+
+        refresh_token = token_data["refresh_token"]
+
+        # Fall back to token endpoint if no specific refresh endpoint
+        # has been set
+        token_endpoint = app_data["token_endpoint"]
+
+        client_id = app_data["client_id"]
+        client_secret = app_data["client_secret"]
+
+        # Perform refresh
+        client = WebApplicationClient(client_id, refresh_token=refresh_token)
+        uri, headers, body = client.prepare_refresh_token_request(token_endpoint)
+        refresh_result = requests.post(uri, headers=headers, data=body,
+                                       auth=(client_id, client_secret))
+
+        if refresh_result.ok:
+            new_token_data = refresh_result.json()
+            # Make sure 'expires_at' entry exists in token
+            if 'expires_at' not in new_token_data:
+                new_token_data['expires_at'] = time.time() + token_data['expires_in']
+            # Store token
+            with OAuthTokenDatabase() as db:
+                token_data.update(new_token_data)
+                db.update_token(dev_cred, token_data)
+
+        return token_data
+
+    def oauth_get_token(self, dev_cred, auto_refresh=True):
+        """
+            Get Oauth token for dev_credential dev_cred.
+
+            Argument:
+                dev_cred:   development credentials identifier
+                auto_refresh: refresh expired tokens automatically
+
+            Returns:
+                json string containing token and additional information
+        """
+        if auto_refresh:
+            expired = False
+            with OAuthTokenDatabase() as db:
+                token_data = db.get(dev_cred)
+            if "expires_at" not in token_data:
+                expired = True
+            elif token_data["expires_at"] >= time.time():
+                expired = True
+            if expired:
+                return self.oauth_refresh_token(dev_cred)
         return self.db_get_oauth_token(dev_cred)
 
     # Admin API

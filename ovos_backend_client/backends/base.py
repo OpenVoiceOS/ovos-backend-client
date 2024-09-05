@@ -342,12 +342,26 @@ class AbstractBackend:
 
     # OAuth API
     @abc.abstractmethod
-    def oauth_get_token(self, dev_cred):
+    def oauth_refresh_token(self, dev_cred):
+        """
+            Refresh Oauth token for dev_credential dev_cred.
+
+            Argument:
+                dev_cred:   development credentials identifier
+
+            Returns:
+                json string containing token and additional information
+        """
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def oauth_get_token(self, dev_cred, auto_refresh=True):
         """
             Get Oauth token for dev_credential dev_cred.
 
             Argument:
                 dev_cred:   development credentials identifier
+                auto_refresh: refresh expired tokens automatically
 
             Returns:
                 json string containing token and additional information

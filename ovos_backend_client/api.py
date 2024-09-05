@@ -595,9 +595,9 @@ class OAuthApi(BaseApi):
         if not API_REGISTRY[self.backend_type]["oauth"]:
             raise ValueError(f"{self.__class__.__name__} not available for {self.backend_type}")
 
-    def get_oauth_token(self, dev_cred):
+    def refresh_oauth_token(self, dev_cred):
         """
-            Get Oauth token for dev_credential dev_cred.
+            Refresh Oauth token for dev_credential dev_cred.
 
             Argument:
                 dev_cred:   development credentials identifier
@@ -605,7 +605,20 @@ class OAuthApi(BaseApi):
             Returns:
                 json string containing token and additional information
         """
-        return self.backend.oauth_get_token(dev_cred)
+        return self.backend.oauth_refresh_token(dev_cred)
+
+    def get_oauth_token(self, dev_cred, auto_refresh=True):
+        """
+            Get Oauth token for dev_credential dev_cred.
+
+            Argument:
+                dev_cred:   development credentials identifier
+                auto_refresh: refresh expired tokens automatically
+
+            Returns:
+                json string containing token and additional information
+        """
+        return self.backend.oauth_get_token(dev_cred, auto_refresh=auto_refresh)
 
 
 class DatabaseApi(BaseApi):

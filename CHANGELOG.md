@@ -1,65 +1,12 @@
 # Changelog
 
-## [V0.1.1a7](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.1.1a7) (2024-06-02)
+## [0.1.2a1](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.1.2a1) (2024-09-10)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.1a6...V0.1.1a7)
-
-**Fixed bugs:**
-
-- Use generic tempdir path for broad support [\#68](https://github.com/OpenVoiceOS/ovos-backend-client/issues/68)
-- fix: allow cross-platform tempdir usage [\#69](https://github.com/OpenVoiceOS/ovos-backend-client/pull/69) ([mikejgray](https://github.com/mikejgray))
-
-## [V0.1.1a6](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.1.1a6) (2024-04-17)
-
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.1a5...V0.1.1a6)
-
-**Fixed bugs:**
-
-- improve geolocation [\#67](https://github.com/OpenVoiceOS/ovos-backend-client/pull/67) ([JarbasAl](https://github.com/JarbasAl))
-
-## [V0.1.1a5](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.1.1a5) (2024-02-09)
-
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.1a4...V0.1.1a5)
-
-**Implemented enhancements:**
-
-- feat/refresh\_oauth\_token [\#65](https://github.com/OpenVoiceOS/ovos-backend-client/pull/65) ([JarbasAl](https://github.com/JarbasAl))
-
-**Fixed bugs:**
-
-- OAuthApplicationDatabase update\_application infinite recursion [\#60](https://github.com/OpenVoiceOS/ovos-backend-client/issues/60)
-
-## [V0.1.1a4](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.1.1a4) (2024-01-16)
-
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.1a3...V0.1.1a4)
-
-**Fixed bugs:**
-
-- Database: Fix update\_application\(\) method [\#62](https://github.com/OpenVoiceOS/ovos-backend-client/pull/62) ([forslund](https://github.com/forslund))
-
-## [V0.1.1a3](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.1.1a3) (2024-01-04)
-
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.1a2...V0.1.1a3)
-
-**Fixed bugs:**
-
-- Fix path errors in Database init [\#58](https://github.com/OpenVoiceOS/ovos-backend-client/pull/58) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [V0.1.1a2](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.1.1a2) (2023-12-30)
-
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.1a1...V0.1.1a2)
-
-**Fixed bugs:**
-
-- Fix location config reference [\#57](https://github.com/OpenVoiceOS/ovos-backend-client/pull/57) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [V0.1.1a1](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.1.1a1) (2023-12-29)
-
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.0...V0.1.1a1)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.1.2...0.1.2a1)
 
 **Merged pull requests:**
 
-- packaging/update\_imports [\#56](https://github.com/OpenVoiceOS/ovos-backend-client/pull/56) ([JarbasAl](https://github.com/JarbasAl))
+- chore:automations [\#73](https://github.com/OpenVoiceOS/ovos-backend-client/pull/73) ([JarbasAl](https://github.com/JarbasAl))
 
 
 

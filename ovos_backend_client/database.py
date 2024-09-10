@@ -403,14 +403,13 @@ class OAuthApplicationDatabase(JsonStorageXDG):
 
     def add_application(self, oauth_service,
                         client_id, client_secret,
-                        auth_endpoint, token_endpoint, refresh_endpoint,
-                        callback_endpoint, scope, shell_integration=True):
+                        auth_endpoint, token_endpoint, callback_endpoint, scope,
+                        shell_integration=True):
         self[oauth_service] = {"oauth_service": oauth_service,
                                "client_id": client_id,
                                "client_secret": client_secret,
                                "auth_endpoint": auth_endpoint,
                                "token_endpoint": token_endpoint,
-                               "refresh_endpoint": refresh_endpoint,
                                "callback_endpoint": callback_endpoint,
                                "scope": scope,
                                "shell_integration": shell_integration}
@@ -420,11 +419,11 @@ class OAuthApplicationDatabase(JsonStorageXDG):
 
     def update_application(self, oauth_service,
                            client_id, client_secret,
-                           auth_endpoint, token_endpoint, refresh_endpoint,
+                           auth_endpoint, token_endpoint,
                            callback_endpoint, scope, shell_integration=True):
         self.add_application(oauth_service,
                              client_id, client_secret,
-                             auth_endpoint, token_endpoint, refresh_endpoint,
+                             auth_endpoint, token_endpoint,
                              callback_endpoint, scope, shell_integration)
 
     def delete_application(self, oauth_service):

@@ -1,15 +1,12 @@
-from ovos_utils import timed_lru_cache
-from ovos_utils.log import LOG
-
 import json
-import os
 from os import makedirs
-from os.path import isfile
-from ovos_config.config import Configuration, get_xdg_config_save_path
+
 from ovos_backend_client.backends import OfflineBackend, \
     PersonalBackend, BackendType, get_backend_config, API_REGISTRY
-from ovos_backend_client.database import SkillSettingsModel
 from ovos_backend_client.settings import get_local_settings
+from ovos_config.config import Configuration, get_xdg_config_save_path
+from ovos_utils import timed_lru_cache
+from ovos_utils.log import LOG
 
 
 class BaseApi:
@@ -547,7 +544,7 @@ class SkillSettingsApi(BaseApi):
         for s in settings:  # list of SkillSettingsModel or dicts
             settings_path = f"{get_xdg_config_save_path()}/skills/{s.skill_id}"
             makedirs(settings_path, exist_ok=True)
-            with open( f"{settings_path}/settingsmeta.json", "w") as f:
+            with open(f"{settings_path}/settingsmeta.json", "w") as f:
                 json.dump(s.meta, f, indent=4, ensure_ascii=False)
             with open(f"{settings_path}/settings.json", "w") as f:
                 json.dump(s.skill_settings, f, indent=4, ensure_ascii=False)
@@ -721,19 +718,19 @@ class DatabaseApi(BaseApi):
         return self.backend.db_get_oauth_app(token_id)
 
     def update_oauth_app(self, token_id, client_id=None, client_secret=None,
-                         auth_endpoint=None, token_endpoint=None, refresh_endpoint=None,
+                         auth_endpoint=None, token_endpoint=None,
                          callback_endpoint=None, scope=None, shell_integration=None):
         return self.backend.db_update_oauth_app(token_id, client_id, client_secret, auth_endpoint, token_endpoint,
-                                                refresh_endpoint, callback_endpoint, scope, shell_integration)
+                                                callback_endpoint, scope, shell_integration)
 
     def delete_oauth_app(self, token_id):
         return self.backend.db_delete_oauth_app(token_id)
 
     def add_oauth_app(self, token_id, client_id, client_secret,
-                      auth_endpoint, token_endpoint, refresh_endpoint,
+                      auth_endpoint, token_endpoint,
                       callback_endpoint, scope, shell_integration=True):
         return self.backend.db_post_oauth_app(token_id, client_id, client_secret, auth_endpoint, token_endpoint,
-                                              refresh_endpoint, callback_endpoint, scope, shell_integration)
+                                              callback_endpoint, scope, shell_integration)
 
     def list_oauth_tokens(self):
         return self.backend.db_list_oauth_tokens()

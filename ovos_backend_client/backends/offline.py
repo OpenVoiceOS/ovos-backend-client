@@ -8,18 +8,17 @@ from uuid import uuid4
 
 import requests
 from oauthlib.oauth2 import WebApplicationClient
+from ovos_backend_client.backends.base import AbstractBackend, BackendType
+from ovos_backend_client.database import JsonMetricDatabase, JsonWakeWordDatabase, \
+    SkillSettingsModel, OAuthTokenDatabase, OAuthApplicationDatabase, DeviceModel, JsonUtteranceDatabase
+from ovos_backend_client.identity import IdentityManager
+from ovos_backend_client.settings import get_local_settings
 from ovos_config.config import Configuration, update_mycroft_config, get_xdg_config_save_path
 from ovos_config.locations import USER_CONFIG, get_xdg_data_save_path, xdg_data_home
 from ovos_utils import timed_lru_cache
 from ovos_utils.log import LOG
 from ovos_utils.network_utils import get_external_ip
 from ovos_utils.smtp_utils import send_smtp
-
-from ovos_backend_client.backends.base import AbstractBackend, BackendType
-from ovos_backend_client.database import JsonMetricDatabase, JsonWakeWordDatabase, \
-    SkillSettingsModel, OAuthTokenDatabase, OAuthApplicationDatabase, DeviceModel, JsonUtteranceDatabase
-from ovos_backend_client.identity import IdentityManager
-from ovos_backend_client.settings import get_local_settings
 
 try:
     from ovos_plugin_manager.tts import get_voices, get_voice_id
@@ -820,11 +819,11 @@ class OfflineBackend(AbstractBackend):
         return OAuthApplicationDatabase().get_application(token_id)
 
     def db_update_oauth_app(self, token_id, client_id=None, client_secret=None,
-                            auth_endpoint=None, token_endpoint=None, refresh_endpoint=None,
+                            auth_endpoint=None, token_endpoint=None,
                             callback_endpoint=None, scope=None, shell_integration=None):
         with OAuthApplicationDatabase() as db:
             return db.add_token(token_id, client_id, client_secret,
-                                auth_endpoint, token_endpoint, refresh_endpoint,
+                                auth_endpoint, token_endpoint,
                                 callback_endpoint, scope, shell_integration)
 
     def db_delete_oauth_app(self, token_id):
@@ -832,12 +831,11 @@ class OfflineBackend(AbstractBackend):
             return db.delete_application(token_id)
 
     def db_post_oauth_app(self, token_id, client_id, client_secret,
-                          auth_endpoint, token_endpoint, refresh_endpoint,
+                          auth_endpoint, token_endpoint,
                           callback_endpoint, scope, shell_integration=True):
         with OAuthApplicationDatabase() as db:
             return db.add_application(token_id, client_id, client_secret,
-                                      auth_endpoint, token_endpoint,
-                                      refresh_endpoint, callback_endpoint,
+                                      auth_endpoint, token_endpoint, callback_endpoint,
                                       scope, shell_integration)
 
     def db_list_oauth_tokens(self):

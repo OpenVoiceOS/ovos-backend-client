@@ -5,13 +5,12 @@ import time
 from io import BytesIO, StringIO
 
 import requests
-from ovos_config.config import Configuration
-from ovos_utils.log import LOG
-from requests.exceptions import HTTPError
-
 from ovos_backend_client.backends.offline import AbstractPartialBackend, BackendType
 from ovos_backend_client.database import SkillSettingsModel
 from ovos_backend_client.identity import IdentityManager, identity_lock
+from ovos_config.config import Configuration
+from ovos_utils.log import LOG
+from requests.exceptions import HTTPError
 
 
 class PersonalBackend(AbstractPartialBackend):
@@ -414,8 +413,8 @@ class PersonalBackend(AbstractPartialBackend):
 
     def admin_update_backend_config(self, config):
         return self.post(f"{self.backend_url}/{self.backend_version}/admin/config",
-                        json={"config": config},
-                        headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
+                         json={"config": config},
+                         headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def admin_set_device_location(self, uuid, loc):
         """
@@ -619,12 +618,11 @@ class PersonalBackend(AbstractPartialBackend):
                         headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_update_oauth_app(self, token_id, client_id=None, client_secret=None,
-                            auth_endpoint=None, token_endpoint=None, refresh_endpoint=None,
+                            auth_endpoint=None, token_endpoint=None,
                             callback_endpoint=None, scope=None, shell_integration=None):
         payload = {"client_id": client_id, "client_secret": client_secret,
                    "auth_endpoint": auth_endpoint,
                    "token_endpoint": token_endpoint,
-                   "refresh_endpoint": refresh_endpoint,
                    "callback_endpoint": callback_endpoint,
                    "scope": scope, "shell_integration": True}
         return self.put(url=f"{self.backend_url}/{self.backend_version}/admin/oauth_apps/{token_id}",
@@ -636,14 +634,13 @@ class PersonalBackend(AbstractPartialBackend):
                            headers={"Authorization": f"Bearer {self.credentials['admin']}"}).json()
 
     def db_post_oauth_app(self, token_id, client_id, client_secret,
-                          auth_endpoint, token_endpoint, refresh_endpoint,
+                          auth_endpoint, token_endpoint,
                           callback_endpoint, scope, shell_integration=True):
         payload = {"token_id": token_id,
                    "client_id": client_id,
                    "client_secret": client_secret,
                    "auth_endpoint": auth_endpoint,
                    "token_endpoint": token_endpoint,
-                   "refresh_endpoint": refresh_endpoint,
                    "callback_endpoint": callback_endpoint,
                    "scope": scope, "shell_integration": True}
         return self.post(url=f"{self.backend_url}/{self.backend_version}/admin/oauth_apps",

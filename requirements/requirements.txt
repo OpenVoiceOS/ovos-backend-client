@@ -1,4 +1,4 @@
 ovos-utils>=0.0.37,<1.0.0
 ovos-config>=0.0.12,<1.0.0
 json_database~=0.7
-oauthlib~=3.0
+oauthlib~=3.2

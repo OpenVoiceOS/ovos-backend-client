@@ -4,10 +4,9 @@ from enum import Enum
 from io import BytesIO, StringIO
 
 import requests
-from ovos_config.config import Configuration
-
 from ovos_backend_client.database import SkillSettingsModel
 from ovos_backend_client.identity import IdentityManager
+from ovos_config.config import Configuration
 
 try:
     from timezonefinder import TimezoneFinder
@@ -586,7 +585,7 @@ class AbstractBackend:
 
     @abc.abstractmethod
     def db_update_oauth_app(self, token_id, client_id=None, client_secret=None,
-                            auth_endpoint=None, token_endpoint=None, refresh_endpoint=None,
+                            auth_endpoint=None, token_endpoint=None,
                             callback_endpoint=None, scope=None, shell_integration=None):
         raise NotImplementedError()
 
@@ -596,7 +595,7 @@ class AbstractBackend:
 
     @abc.abstractmethod
     def db_post_oauth_app(self, token_id, client_id, client_secret,
-                          auth_endpoint, token_endpoint, refresh_endpoint,
+                          auth_endpoint, token_endpoint,
                           callback_endpoint, scope, shell_integration=True):
         raise NotImplementedError()
 

@@ -1,52 +1,20 @@
 # Changelog
 
-## [1.0.0a1](https://github.com/OpenVoiceOS/ovos-backend-client/tree/1.0.0a1) (2024-09-11)
+## [1.0.1a1](https://github.com/OpenVoiceOS/ovos-backend-client/tree/1.0.1a1) (2024-11-11)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.2.1a1...1.0.0a1)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V1.0.0...1.0.1a1)
 
-**Breaking changes:**
+**Closed issues:**
 
-- refactor!:deprecate\_refresh\_endpoint [\#78](https://github.com/OpenVoiceOS/ovos-backend-client/pull/78) ([JarbasAl](https://github.com/JarbasAl))
-
-## [V0.2.1a1](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.2.1a1) (2024-09-11)
-
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/0.2.1a1...V0.2.1a1)
-
-## [0.2.1a1](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.2.1a1) (2024-09-11)
-
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.2.0...0.2.1a1)
+- Oauth2 App database should not require the refresh\_endpoint [\#59](https://github.com/OpenVoiceOS/ovos-backend-client/issues/59)
 
 **Merged pull requests:**
 
-- Update oauthlib requirement from ~=3.0 to ~=3.2 in /requirements [\#66](https://github.com/OpenVoiceOS/ovos-backend-client/pull/66) ([dependabot[bot]](https://github.com/apps/dependabot))
+- fix:nominatim [\#82](https://github.com/OpenVoiceOS/ovos-backend-client/pull/82) ([JarbasAl](https://github.com/JarbasAl))
 
-## [V0.2.0](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.2.0) (2024-09-10)
+## [V1.0.0](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V1.0.0) (2024-09-11)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/0.2.0...V0.2.0)
-
-## [0.2.0](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.2.0) (2024-09-10)
-
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/0.2.0a2...0.2.0)
-
-**Merged pull requests:**
-
-- Release 0.2.0a2 [\#76](https://github.com/OpenVoiceOS/ovos-backend-client/pull/76) ([github-actions[bot]](https://github.com/apps/github-actions))
-
-## [0.2.0a2](https://github.com/OpenVoiceOS/ovos-backend-client/tree/0.2.0a2) (2024-09-10)
-
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/V0.2.0a2...0.2.0a2)
-
-## [V0.2.0a2](https://github.com/OpenVoiceOS/ovos-backend-client/tree/V0.2.0a2) (2024-09-10)
-
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/0.1.2...V0.2.0a2)
-
-**Breaking changes:**
-
-- Remove oauth refresh endpoint [\#61](https://github.com/OpenVoiceOS/ovos-backend-client/pull/61) ([forslund](https://github.com/forslund))
-
-**Merged pull requests:**
-
-- chore:semver\_versioning [\#75](https://github.com/OpenVoiceOS/ovos-backend-client/pull/75) ([JarbasAl](https://github.com/JarbasAl))
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-backend-client/compare/1.0.0...V1.0.0)
 
 
 

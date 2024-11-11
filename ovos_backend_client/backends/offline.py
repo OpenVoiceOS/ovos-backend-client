@@ -8,17 +8,18 @@ from uuid import uuid4
 
 import requests
 from oauthlib.oauth2 import WebApplicationClient
-from ovos_backend_client.backends.base import AbstractBackend, BackendType
-from ovos_backend_client.database import JsonMetricDatabase, JsonWakeWordDatabase, \
-    SkillSettingsModel, OAuthTokenDatabase, OAuthApplicationDatabase, DeviceModel, JsonUtteranceDatabase
-from ovos_backend_client.identity import IdentityManager
-from ovos_backend_client.settings import get_local_settings
 from ovos_config.config import Configuration, update_mycroft_config, get_xdg_config_save_path
 from ovos_config.locations import USER_CONFIG, get_xdg_data_save_path, xdg_data_home
 from ovos_utils import timed_lru_cache
 from ovos_utils.log import LOG
 from ovos_utils.network_utils import get_external_ip
 from ovos_utils.smtp_utils import send_smtp
+
+from ovos_backend_client.backends.base import AbstractBackend, BackendType
+from ovos_backend_client.database import JsonMetricDatabase, JsonWakeWordDatabase, \
+    SkillSettingsModel, OAuthTokenDatabase, OAuthApplicationDatabase, DeviceModel, JsonUtteranceDatabase
+from ovos_backend_client.identity import IdentityManager
+from ovos_backend_client.settings import get_local_settings
 
 try:
     from ovos_plugin_manager.tts import get_voices, get_voice_id
@@ -198,7 +199,9 @@ class OfflineBackend(AbstractBackend):
             str: JSON structure with lookup results
         """
         url = "https://nominatim.openstreetmap.org/search"
-        data = self.get(url, params={"q": location, "format": "json", "limit": 1}).json()[0]
+
+        data = self.get(url, params={"q": location, "format": "json", "limit": 1},
+                        headers={"User-Agent": "OVOS/1.0"}).json()[0]
         lat = data.get("lat")
         lon = data.get("lon")
 
@@ -207,7 +210,8 @@ class OfflineBackend(AbstractBackend):
 
         url = "https://nominatim.openstreetmap.org/details.php"
         details = self.get(url, params={"osmid": data['osm_id'], "osmtype": data['osm_type'][0].upper(),
-                                        "format": "json"}).json()
+                                        "format": "json"},
+                           headers={"User-Agent": "OVOS/1.0"}).json()
 
         # if no addresstags are present for the location an empty list is sent instead of a dict
         tags = details.get("addresstags") or {}
@@ -255,7 +259,8 @@ class OfflineBackend(AbstractBackend):
             str: JSON structure with lookup results
         """
         url = "https://nominatim.openstreetmap.org/reverse"
-        details = self.get(url, params={"lat": lat, "lon": lon, "format": "json"}).json()
+        details = self.get(url, params={"lat": lat, "lon": lon, "format": "json"},
+                           headers={"User-Agent": "OVOS/1.0"}).json()
         address = details.get("address")
         location = {
             "address": details["display_name"],
